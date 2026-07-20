@@ -25,7 +25,7 @@ namespace DataAccess.DAO
         // Paso 2: Redefinir el constructor default de la clase
         private SqlDao(){
 
-            connectionString = @"Data Source=localhost;Initial Catalog=SGDE_Prueba;Integrated Security=True;Encrypt=True;Trust Server Certificate=True";
+            connectionString = @"Data Source=proyecto2grupo1.database.windows.net;Initial Catalog=Proyecto2_SEGEDE_Grupo1;Persist Security Info=True;User ID=sgderootg1;Password=sgde123!.!";
         }
 
         // Paso 3: Definir un metodo estatico que expone la instancia
