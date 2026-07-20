@@ -25,7 +25,7 @@ namespace DataAccess.DAO
         // Paso 2: Redefinir el constructor default de la clase
         private SqlDao(){
 
-            connectionString = @"Data Source=localhost;Initial Catalog=cenfocinemas-db;Integrated Security=True;Encrypt=True;TrustServerCertificate=True";
+            connectionString = @"Data Source=localhost;Initial Catalog=SGDE_Prueba;Integrated Security=True;Encrypt=True;Trust Server Certificate=True";
         }
 
         // Paso 3: Definir un metodo estatico que expone la instancia
