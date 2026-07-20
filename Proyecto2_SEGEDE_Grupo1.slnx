@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/0_Entities-DTOs/">
+    <Project Path="Entities-DTOs/Entities-DTOs.csproj" />
+  </Folder>
+  <Folder Name="/1_DataAccess/">
+    <Project Path="DataAccess/DataAccess.csproj" />
+  </Folder>
+  <Folder Name="/2_CoreApp/">
+    <Project Path="CoreApp/CoreApp.csproj" />
+  </Folder>
+  <Folder Name="/3_WebAPI/">
+    <Project Path="WebAPI/WebAPI/WebAPI.csproj" Id="5b57d4ec-7b66-4650-899d-ce3c9f91e65a" />
+  </Folder>
+  <Folder Name="/4_WebApp/">
+    <Project Path="WebApp/WebApp.csproj" />
+  </Folder>
+</Solution>
