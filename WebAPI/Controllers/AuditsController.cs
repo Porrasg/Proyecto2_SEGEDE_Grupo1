@@ -7,6 +7,8 @@ namespace WebAPI.Controllers
         public IActionResult Index()
         {
             return View();
+
+
         }
     }
 }

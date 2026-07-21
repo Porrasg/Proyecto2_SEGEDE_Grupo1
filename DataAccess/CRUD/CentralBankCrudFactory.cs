@@ -16,7 +16,7 @@ namespace DataAccess.CRUD
         public override void Create(BaseDTO baseDTO)
         {
             var cb = baseDTO as CentralBank;
-            var sqlOperation = new SqlOperaton();
+            var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "CRE_CENTRAL_BANK_PR";
 
             sqlOperation.AddStringParameter("Name", cb.Name);
