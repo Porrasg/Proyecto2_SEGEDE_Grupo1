@@ -13,7 +13,7 @@ GO
         Registra un nuevo usuario y retorna su identificador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.CRE_USER_PR
+CREATE OR ALTER PROCEDURE dbo.CRE_USER_PR
 (
     @Identification NVARCHAR(20),
     @FirstName NVARCHAR(100),
@@ -23,7 +23,8 @@ CREATE PROCEDURE dbo.CRE_USER_PR
     @PhoneNumber NVARCHAR(20),
     @Email NVARCHAR(150),
     @ProfilePhoto NVARCHAR(500) = NULL,
-    @PasswordHash NVARCHAR(255),
+    @Password NVARCHAR(255),
+    @Age INT,
     @Role NVARCHAR(50),
     @Status NVARCHAR(50),
     @FailedLoginAttempts INT,
@@ -46,7 +47,8 @@ BEGIN
         PhoneNumber,
         Email,
         ProfilePhoto,
-        PasswordHash,
+        Password,
+        Age,
         Role,
         Status,
         FailedLoginAttempts,
@@ -65,7 +67,8 @@ BEGIN
         @PhoneNumber,
         @Email,
         @ProfilePhoto,
-        @PasswordHash,
+        @Password,
+        @Age,
         @Role,
         @Status,
         @FailedLoginAttempts,
@@ -87,7 +90,7 @@ GO
         Actualiza la información de un usuario.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.UPD_USER_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_USER_PR
 (
     @UserId INT,
     @Identification NVARCHAR(20),
@@ -98,7 +101,8 @@ CREATE PROCEDURE dbo.UPD_USER_PR
     @PhoneNumber NVARCHAR(20),
     @Email NVARCHAR(150),
     @ProfilePhoto NVARCHAR(500) = NULL,
-    @PasswordHash NVARCHAR(255),
+    @Password NVARCHAR(255),
+    @Age INT,
     @Role NVARCHAR(50),
     @Status NVARCHAR(50),
     @FailedLoginAttempts INT,
@@ -120,7 +124,8 @@ BEGIN
         PhoneNumber = @PhoneNumber,
         Email = @Email,
         ProfilePhoto = @ProfilePhoto,
-        PasswordHash = @PasswordHash,
+        Password = @Password,
+        Age = @Age,
         Role = @Role,
         Status = @Status,
         FailedLoginAttempts = @FailedLoginAttempts,
@@ -139,7 +144,7 @@ GO
         Realiza la eliminación lógica de un usuario.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.DEL_USER_PR
+CREATE OR ALTER PROCEDURE dbo.DEL_USER_PR
 (
     @UserId INT,
     @Status NVARCHAR(50),
@@ -165,7 +170,7 @@ GO
         Obtiene un usuario mediante su identificador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_ID_USER_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_ID_USER_PR
 (
     @UserId INT
 )
@@ -183,7 +188,8 @@ BEGIN
         PhoneNumber,
         Email,
         ProfilePhoto,
-        PasswordHash,
+        Password,
+        Age,
         Role,
         Status,
         FailedLoginAttempts,
@@ -204,7 +210,7 @@ GO
         Obtiene todos los usuarios registrados.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_ALL_USER_PR
+CREATE OR ALTER PROCEDURE dbo.RET_ALL_USER_PR
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -219,7 +225,8 @@ BEGIN
         PhoneNumber,
         Email,
         ProfilePhoto,
-        PasswordHash,
+        Password,
+        Age,
         Role,
         Status,
         FailedLoginAttempts,
@@ -239,7 +246,7 @@ GO
         Obtiene la información de un usuario mediante su correo electrónico.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_EMAIL_USER_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_EMAIL_USER_PR
 (
     @Email NVARCHAR(150)
 )
@@ -257,7 +264,8 @@ BEGIN
         PhoneNumber,
         Email,
         ProfilePhoto,
-        PasswordHash,
+        Password,
+        Age,
         Role,
         Status,
         FailedLoginAttempts,
@@ -277,7 +285,7 @@ GO
         Obtiene un usuario mediante su identificación.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_IDENTIFICATION_USER_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_IDENTIFICATION_USER_PR
 (
     @Identification NVARCHAR(20)
 )
@@ -295,7 +303,8 @@ BEGIN
         PhoneNumber,
         Email,
         ProfilePhoto,
-        PasswordHash,
+        Password,
+        Age,
         Role,
         Status,
         FailedLoginAttempts,
@@ -316,7 +325,7 @@ GO
         fecha de finalización del bloqueo de un usuario.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.UPD_LOGIN_ATTEMPTS_USER_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_LOGIN_ATTEMPTS_USER_PR
 (
     @UserId INT,
     @FailedLoginAttempts INT,
@@ -345,7 +354,7 @@ GO
         activo.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.UPD_LAST_LOGIN_USER_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_LAST_LOGIN_USER_PR
 (
     @UserId INT,
     @LastLoginAt DATETIME,
@@ -374,10 +383,10 @@ GO
         Actualiza la contraseña cifrada de un usuario.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.UPD_PASSWORD_USER_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_PASSWORD_USER_PR
 (
     @UserId INT,
-    @PasswordHash NVARCHAR(255),
+    @Password NVARCHAR(255),
     @UpdatedAt DATETIME
 )
 AS
@@ -386,12 +395,227 @@ BEGIN
 
     UPDATE dbo.tblUsers
     SET
-        PasswordHash = @PasswordHash,
+        Password = @Password,
         UpdatedAt = @UpdatedAt
     WHERE UserId = @UserId;
 END;
 GO
 
+/*==============================================================================
+    STORED PROCEDURES: OtpTokens
+==============================================================================*/
+
+
+/*==============================================================================
+    PROCEDIMIENTO: CRE_OTP_TOKEN_PR
+
+    Descripción:
+        Registra un nuevo código de verificación OTP asociado al correo
+        electrónico de un usuario.
+
+        El código se crea inicialmente como no utilizado y conserva la fecha
+        de expiración calculada por la aplicación.
+==============================================================================*/
+
+CREATE OR ALTER PROCEDURE dbo.CRE_OTP_TOKEN_PR
+(
+    @Email VARCHAR(150),
+    @TokenCode VARCHAR(6),
+    @ExpirationDate DATETIME
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO dbo.OtpTokens
+    (
+        Email,
+        TokenCode,
+        ExpirationDate,
+        IsUsed,
+        Created,
+        Updated
+    )
+    VALUES
+    (
+        @Email,
+        @TokenCode,
+        @ExpirationDate,
+        0,
+        GETDATE(),
+        GETDATE()
+    );
+END;
+GO
+
+
+/*==============================================================================
+    PROCEDIMIENTO: RET_VALID_OTP_TOKEN_PR
+
+    Descripción:
+        Obtiene un código OTP válido mediante el correo electrónico y el código
+        recibido.
+
+        Solamente retorna tokens que no han sido utilizados y cuya fecha de
+        expiración todavía no ha finalizado.
+==============================================================================*/
+
+CREATE OR ALTER PROCEDURE dbo.RET_VALID_OTP_TOKEN_PR
+(
+    @Email VARCHAR(150),
+    @TokenCode VARCHAR(6)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        Id,
+        Created,
+        Updated,
+        Email,
+        TokenCode,
+        ExpirationDate,
+        IsUsed
+    FROM dbo.OtpTokens
+    WHERE Email = @Email
+      AND TokenCode = @TokenCode
+      AND IsUsed = 0
+      AND ExpirationDate >= GETDATE();
+END;
+GO
+
+
+/*==============================================================================
+    PROCEDIMIENTO: ACTIVATE_USER_ACCOUNT_PR
+
+    Descripción:
+        Activa la cuenta de un usuario después de validar correctamente su
+        código OTP.
+
+        También marca el código como utilizado para impedir que pueda volver
+        a emplearse.
+==============================================================================*/
+
+CREATE OR ALTER PROCEDURE dbo.ACTIVATE_USER_ACCOUNT_PR
+(
+    @Email NVARCHAR(150),
+    @TokenCode VARCHAR(6)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        -- Verifica que exista un código válido y vigente.
+        IF NOT EXISTS
+        (
+            SELECT 1
+            FROM dbo.OtpTokens
+            WHERE Email = @Email
+              AND TokenCode = @TokenCode
+              AND IsUsed = 0
+              AND ExpirationDate >= GETDATE()
+        )
+        BEGIN
+            THROW 50001, 'El código OTP es inválido, ya fue utilizado o ha expirado.', 1;
+        END;
+
+        -- Activa la cuenta del usuario.
+        UPDATE dbo.tblUsers
+        SET
+            Status = 'Activo',
+            UpdatedAt = GETDATE()
+        WHERE Email = @Email;
+
+        -- Verifica que el usuario exista.
+        IF @@ROWCOUNT = 0
+        BEGIN
+            THROW 50002, 'No existe un usuario registrado con el correo indicado.', 1;
+        END;
+
+        -- Marca el código OTP como utilizado.
+        UPDATE dbo.OtpTokens
+        SET
+            IsUsed = 1,
+            Updated = GETDATE()
+        WHERE Email = @Email
+          AND TokenCode = @TokenCode
+          AND IsUsed = 0;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+        BEGIN
+            ROLLBACK TRANSACTION;
+        END;
+
+        THROW;
+    END CATCH;
+END;
+GO
+
+
+/*==============================================================================
+    PROCEDIMIENTO: RET_LAST_OTP_TOKEN_BY_EMAIL_PR
+
+    Descripción:
+        Obtiene el último código OTP generado para un correo electrónico.
+
+        Puede utilizarse para verificar el estado, la fecha de expiración o si
+        el código ya fue consumido.
+==============================================================================*/
+
+CREATE OR ALTER PROCEDURE dbo.RET_LAST_OTP_TOKEN_BY_EMAIL_PR
+(
+    @Email VARCHAR(150)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP 1
+        Id,
+        Created,
+        Updated,
+        Email,
+        TokenCode,
+        ExpirationDate,
+        IsUsed
+    FROM dbo.OtpTokens
+    WHERE Email = @Email
+    ORDER BY Id DESC;
+END;
+GO
+
+
+/*==============================================================================
+    PROCEDIMIENTO: UPD_OTP_TOKEN_AS_USED_PR
+
+    Descripción:
+        Marca un código OTP como utilizado para impedir que pueda volver a
+        emplearse.
+==============================================================================*/
+
+CREATE OR ALTER PROCEDURE dbo.UPD_OTP_TOKEN_AS_USED_PR
+(
+    @Id INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE dbo.OtpTokens
+    SET
+        IsUsed = 1,
+        Updated = GETDATE()
+    WHERE Id = @Id
+      AND IsUsed = 0;
+END;
+GO
 
 /*==============================================================================
     STORED PROCEDURES: tblTurbines
@@ -406,7 +630,7 @@ GO
         identificador generado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.CRE_TURBINE_PR
+CREATE OR ALTER PROCEDURE dbo.CRE_TURBINE_PR
 (
     @Code NVARCHAR(50),
     @Name NVARCHAR(100),
@@ -462,7 +686,7 @@ GO
         Actualiza la información general y técnica de una turbina registrada.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.UPD_TURBINE_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_TURBINE_PR
 (
     @TurbineId INT,
     @Code NVARCHAR(50),
@@ -504,7 +728,7 @@ GO
         baterías, mantenimientos, fallas y movimientos energéticos.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.DEL_TURBINE_PR
+CREATE OR ALTER PROCEDURE dbo.DEL_TURBINE_PR
 (
     @TurbineId INT,
     @Status NVARCHAR(50),
@@ -530,7 +754,7 @@ GO
         Obtiene la información de una turbina mediante su identificador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_ID_TURBINE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_ID_TURBINE_PR
 (
     @TurbineId INT
 )
@@ -563,7 +787,7 @@ GO
         Obtiene todas las turbinas registradas en el sistema SGDE.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_ALL_TURBINE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_ALL_TURBINE_PR
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -594,7 +818,7 @@ GO
         no esté registrado previamente.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_CODE_TURBINE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_CODE_TURBINE_PR
 (
     @Code NVARCHAR(50)
 )
@@ -626,7 +850,7 @@ GO
         Obtiene las turbinas que coincidan con el estado indicado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_STATUS_TURBINE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_STATUS_TURBINE_PR
 (
     @Status NVARCHAR(50)
 )
@@ -665,7 +889,7 @@ GO
         identificador generado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.CRE_MAINTENANCE_PR
+CREATE OR ALTER PROCEDURE dbo.CRE_MAINTENANCE_PR
 (
     @TurbineId INT,
     @EngineerId INT,
@@ -727,7 +951,7 @@ GO
         Actualiza la información de un mantenimiento registrado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.UPD_MAINTENANCE_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_MAINTENANCE_PR
 (
     @MaintenanceId INT,
     @TurbineId INT,
@@ -773,7 +997,7 @@ GO
         operativo de la turbina.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.DEL_MAINTENANCE_PR
+CREATE OR ALTER PROCEDURE dbo.DEL_MAINTENANCE_PR
 (
     @MaintenanceId INT,
     @Status NVARCHAR(50),
@@ -799,7 +1023,7 @@ GO
         Obtiene la información de un mantenimiento mediante su identificador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_ID_MAINTENANCE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_ID_MAINTENANCE_PR
 (
     @MaintenanceId INT
 )
@@ -834,7 +1058,7 @@ GO
         Obtiene todos los mantenimientos registrados en el sistema SGDE.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_ALL_MAINTENANCE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_ALL_MAINTENANCE_PR
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -866,7 +1090,7 @@ GO
         Obtiene los mantenimientos asociados a una turbina específica.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_TURBINE_MAINTENANCE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_TURBINE_MAINTENANCE_PR
 (
     @TurbineId INT
 )
@@ -902,7 +1126,7 @@ GO
         Obtiene los mantenimientos asignados a un ingeniero específico.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_ENGINEER_MAINTENANCE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_ENGINEER_MAINTENANCE_PR
 (
     @EngineerId INT
 )
@@ -938,7 +1162,7 @@ GO
         Obtiene los mantenimientos que coincidan con el estado indicado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_STATUS_MAINTENANCE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_STATUS_MAINTENANCE_PR
 (
     @Status NVARCHAR(50)
 )
@@ -979,7 +1203,7 @@ GO
         identificador generado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.CRE_FAILURE_PR
+CREATE OR ALTER PROCEDURE dbo.CRE_FAILURE_PR
 (
     @TurbineId INT,
     @EngineerId INT,
@@ -1032,7 +1256,7 @@ GO
         Actualiza la información de una falla registrada.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.UPD_FAILURE_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_FAILURE_PR
 (
     @FailureId INT,
     @TurbineId INT,
@@ -1072,7 +1296,7 @@ GO
         operativo y técnico de la turbina.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.DEL_FAILURE_PR
+CREATE OR ALTER PROCEDURE dbo.DEL_FAILURE_PR
 (
     @FailureId INT,
     @Status NVARCHAR(50),
@@ -1098,7 +1322,7 @@ GO
         Obtiene la información de una falla mediante su identificador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_ID_FAILURE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_ID_FAILURE_PR
 (
     @FailureId INT
 )
@@ -1130,7 +1354,7 @@ GO
         Obtiene todas las fallas registradas en el sistema SGDE.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_ALL_FAILURE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_ALL_FAILURE_PR
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -1159,7 +1383,7 @@ GO
         Obtiene las fallas asociadas a una turbina específica.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_TURBINE_FAILURE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_TURBINE_FAILURE_PR
 (
     @TurbineId INT
 )
@@ -1192,7 +1416,7 @@ GO
         Obtiene las fallas asignadas o atendidas por un ingeniero específico.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_ENGINEER_FAILURE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_ENGINEER_FAILURE_PR
 (
     @EngineerId INT
 )
@@ -1225,7 +1449,7 @@ GO
         Obtiene las fallas que coincidan con el estado indicado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_STATUS_FAILURE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_STATUS_FAILURE_PR
 (
     @Status NVARCHAR(50)
 )
@@ -1258,7 +1482,7 @@ GO
         Obtiene las fallas que coincidan con el nivel de severidad indicado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_SEVERITY_FAILURE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_SEVERITY_FAILURE_PR
 (
     @Severity NVARCHAR(50)
 )
@@ -1296,7 +1520,7 @@ GO
         identificador generado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.CRE_BATTERY_PR
+CREATE OR ALTER PROCEDURE dbo.CRE_BATTERY_PR
 (
     @TurbineId INT,
     @MaximumCapacityMWh DECIMAL(18,4),
@@ -1349,7 +1573,7 @@ GO
         Actualiza la información energética y operativa de una batería.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.UPD_BATTERY_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_BATTERY_PR
 (
     @BatteryId INT,
     @TurbineId INT,
@@ -1389,7 +1613,7 @@ GO
         generación, transferencias, pérdidas y vaciados.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.DEL_BATTERY_PR
+CREATE OR ALTER PROCEDURE dbo.DEL_BATTERY_PR
 (
     @BatteryId INT,
     @Status NVARCHAR(50),
@@ -1415,7 +1639,7 @@ GO
         Obtiene la información de una batería mediante su identificador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_ID_BATTERY_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_ID_BATTERY_PR
 (
     @BatteryId INT
 )
@@ -1447,7 +1671,7 @@ GO
         Obtiene todas las baterías registradas en el sistema SGDE.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_ALL_BATTERY_PR
+CREATE OR ALTER PROCEDURE dbo.RET_ALL_BATTERY_PR
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -1476,7 +1700,7 @@ GO
         Obtiene las baterías asociadas a una turbina específica.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_TURBINE_BATTERY_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_TURBINE_BATTERY_PR
 (
     @TurbineId INT
 )
@@ -1509,7 +1733,7 @@ GO
         Obtiene las baterías que coincidan con el estado indicado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_STATUS_BATTERY_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_STATUS_BATTERY_PR
 (
     @Status NVARCHAR(50)
 )
@@ -1547,7 +1771,7 @@ GO
         el banco central y retorna el identificador generado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.CRE_FLUSH_PR
+CREATE OR ALTER PROCEDURE dbo.CRE_FLUSH_PR
 (
     @FlushBatchId INT,
     @TurbineId INT,
@@ -1606,7 +1830,7 @@ GO
         Actualiza la información de un movimiento de vaciado registrado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.UPD_FLUSH_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_FLUSH_PR
 (
     @FlushId INT,
     @FlushBatchId INT,
@@ -1650,7 +1874,7 @@ GO
         El registro se conserva para mantener la trazabilidad energética.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.DEL_FLUSH_PR
+CREATE OR ALTER PROCEDURE dbo.DEL_FLUSH_PR
 (
     @FlushId INT,
     @Status NVARCHAR(50)
@@ -1674,7 +1898,7 @@ GO
         Obtiene un movimiento de vaciado mediante su identificador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_ID_FLUSH_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_ID_FLUSH_PR
 (
     @FlushId INT
 )
@@ -1708,7 +1932,7 @@ GO
         Obtiene todos los movimientos de vaciado registrados en el sistema.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_ALL_FLUSH_PR
+CREATE OR ALTER PROCEDURE dbo.RET_ALL_FLUSH_PR
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -1740,7 +1964,7 @@ GO
         vaciado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_BATCH_FLUSH_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_BATCH_FLUSH_PR
 (
     @FlushBatchId INT
 )
@@ -1775,7 +1999,7 @@ GO
         Obtiene los movimientos de vaciado asociados a una turbina.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_TURBINE_FLUSH_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_TURBINE_FLUSH_PR
 (
     @TurbineId INT
 )
@@ -1810,7 +2034,7 @@ GO
         Obtiene los movimientos de vaciado asociados a una batería.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_BATTERY_FLUSH_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_BATTERY_FLUSH_PR
 (
     @BatteryId INT
 )
@@ -1845,7 +2069,7 @@ GO
         Obtiene los movimientos de vaciado recibidos por un banco central.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_CENTRAL_BANK_FLUSH_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_CENTRAL_BANK_FLUSH_PR
 (
     @CentralBankId INT
 )
@@ -1881,7 +2105,7 @@ GO
         indicado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_STATUS_FLUSH_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_STATUS_FLUSH_PR
 (
     @Status NVARCHAR(50)
 )
@@ -1917,7 +2141,7 @@ GO
         ejecución indicado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_EXECUTION_TYPE_FLUSH_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_EXECUTION_TYPE_FLUSH_PR
 (
     @ExecutionType NVARCHAR(50)
 )
@@ -1957,7 +2181,7 @@ GO
         retorna el identificador generado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.CRE_CENTRAL_BANK_PR
+CREATE OR ALTER PROCEDURE dbo.CRE_CENTRAL_BANK_PR
 (
     @Name NVARCHAR(150),
     @MaximumCapacityMWh DECIMAL(18,4),
@@ -2010,7 +2234,7 @@ GO
         Actualiza la información energética y operativa de un banco central.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.UPD_CENTRAL_BANK_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_CENTRAL_BANK_PR
 (
     @CentralBankId INT,
     @Name NVARCHAR(150),
@@ -2051,7 +2275,7 @@ GO
         vaciados, distribuciones y movimientos energéticos relacionados.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.DEL_CENTRAL_BANK_PR
+CREATE OR ALTER PROCEDURE dbo.DEL_CENTRAL_BANK_PR
 (
     @CentralBankId INT,
     @Status NVARCHAR(50),
@@ -2077,7 +2301,7 @@ GO
         Obtiene la información de un banco central mediante su identificador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_ID_CENTRAL_BANK_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_ID_CENTRAL_BANK_PR
 (
     @CentralBankId INT
 )
@@ -2109,7 +2333,7 @@ GO
         Obtiene todos los bancos centrales registrados en el sistema SGDE.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_ALL_CENTRAL_BANK_PR
+CREATE OR ALTER PROCEDURE dbo.RET_ALL_CENTRAL_BANK_PR
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -2140,7 +2364,7 @@ GO
         repetidos antes de realizar un registro.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_NAME_CENTRAL_BANK_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_NAME_CENTRAL_BANK_PR
 (
     @Name NVARCHAR(150)
 )
@@ -2172,7 +2396,7 @@ GO
         Obtiene los bancos centrales que coincidan con el estado indicado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_STATUS_CENTRAL_BANK_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_STATUS_CENTRAL_BANK_PR
 (
     @Status NVARCHAR(50)
 )
@@ -2210,7 +2434,7 @@ GO
         y retorna el identificador generado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.CRE_FORECAST_PR
+CREATE OR ALTER PROCEDURE dbo.CRE_FORECAST_PR
 (
     @BuyerId INT,
     @ForecastYear INT,
@@ -2257,7 +2481,7 @@ GO
         Actualiza la información de una previsión energética registrada.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.UPD_FORECAST_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_FORECAST_PR
 (
     @ForecastId INT,
     @BuyerId INT,
@@ -2293,7 +2517,7 @@ GO
         de las solicitudes y sus posibles distribuciones relacionadas.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.DEL_FORECAST_PR
+CREATE OR ALTER PROCEDURE dbo.DEL_FORECAST_PR
 (
     @ForecastId INT,
     @Status NVARCHAR(50),
@@ -2319,7 +2543,7 @@ GO
         Obtiene una previsión energética mediante su identificador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_ID_FORECAST_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_ID_FORECAST_PR
 (
     @ForecastId INT
 )
@@ -2349,7 +2573,7 @@ GO
         Obtiene todas las previsiones energéticas registradas en el sistema.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_ALL_FORECAST_PR
+CREATE OR ALTER PROCEDURE dbo.RET_ALL_FORECAST_PR
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -2376,7 +2600,7 @@ GO
         Obtiene las previsiones energéticas asociadas a un comprador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_BUYER_FORECAST_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_BUYER_FORECAST_PR
 (
     @BuyerId INT
 )
@@ -2408,7 +2632,7 @@ GO
         específicos.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_PERIOD_FORECAST_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_PERIOD_FORECAST_PR
 (
     @ForecastYear INT,
     @ForecastMonth INT
@@ -2444,7 +2668,7 @@ GO
         para el periodo indicado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_BUYER_PERIOD_FORECAST_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_BUYER_PERIOD_FORECAST_PR
 (
     @BuyerId INT,
     @ForecastYear INT,
@@ -2479,7 +2703,7 @@ GO
         indicado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_STATUS_FORECAST_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_STATUS_FORECAST_PR
 (
     @Status NVARCHAR(50)
 )
@@ -2515,7 +2739,7 @@ GO
         generado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.CRE_DISTRIBUTION_PR
+CREATE OR ALTER PROCEDURE dbo.CRE_DISTRIBUTION_PR
 (
     @DistributionBatchId INT,
     @ForecastId INT,
@@ -2574,7 +2798,7 @@ GO
         Actualiza la información de una distribución energética registrada.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.UPD_DISTRIBUTION_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_DISTRIBUTION_PR
 (
     @DistributionId INT,
     @DistributionBatchId INT,
@@ -2619,7 +2843,7 @@ GO
         energética y financiera.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.DEL_DISTRIBUTION_PR
+CREATE OR ALTER PROCEDURE dbo.DEL_DISTRIBUTION_PR
 (
     @DistributionId INT,
     @Status NVARCHAR(50)
@@ -2643,7 +2867,7 @@ GO
         Obtiene una distribución de energía mediante su identificador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_ID_DISTRIBUTION_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_ID_DISTRIBUTION_PR
 (
     @DistributionId INT
 )
@@ -2677,7 +2901,7 @@ GO
         Obtiene todas las distribuciones registradas en el sistema SGDE.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_ALL_DISTRIBUTION_PR
+CREATE OR ALTER PROCEDURE dbo.RET_ALL_DISTRIBUTION_PR
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -2708,7 +2932,7 @@ GO
         Obtiene todas las distribuciones que pertenecen a un mismo lote.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_BATCH_DISTRIBUTION_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_BATCH_DISTRIBUTION_PR
 (
     @DistributionBatchId INT
 )
@@ -2743,7 +2967,7 @@ GO
         Obtiene las distribuciones asociadas a una previsión energética.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_FORECAST_DISTRIBUTION_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_FORECAST_DISTRIBUTION_PR
 (
     @ForecastId INT
 )
@@ -2778,7 +3002,7 @@ GO
         Obtiene las distribuciones asociadas a un comprador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_BUYER_DISTRIBUTION_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_BUYER_DISTRIBUTION_PR
 (
     @BuyerId INT
 )
@@ -2813,7 +3037,7 @@ GO
         Obtiene las distribuciones realizadas desde un banco central.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_CENTRAL_BANK_DISTRIBUTION_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_CENTRAL_BANK_DISTRIBUTION_PR
 (
     @CentralBankId INT
 )
@@ -2848,7 +3072,7 @@ GO
         Obtiene las distribuciones que coincidan con el estado indicado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_STATUS_DISTRIBUTION_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_STATUS_DISTRIBUTION_PR
 (
     @Status NVARCHAR(50)
 )
@@ -2883,7 +3107,7 @@ GO
         Obtiene las distribuciones realizadas dentro de un rango de fechas.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_DATE_RANGE_DISTRIBUTION_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_DATE_RANGE_DISTRIBUTION_PR
 (
     @StartDate DATETIME,
     @EndDate DATETIME
@@ -2925,7 +3149,7 @@ GO
         retorna el identificador generado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.CRE_INVOICE_PR
+CREATE OR ALTER PROCEDURE dbo.CRE_INVOICE_PR
 (
     @InvoiceNumber NVARCHAR(100),
     @DistributionId INT,
@@ -2991,7 +3215,7 @@ GO
         factura registrada.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.UPD_INVOICE_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_INVOICE_PR
 (
     @InvoiceId INT,
     @InvoiceNumber NVARCHAR(100),
@@ -3037,7 +3261,7 @@ GO
         Elimina físicamente una factura mediante su identificador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.DEL_INVOICE_PR
+CREATE OR ALTER PROCEDURE dbo.DEL_INVOICE_PR
 (
     @InvoiceId INT
 )
@@ -3058,7 +3282,7 @@ GO
         Obtiene una factura mediante su identificador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_ID_INVOICE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_ID_INVOICE_PR
 (
     @InvoiceId INT
 )
@@ -3094,7 +3318,7 @@ GO
         Obtiene todas las facturas registradas en el sistema SGDE.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_ALL_INVOICE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_ALL_INVOICE_PR
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -3129,7 +3353,7 @@ GO
         repetidos antes de registrar una nueva.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_NUMBER_INVOICE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_NUMBER_INVOICE_PR
 (
     @InvoiceNumber NVARCHAR(100)
 )
@@ -3165,7 +3389,7 @@ GO
         Obtiene las facturas asociadas a una distribución de energía.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_DISTRIBUTION_INVOICE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_DISTRIBUTION_INVOICE_PR
 (
     @DistributionId INT
 )
@@ -3202,7 +3426,7 @@ GO
         Obtiene las facturas asociadas a un comprador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_BUYER_INVOICE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_BUYER_INVOICE_PR
 (
     @BuyerId INT
 )
@@ -3239,7 +3463,7 @@ GO
         Obtiene las facturas que coincidan con el estado de pago indicado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_PAYMENT_STATUS_INVOICE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_PAYMENT_STATUS_INVOICE_PR
 (
     @PaymentStatus NVARCHAR(50)
 )
@@ -3276,7 +3500,7 @@ GO
         Obtiene las facturas emitidas dentro de un rango de fechas.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_DATE_RANGE_INVOICE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_DATE_RANGE_INVOICE_PR
 (
     @StartDate DATE,
     @EndDate DATE
@@ -3316,7 +3540,7 @@ GO
         indicada y que todavía no tengan un estado de pago completado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_OVERDUE_INVOICE_PR
+CREATE OR ALTER PROCEDURE dbo.RET_OVERDUE_INVOICE_PR
 (
     @CurrentDate DATE,
     @PaidStatus NVARCHAR(50)
@@ -3357,7 +3581,7 @@ GO
         financieros originales de la factura.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.UPD_PAYMENT_STATUS_INVOICE_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_PAYMENT_STATUS_INVOICE_PR
 (
     @InvoiceId INT,
     @PaymentStatus NVARCHAR(50)
@@ -3386,7 +3610,7 @@ GO
         identificador generado..
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.CRE_NOTIFICATION_PR
+CREATE OR ALTER PROCEDURE dbo.CRE_NOTIFICATION_PR
 (
     @UserId INT,
     @Title NVARCHAR(150),
@@ -3439,7 +3663,7 @@ GO
         Actualiza la información general de una notificación registrada.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.UPD_NOTIFICATION_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_NOTIFICATION_PR
 (
     @NotificationId INT,
     @UserId INT,
@@ -3477,7 +3701,7 @@ GO
         Elimina físicamente una notificación mediante su identificador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.DEL_NOTIFICATION_PR
+CREATE OR ALTER PROCEDURE dbo.DEL_NOTIFICATION_PR
 (
     @NotificationId INT
 )
@@ -3498,7 +3722,7 @@ GO
         Obtiene una notificación mediante su identificador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_ID_NOTIFICATION_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_ID_NOTIFICATION_PR
 (
     @NotificationId INT
 )
@@ -3530,7 +3754,7 @@ GO
         Obtiene todas las notificaciones registradas en el sistema SGDE.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_ALL_NOTIFICATION_PR
+CREATE OR ALTER PROCEDURE dbo.RET_ALL_NOTIFICATION_PR
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -3559,7 +3783,7 @@ GO
         Obtiene todas las notificaciones asociadas a un usuario.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_USER_NOTIFICATION_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_USER_NOTIFICATION_PR
 (
     @UserId INT
 )
@@ -3592,7 +3816,7 @@ GO
         Obtiene las notificaciones no leídas asociadas a un usuario.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_UNREAD_BY_USER_NOTIFICATION_PR
+CREATE OR ALTER PROCEDURE dbo.RET_UNREAD_BY_USER_NOTIFICATION_PR
 (
     @UserId INT
 )
@@ -3626,7 +3850,7 @@ GO
         Obtiene las notificaciones que coincidan con el tipo indicado.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_TYPE_NOTIFICATION_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_TYPE_NOTIFICATION_PR
 (
     @NotificationType NVARCHAR(50)
 )
@@ -3660,7 +3884,7 @@ GO
         mediante su tipo y su identificador de referencia.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_REFERENCE_NOTIFICATION_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_REFERENCE_NOTIFICATION_PR
 (
     @ReferenceType NVARCHAR(50),
     @ReferenceId INT
@@ -3695,7 +3919,7 @@ GO
         Obtiene las notificaciones creadas dentro de un rango de fechas.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_DATE_RANGE_NOTIFICATION_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_DATE_RANGE_NOTIFICATION_PR
 (
     @StartDate DATETIME,
     @EndDate DATETIME
@@ -3733,7 +3957,7 @@ GO
         ReadAt debe enviarse como NULL.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.UPD_READ_STATUS_NOTIFICATION_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_READ_STATUS_NOTIFICATION_PR
 (
     @NotificationId INT,
     @IsRead BIT,
@@ -3759,7 +3983,7 @@ GO
         Marca como leídas todas las notificaciones pendientes de un usuario.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.UPD_ALL_READ_BY_USER_NOTIFICATION_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_ALL_READ_BY_USER_NOTIFICATION_PR
 (
     @UserId INT,
     @ReadAt DATETIME
@@ -3785,7 +4009,7 @@ GO
         Obtiene la cantidad de notificaciones no leídas de un usuario.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_UNREAD_COUNT_BY_USER_NOTIFICATION_PR
+CREATE OR ALTER PROCEDURE dbo.RET_UNREAD_COUNT_BY_USER_NOTIFICATION_PR
 (
     @UserId INT
 )
@@ -3816,7 +4040,7 @@ GO
         sesión autenticada, por ejemplo, un intento de acceso fallido.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.CRE_AUDIT_PR
+CREATE OR ALTER PROCEDURE dbo.CRE_AUDIT_PR
 (
     @UserId INT = NULL,
     @Action NVARCHAR(100),
@@ -3866,7 +4090,7 @@ GO
         modificarse.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.UPD_AUDIT_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_AUDIT_PR
 (
     @AuditId INT,
     @UserId INT = NULL,
@@ -3902,7 +4126,7 @@ GO
         a usuarios autorizados.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.DEL_AUDIT_PR
+CREATE OR ALTER PROCEDURE dbo.DEL_AUDIT_PR
 (
     @AuditId INT
 )
@@ -3923,7 +4147,7 @@ GO
         Obtiene un registro de auditoría mediante su identificador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_ID_AUDIT_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_ID_AUDIT_PR
 (
     @AuditId INT
 )
@@ -3953,7 +4177,7 @@ GO
         Obtiene todos los registros de auditoría del sistema SGDE.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_ALL_AUDIT_PR
+CREATE OR ALTER PROCEDURE dbo.RET_ALL_AUDIT_PR
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -3980,7 +4204,7 @@ GO
         Obtiene los registros de auditoría asociados a un usuario.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_USER_AUDIT_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_USER_AUDIT_PR
 (
     @UserId INT
 )
@@ -4012,7 +4236,7 @@ GO
         indicada.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_ACTION_AUDIT_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_ACTION_AUDIT_PR
 (
     @Action NVARCHAR(100)
 )
@@ -4043,7 +4267,7 @@ GO
         Obtiene los registros de auditoría asociados a un tipo de entidad.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_ENTITY_AUDIT_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_ENTITY_AUDIT_PR
 (
     @EntityName NVARCHAR(100)
 )
@@ -4075,7 +4299,7 @@ GO
         mediante su nombre y su identificador.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_ENTITY_ID_AUDIT_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_ENTITY_ID_AUDIT_PR
 (
     @EntityName NVARCHAR(100),
     @EntityId INT
@@ -4109,7 +4333,7 @@ GO
         fechas.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_DATE_RANGE_AUDIT_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_DATE_RANGE_AUDIT_PR
 (
     @StartDate DATETIME,
     @EndDate DATETIME
@@ -4142,7 +4366,7 @@ GO
         Obtiene los registros de auditoría asociados a una dirección IP.
 ==============================================================================*/
 
-CREATE PROCEDURE dbo.RET_BY_IP_ADDRESS_AUDIT_PR
+CREATE OR ALTER PROCEDURE dbo.RET_BY_IP_ADDRESS_AUDIT_PR
 (
     @IpAddress NVARCHAR(50)
 )
