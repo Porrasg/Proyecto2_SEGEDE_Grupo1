@@ -23,7 +23,8 @@ CREATE TABLE dbo.tblUsers
     PhoneNumber NVARCHAR(20) NOT NULL,
     Email NVARCHAR(150) NOT NULL,
     ProfilePhoto NVARCHAR(500) NULL,
-    PasswordHash NVARCHAR(255) NOT NULL,
+    Password NVARCHAR(255) NOT NULL,
+    Age INT NOT NULL,
     Role NVARCHAR(50) NOT NULL,
     Status NVARCHAR(50) NOT NULL,
     FailedLoginAttempts INT NOT NULL,
@@ -31,6 +32,35 @@ CREATE TABLE dbo.tblUsers
     LastLoginAt DATETIME NULL,
     CreatedAt DATETIME NOT NULL,
     UpdatedAt DATETIME NULL
+);
+GO
+
+/*==============================================================================
+    TABLA: tblOtp (Verificación en dos pasos)
+
+    Descripción:
+        Almacena los códigos de verificación de un solo uso (OTP)
+        generados por el sistema para validar la identidad de un usuario
+        durante procesos sensibles como el registro de una cuenta,
+        inicio de sesión, recuperación de contraseña o cualquier otra
+        operación que requiera autenticación adicional.
+
+        Cada registro contiene el correo electrónico asociado, el código
+        OTP generado, su fecha de expiración y un indicador que determina
+        si el código ya fue utilizado, garantizando que cada token pueda
+        emplearse una única vez por motivos de seguridad.
+
+==============================================================================*/
+
+CREATE TABLE dbo.OtpTokens (
+    Id INT IDENTITY(1,1) NOT NULL,
+    Created DATETIME DEFAULT GETDATE() NOT NULL,
+    Updated DATETIME DEFAULT GETDATE() NOT NULL,
+    Email VARCHAR(150) NOT NULL,
+    TokenCode VARCHAR(6) NOT NULL,        -- OTP estrictamente de 6 dígitos numéricos
+    ExpirationDate DATETIME NOT NULL,     -- Fecha límite de vigencia (Calculada en C#)
+    IsUsed BIT DEFAULT 0 NOT NULL,         -- Bandera de seguridad de un solo uso
+    CONSTRAINT [PK_OtpTokens] PRIMARY KEY CLUSTERED ([Id] ASC)
 );
 GO
 
