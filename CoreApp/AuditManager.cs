@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 
 using Entities_DTOs;
-using 
+using DataAccess.CRUD;
 
 
 namespace CoreApp
@@ -12,34 +12,41 @@ namespace CoreApp
     {
         public List<Audit> RetrieveAllAudits()
         {
-            var crud = new AuditCrudFactory();
-            return crud.RetrieveAll<Audit>();
+            var aCrud = new AuditCrudFactory();
+
+            return aCrud.RetrieveAll<Audit>();
         }
 
-        public Audit RetrieveById(int id)
+        public void Create(Audit a)
         {
-            var crud = new AuditCrudFactory();
-            return crud.RetrieveById<Audit>(id);
+            if (HasEmptyFields(a))
+            {
+                throw new Exception("Todos los campos obligatorios deben estar completos");
+            }
+
+            var aCrud = new AuditCrudFactory();
+
+            aCrud.Create(a);
         }
 
-        public void Create(Audit audit)
+        public void Update(Audit a)
         {
-            // validaciones de negocio aquí
+            var aCrud = new AuditCrudFactory();
 
-            var crud = new AuditCrudFactory();
-            crud.Create(audit);
+            aCrud.Update(a);
         }
-
-        public void Update(Audit audit)
+        public void Delete(Audit a)
         {
-            var crud = new AuditCrudFactory();
-            crud.Update(audit);
+            var aCrud = new AuditCrudFactory();
+
+            aCrud.Delete(a);
         }
-
-        public void Delete(Audit audit)
+        // Validaciones
+        private bool HasEmptyFields(Audit audit)
         {
-            var crud = new AuditCrudFactory();
-            crud.Delete(audit);
+            return string.IsNullOrWhiteSpace(audit.Action) ||
+                   string.IsNullOrWhiteSpace(audit.EntityName) ||
+                   string.IsNullOrWhiteSpace(audit.Description);
         }
     }
 }
