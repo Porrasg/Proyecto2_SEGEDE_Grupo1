@@ -28,7 +28,8 @@ namespace DataAccess.CRUD
             sqlOperation.AddStringParameter("PhoneNumber", user.PhoneNumber);
             sqlOperation.AddStringParameter("Email", user.Email);
             sqlOperation.AddStringParameter("ProfilePhoto", user.ProfilePhoto);
-            sqlOperation.AddStringParameter("PasswordHash", user.PasswordHash);
+            sqlOperation.AddStringParameter("Password", user.Password);
+            sqlOperation.AddIntParameter("Age", user.Age);
             sqlOperation.AddStringParameter("Role", user.Role);
             sqlOperation.AddStringParameter("Status", user.Status);
             sqlOperation.AddIntParameter("FailedLoginAttempts", user.FailedLoginAttempts);
@@ -100,7 +101,8 @@ namespace DataAccess.CRUD
             sqlOperation.AddStringParameter("PhoneNumber", user.PhoneNumber);
             sqlOperation.AddStringParameter("Email", user.Email);
             sqlOperation.AddStringParameter("ProfilePhoto", user.ProfilePhoto);
-            sqlOperation.AddStringParameter("PasswordHash", user.PasswordHash);
+            sqlOperation.AddStringParameter("Password", user.Password);
+            sqlOperation.AddIntParameter("Age", user.Age);
             sqlOperation.AddStringParameter("Role", user.Role);
             sqlOperation.AddStringParameter("Status", user.Status);
             sqlOperation.AddIntParameter("FailedLoginAttempts", user.FailedLoginAttempts);
@@ -124,7 +126,8 @@ namespace DataAccess.CRUD
                 PhoneNumber = (string)row["PhoneNumber"],
                 Email = (string)row["Email"],
                 ProfilePhoto = (string)row["ProfilePhoto"],
-                PasswordHash = (string)row["PasswordHash"],
+                Password = (string)row["Password"],
+                Age = (int)row["Age"],
                 Role = (string)row["Role"],
                 Status = (string)row["Status"],
                 FailedLoginAttempts = (int)row["FailedLoginAttempts"],
