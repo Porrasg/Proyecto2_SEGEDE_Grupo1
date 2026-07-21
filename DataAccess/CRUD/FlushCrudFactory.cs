@@ -8,18 +8,20 @@ namespace DataAccess.CRUD
 {
     public class FlushCrudFactory : CrudFactory
     {
-        public FlushCrudFactory() 
-        {
+        public FlushCrudFactory() {
             sqlDao = SqlDao.GetInstance();
-
         }
 
         public override void Create(BaseDTO baseDTO)
         {
+            // Convirtiendo el baseDTO en un objeto Flush
             var flush = baseDTO as Flush;
-            var sqlOperation = new SqlOperaton();
+
+            // Definir el SP por medio del sql operation
+            var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "CRE_FLUSH_PR";
 
+            // Mapeo exacto con los nombres del Stored Procedure en la BD
             sqlOperation.AddIntParameter("FlushBatchId", flush.FlushBatchId);
             sqlOperation.AddIntParameter("TurbineId", flush.TurbineId);
             sqlOperation.AddIntParameter("BatteryId", flush.BatteryId);
@@ -32,56 +34,79 @@ namespace DataAccess.CRUD
             sqlOperation.AddDateTimeParameter("ExecutedAt", flush.ExecutedAt);
             sqlOperation.AddDateTimeParameter("CreatedAt", flush.CreatedAt);
 
+            // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
         public override void Delete(BaseDTO baseDTO)
         {
+            // Convertir el baseDTO en un objeto Flush
             var flush = baseDTO as Flush;
+
+            // Definir el SP
             var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "DEL_FLUSH_PR";
 
             sqlOperation.AddIntParameter("FlushId", flush.Id);
             sqlOperation.AddStringParameter("Status", flush.Status);
 
+            // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
         public override List<T> RetrieveAll<T>()
         {
-            var list = new List<T>();
-            var op = new SqlOperation();
-            op.ProcedureName = "RET_ALL_FLUSH_PR";
-            var results = sqlDao.ExecuteQueryProcedure(op);
-            if (results.Count > 0)
+            // Lista que va a contener a todos los flushes que se obtengan de la consulta a la BD
+            var lsflush = new List<T>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_ALL_FLUSH_PR";
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer la lista de resultados y convertir cada fila en un objeto Flush, luego agregarlo a la lista
+            if (lsResults.Count > 0)
             {
-                foreach (var row in results)
+                foreach (var row in lsResults)
                 {
-                    var f = BuildFlush(row);
-                    list.Add((T)Convert.ChangeType(f, typeof(T)));
+                    var flush = BuildFlush(row);
+                    lsflush.Add((T)Convert.ChangeType(flush, typeof(T)));
                 }
             }
-            return list;
+            return lsflush;
         }
 
         public override T RetrieveById<T>(int id)
         {
-            var op = new SqlOperation();
-            op.ProcedureName = "RET_BY_ID_FLUSH_PR";
-            op.AddIntParameter("FlushId", id);
-            var results = sqlDao.ExecuteQueryProcedure(op);
-            if (results.Count > 0)
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_ID_FLUSH_PR";
+
+            
+            sqlOperation.AddIntParameter("FlushId", id);
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Si se obtiene un resultado, convertir la primera fila en un objeto Flush y devolverlo, de lo contrario devolver null
+            if (lsResults.Count > 0)
             {
-                var f = BuildFlush(results[0]);
-                return (T)Convert.ChangeType(f, typeof(T));
+                var flush = BuildFlush(lsResults[0]);
+                return (T)Convert.ChangeType(flush, typeof(T));
             }
             return default(T);
         }
 
         public override void Update(BaseDTO baseDTO)
         {
+            // Convertir el baseDTO en un objeto Flush
             var flush = baseDTO as Flush;
+
+            // Definir el SP
             var sqlOperation = new SqlOperation();
+
             sqlOperation.ProcedureName = "UPD_FLUSH_PR";
 
             sqlOperation.AddIntParameter("FlushId", flush.Id);
@@ -96,12 +121,14 @@ namespace DataAccess.CRUD
             sqlOperation.AddStringParameter("Status", flush.Status);
             sqlOperation.AddDateTimeParameter("ExecutedAt", flush.ExecutedAt);
 
+            // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
+        // Metodo que construye el DTO Flush a partir de la data que viene en la consulta de la BD
         private Flush BuildFlush(Dictionary<string, object> row)
         {
-            var f = new Flush
+            var flush = new Flush
             {
                 Id = (int)row["FlushId"],
                 FlushBatchId = (int)row["FlushBatchId"],
@@ -116,7 +143,7 @@ namespace DataAccess.CRUD
                 ExecutedAt = (DateTime)row["ExecutedAt"],
                 CreatedAt = (DateTime)row["CreatedAt"]
             };
-            return f;
+            return flush;
         }
     }
 }

@@ -31,10 +31,10 @@ namespace Entities_DTOs
 
         public string Status { get; set; } = string.Empty;
 
-        public int FailedLoginAttempts { get; set; }
+        public int FailedLoginAttempts { get; set; } // Número de intentos fallidos de inicio de sesión.
 
-        public DateTime? LockoutEndAt { get; set; }
+        public DateTime? LockoutEndAt { get; set; } // Fecha y hora hasta la que la cuenta permanecerá bloqueada por intentos fallidos.
 
-        public DateTime? LastLoginAt { get; set; }
+        public DateTime? LastLoginAt { get; set; } // Fecha y hora del último inicio de sesión exitoso.
     }
 }

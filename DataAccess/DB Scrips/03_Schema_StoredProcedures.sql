@@ -4043,10 +4043,10 @@ GO
 CREATE OR ALTER PROCEDURE dbo.CRE_AUDIT_PR
 (
     @UserId INT = NULL,
-    @Action NVARCHAR(100),
+    @Action NVARCHAR(50),
     @EntityName NVARCHAR(100),
     @EntityId INT = NULL,
-    @Description NVARCHAR(MAX),
+    @Description NVARCHAR(500),
     @IpAddress NVARCHAR(50) = NULL,
     @CreatedAt DATETIME
 )
@@ -4094,10 +4094,10 @@ CREATE OR ALTER PROCEDURE dbo.UPD_AUDIT_PR
 (
     @AuditId INT,
     @UserId INT = NULL,
-    @Action NVARCHAR(100),
+    @Action NVARCHAR(50),
     @EntityName NVARCHAR(100),
     @EntityId INT = NULL,
-    @Description NVARCHAR(MAX),
+    @Description NVARCHAR(500),
     @IpAddress NVARCHAR(50) = NULL
 )
 AS

@@ -10,36 +10,44 @@ namespace DataAccess.CRUD
     {
         public OtpCrudFactory()
         {
-            // Uso del Singleton oficial del profesor
             sqlDao = SqlDao.GetInstance();
         }
 
         public override void Create(BaseDTO baseDTO)
         {
+            // Convirtiendo el baseDTO en un objeto OtpToken
             var otp = baseDTO as OtpToken;
+
+            // Definir el SP por medio del sql operation
             var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "CRE_OTP_TOKEN_PR";
 
-            // Enlace exacto de parámetros con prefijo P_
+            // Mapeo exacto con los nombres del Stored Procedure en la BD
             sqlOperation.AddStringParameter("P_EMAIL", otp.Email);
             sqlOperation.AddStringParameter("P_TOKEN_CODE", otp.TokenCode);
             sqlOperation.AddDateTimeParameter("P_EXPIRATION_DATE", otp.ExpirationDate);
 
+            // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
-        // Método oficial para recuperar un OTP vigente y traducirlo a un objeto DTO limpio
+        // Busca un OTP valido para el correo y codigo que se reciben
+        // Si no lo encuentra, retorna null para que la capa superior maneje el error
         public OtpToken RetrieveValidOtp(string email, string tokenCode)
         {
+            // Definir el SP
             var sqlOperation = new SqlOperation();
-            sqlOperation.ProcedureName = "RET_VALID_OTP_PR";
+            sqlOperation.ProcedureName = "RET_VALID_OTP_TOKEN_PR";
             sqlOperation.AddStringParameter("P_EMAIL", email);
             sqlOperation.AddStringParameter("P_TOKEN_CODE", tokenCode);
 
-            var lstResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
-            if (lstResults.Count > 0)
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Si se obtiene un resultado, convertir la primera fila en un objeto OtpToken y devolverlo, de lo contrario devolver null
+            if (lsResults.Count > 0)
             {
-                var row = lstResults[0]; // Extrae la primera fila del conjunto
+                var row = lsResults[0];
                 return new OtpToken()
                 {
                     Id = (int)row["Id"],
@@ -53,7 +61,8 @@ namespace DataAccess.CRUD
             return null;
         }
 
-        // Firmas abstractas obligatorias de la cátedra
+        // Estos metodos no se usan para OTP, pero hay que implementarlos
+        // porque la clase base los exige como parte del contrato del CRUD
         public override void Update(BaseDTO baseDTO) { throw new NotImplementedException(); }
         public override void Delete(BaseDTO baseDTO) { throw new NotImplementedException(); }
         public override T RetrieveById<T>(int id) { throw new NotImplementedException(); }

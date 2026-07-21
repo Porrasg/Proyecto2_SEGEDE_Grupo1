@@ -11,7 +11,7 @@ namespace Entities_DTOs
         // pero para simplificar el código se usa solo Id
         public int Id { get; set; } 
         public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
 
     }
 }

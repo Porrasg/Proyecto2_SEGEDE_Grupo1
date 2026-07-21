@@ -15,10 +15,14 @@ namespace DataAccess.CRUD
         }
         public override void Create(BaseDTO baseDTO)
         {
+            // Convirtiendo el baseDTO en un objeto Turbine
             var turbine = baseDTO as Turbine;
+
+            // Definir el SP por medio del sql operation
             var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "CRE_TURBINE_PR";
 
+            // Mapeo exacto con los nombres del Stored Procedure en la BD
             sqlOperation.AddStringParameter("Code", turbine.Code);
             sqlOperation.AddStringParameter("Name", turbine.Name);
             sqlOperation.AddStringParameter("Location", turbine.Location);
@@ -28,50 +32,70 @@ namespace DataAccess.CRUD
             sqlOperation.AddDecimalParameter("NominalWeeklyCapacityMWh", turbine.NominalWeeklyCapacityMWh);
             sqlOperation.AddStringParameter("Status", turbine.Status);
             sqlOperation.AddDateTimeParameter("CreatedAt", turbine.CreatedAt);
-            sqlOperation.AddDateTimeParameter("UpdatedAt", turbine.UpdatedAt);
+            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", turbine.UpdatedAt); // puede ser nulo
 
+            // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
         public override void Delete(BaseDTO baseDTO)
         {
+            // Convertir el baseDTO en un objeto Turbine
             var turbine = baseDTO as Turbine;
+
+            // Definir el SP
             var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "DEL_TURBINE_PR";
 
             sqlOperation.AddIntParameter("TurbineId", turbine.Id);
             sqlOperation.AddStringParameter("Status", turbine.Status);
-            sqlOperation.AddDateTimeParameter("UpdatedAt", turbine.UpdatedAt);
+            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", turbine.UpdatedAt); // puede ser nulo
 
+            // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
         public override List<T> RetrieveAll<T>()
         {
-            var list = new List<T>();
-            var operation = new SqlOperation();
-            operation.ProcedureName = "RET_ALL_TURBINE_PR";
-            var results = sqlDao.ExecuteQueryProcedure(operation);
-            if (results.Count > 0)
+            // Lista que va a contener a todas las turbinas que se obtengan de la consulta a la BD
+            var lsTurbines = new List<T>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_ALL_TURBINE_PR";
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer la lista de resultados y convertir cada fila en un objeto Turbine, luego agregarlo a la lista de turbinas
+            if (lsResults.Count > 0)
             {
-                foreach (var row in results)
+                foreach (var row in lsResults)
                 {
                     var turbine = BuildTurbine(row);
-                    list.Add((T)Convert.ChangeType(turbine, typeof(T)));
+                    lsTurbines.Add((T)Convert.ChangeType(turbine, typeof(T)));
                 }
             }
-            return list;
+
+            return lsTurbines;
         }
 
         public override T RetrieveById<T>(int id)
         {
-            var operation = new SqlOperation();
-            operation.ProcedureName = "RET_BY_ID_TURBINE_PR";
-            operation.AddIntParameter("TurbineId", id);
-            var results = sqlDao.ExecuteQueryProcedure(operation);
-            if (results.Count > 0)
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_ID_TURBINE_PR";
+
+            sqlOperation.AddIntParameter("TurbineId", id);
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Si se obtiene un resultado, convertir la primera fila en un objeto Turbine y devolverlo, de lo contrario devolver null
+            if (lsResults.Count > 0)
             {
-                var turbine = BuildTurbine(results[0]);
+                var item = lsResults[0];
+                var turbine = BuildTurbine(lsResults[0]);
                 return (T)Convert.ChangeType(turbine, typeof(T));
             }
             return default(T);
@@ -79,8 +103,12 @@ namespace DataAccess.CRUD
 
         public override void Update(BaseDTO baseDTO)
         {
+            // Convirtiendo el baseDTO en un objeto Turbine
             var turbine = baseDTO as Turbine;
+
+            // Definir el SP
             var sqlOperation = new SqlOperation();
+
             sqlOperation.ProcedureName = "UPD_TURBINE_PR";
 
             sqlOperation.AddIntParameter("TurbineId", turbine.Id);
@@ -92,11 +120,13 @@ namespace DataAccess.CRUD
             sqlOperation.AddIntParameter("ManufactureYear", turbine.ManufactureYear);
             sqlOperation.AddDecimalParameter("NominalWeeklyCapacityMWh", turbine.NominalWeeklyCapacityMWh);
             sqlOperation.AddStringParameter("Status", turbine.Status);
-            sqlOperation.AddDateTimeParameter("UpdatedAt", turbine.UpdatedAt);
+            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", turbine.UpdatedAt); // puede ser nulo
 
+            //Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
+        //Metodo que construye el DTO del Turbine a partir de la data que viene en la consulta de la BD
         private Turbine BuildTurbine(Dictionary<string, object> row)
         {
             var turbine = new Turbine
@@ -111,7 +141,7 @@ namespace DataAccess.CRUD
                 NominalWeeklyCapacityMWh = (decimal)row["NominalWeeklyCapacityMWh"],
                 Status = (string)row["Status"],
                 CreatedAt = (DateTime)row["CreatedAt"],
-                UpdatedAt = (DateTime)row["UpdatedAt"]
+                UpdatedAt = row["UpdatedAt"] != DBNull.Value ? (DateTime?)row["UpdatedAt"] : null
             };
             return turbine;
         }

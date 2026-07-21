@@ -9,78 +9,104 @@ namespace DataAccess.CRUD
     public class FailureCrudFactory : CrudFactory
     {
         public FailureCrudFactory() {
-
             sqlDao = SqlDao.GetInstance();
-
         }
 
         public override void Create(BaseDTO baseDTO)
         {
+            // Convirtiendo el baseDTO en un objeto Failure
             var failure = baseDTO as Failure;
-            var sqlOperation = new SqlOperaton();
+
+            // Definir el SP por medio del sql operation
+            var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "CRE_FAILURE_PR";
 
+            // Mapeo exacto con los nombres del Stored Procedure en la BD
             sqlOperation.AddIntParameter("TurbineId", failure.TurbineId);
             sqlOperation.AddIntParameter("EngineerId", failure.EngineerId);
             sqlOperation.AddDateTimeParameter("FailureDate", failure.FailureDate);
             sqlOperation.AddStringParameter("Severity", failure.Severity);
             sqlOperation.AddStringParameter("Description", failure.Description);
-            sqlOperation.AddStringParameter("Resolution", failure.Resolution);
+            sqlOperation.AddNullableStringParameter("Resolution", failure.Resolution); // puede ser nulo si la falla aun no se ha resuelto
             sqlOperation.AddStringParameter("Status", failure.Status);
             sqlOperation.AddDateTimeParameter("CreatedAt", failure.CreatedAt);
-            sqlOperation.AddDateTimeParameter("UpdatedAt", failure.UpdatedAt);
+            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", failure.UpdatedAt); // puede ser nulo
 
+            // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
         public override void Delete(BaseDTO baseDTO)
         {
+            // Convertir el baseDTO en un objeto Failure
             var failure = baseDTO as Failure;
+
+            // Definir el SP
             var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "DEL_FAILURE_PR";
 
             sqlOperation.AddIntParameter("FailureId", failure.Id);
             sqlOperation.AddStringParameter("Status", failure.Status);
-            sqlOperation.AddDateTimeParameter("UpdatedAt", failure.UpdatedAt);
+            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", failure.UpdatedAt); // puede ser nulo
 
+            // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
         public override List<T> RetrieveAll<T>()
         {
-            var list = new List<T>();
-            var operation = new SqlOperation();
-            operation.ProcedureName = "RET_ALL_FAILURE_PR";
-            var results = sqlDao.ExecuteQueryProcedure(operation);
-            if (results.Count > 0)
+            // Lista que va a contener a todas las fallas que se obtengan de la consulta a la BD
+            var lsFailures = new List<T>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_ALL_FAILURE_PR";
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer la lista de resultados y convertir cada fila en un objeto Failure, luego agregarlo a la lista de fallas
+            if (lsResults.Count > 0)
             {
-                foreach (var row in results)
+                foreach (var row in lsResults)
                 {
-                    var f = BuildFailure(row);
-                    list.Add((T)Convert.ChangeType(f, typeof(T)));
+                    var failure = BuildFailure(row);
+                    lsFailures.Add((T)Convert.ChangeType(failure, typeof(T)));
                 }
             }
-            return list;
+
+            return lsFailures;
         }
 
         public override T RetrieveById<T>(int id)
         {
-            var op = new SqlOperation();
-            op.ProcedureName = "RET_BY_ID_FAILURE_PR";
-            op.AddIntParameter("FailureId", id);
-            var results = sqlDao.ExecuteQueryProcedure(op);
-            if (results.Count > 0)
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_ID_FAILURE_PR";
+
+            sqlOperation.AddIntParameter("FailureId", id);
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Si se obtiene un resultado, convertir la primera fila en un objeto Failure y devolverlo, de lo contrario devolver null
+            if (lsResults.Count > 0)
             {
-                var f = BuildFailure(results[0]);
-                return (T)Convert.ChangeType(f, typeof(T));
+                var item = lsResults[0];
+                var failure = BuildFailure(lsResults[0]);
+                return (T)Convert.ChangeType(failure, typeof(T));
             }
             return default(T);
         }
 
         public override void Update(BaseDTO baseDTO)
         {
+            // Convirtiendo el baseDTO en un objeto Failure
             var failure = baseDTO as Failure;
+
+            // Definir el SP
             var sqlOperation = new SqlOperation();
+
             sqlOperation.ProcedureName = "UPD_FAILURE_PR";
 
             sqlOperation.AddIntParameter("FailureId", failure.Id);
@@ -89,16 +115,18 @@ namespace DataAccess.CRUD
             sqlOperation.AddDateTimeParameter("FailureDate", failure.FailureDate);
             sqlOperation.AddStringParameter("Severity", failure.Severity);
             sqlOperation.AddStringParameter("Description", failure.Description);
-            sqlOperation.AddStringParameter("Resolution", failure.Resolution);
+            sqlOperation.AddNullableStringParameter("Resolution", failure.Resolution); // puede ser nulo si la falla aun no se ha resuelto
             sqlOperation.AddStringParameter("Status", failure.Status);
-            sqlOperation.AddDateTimeParameter("UpdatedAt", failure.UpdatedAt);
+            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", failure.UpdatedAt); // puede ser nulo
 
+            //Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
+        //Metodo que construye el DTO del Failure a partir de la data que viene en la consulta de la BD
         private Failure BuildFailure(Dictionary<string, object> row)
         {
-            var f = new Failure
+            var failure = new Failure
             {
                 Id = (int)row["FailureId"],
                 TurbineId = (int)row["TurbineId"],
@@ -106,12 +134,12 @@ namespace DataAccess.CRUD
                 FailureDate = (DateTime)row["FailureDate"],
                 Severity = (string)row["Severity"],
                 Description = (string)row["Description"],
-                Resolution = row.ContainsKey("Resolution") && row["Resolution"] != DBNull.Value ? row["Resolution"].ToString() : null,
+                Resolution = row["Resolution"] != DBNull.Value ? (string)row["Resolution"] : null, // para manejar el caso de que Resolution pueda ser nulo
                 Status = (string)row["Status"],
                 CreatedAt = (DateTime)row["CreatedAt"],
                 UpdatedAt = (DateTime)row["UpdatedAt"]
             };
-            return f;
+            return failure;
         }
     }
 }
