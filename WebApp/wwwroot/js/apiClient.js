@@ -9,10 +9,9 @@ const apiClient = (function () {
         return BASE + cleanPath; 
     }
 
-    // Genera el encabezado de autorización Bearer si existe una sesión activa en el navegador
+    // No se envía encabezado de autorización porque este proyecto usa sesión por usuario autenticado
     function authHeader() {
-        const token = window.session?.getToken();
-        return token ? { 'Authorization': 'Bearer ' + token } : {};
+        return {};
     }
 
     // Realiza una petición asíncrona utilizando jQuery AJAX con soporte de autenticación y JSON

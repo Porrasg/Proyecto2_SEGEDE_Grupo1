@@ -1,0 +1,965 @@
+﻿@page
+@model WebApp.Pages.LandingEquipoModel
+@{
+    Layout = null;
+    ViewData["Title"] = "CoreForge Technologies - Nuestro Equipo";
+}
+
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CoreForge Technologies | El núcleo de tu transformación digital</title>
+    <!-- Favicon (Icono de la pestaña) -->
+    <link rel="icon" type="image/png" href="~/img/Logo.png"> <!-- Cambia esto por la ruta de tu logo -->
+    <!-- Tailwind CSS para diseño moderno, ultra-rápido y responsive -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Poppins (Títulos) y Lato (Textos de lectura) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- Iconos profesionales FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- <script>
+        // Configuración de colores corporativos alineados 100% con la paleta del logo image_f2cbe6.png
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandDark: '#0F172A',   // Azul Grisáceo Oscuro (Fondo Principal)
+                        brandCard: '#1E293B',   // Gris Azulado Suave (Tarjetas)
+                        brandWhite: '#F8FAFC',  // Blanco Hielo (Títulos de alta legibilidad)
+                        brandMute: '#94A3B8',   // Gris Claro Mate (Textos largos sin fatiga)
+                        brandBlue: '#38BDF8',   // Azul Orbe (Botones, detalles y centro de la órbita)
+                        brandGold: '#F59E0B',   // Ámbar/Dorado Circuit (Bordes del ojo y precios)
+                        brandDeep: '#0A0E17',   // Negro Profundo (Footer y Cabecera)
+                    },
+                    fontFamily: {
+                        sans: ['Lato', 'sans-serif'],
+                        heading: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Efectos visuales interactivos personalizados */
+        .glow-effect {
+            box-shadow: 0 0 45px rgba(56, 189, 248, 0.2);
+        }
+        .glow-gold {
+            box-shadow: 0 0 35px rgba(245, 158, 11, 0.15);
+        }
+        .glass-nav {
+            background-color: rgba(10, 14, 23, 0.85);
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>-->
+    <script>
+            // Configuración de colores corporativos mapeados a variables CSS dinámicas para soporte de modo claro/oscuro
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            // rgb(var(--color) / <alpha-value>) permite usar opacidad de Tailwind (ej: bg-brandDark/60) con variables CSS
+                            brandDark: 'rgb(var(--color-brand-dark) / <alpha-value>)',
+                            brandCard: 'rgb(var(--color-brand-card) / <alpha-value>)',
+                            brandWhite: 'rgb(var(--color-brand-white) / <alpha-value>)',
+                            brandMute: 'rgb(var(--color-brand-mute) / <alpha-value>)',
+                            brandDeep: 'rgb(var(--color-brand-deep) / <alpha-value>)',
+                            brandBlue: '#38BDF8',   // Azul Orbe (Constante)
+                            brandGold: '#F59E0B',   // Ámbar/Dorado Circuit (Constante)
+                        },
+                        fontFamily: {
+                            sans: ['Lato', 'sans-serif'],
+                            heading: ['Poppins', 'sans-serif'],
+                        }
+                    }
+                }
+            }
+    </script>
+
+    <style>
+            /* Variables de color por defecto (Modo Oscuro) */
+            :root {
+                --color-brand-dark: 15 23 42; /* #0F172A (Azul Grisáceo Oscuro) */
+                --color-brand-card: 30 41 59; /* #1E293B (Gris Azulado Suave) */
+                --color-brand-white: 248 250 252; /* #F8FAFC (Blanco Hielo) */
+                --color-brand-mute: 148 163 184; /* #94A3B8 (Gris Claro Mate) */
+                --color-brand-deep: 10 14 23; /* #0A0E17 (Negro Profundo) */
+                --color-glass-nav: rgba(10, 14, 23, 0.85);
+                --color-border-subtle: rgba(255, 255, 255, 0.05);
+            }
+
+                /* Variables de color cuando se activa el Modo Claro */
+                :root.light {
+                    --color-brand-dark: 241 245 249; /* #F1F5F9 (Fondo claro agradable) */
+                    --color-brand-card: 255 255 255; /* #FFFFFF (Tarjetas blancas limpias) */
+                    --color-brand-white: 15 23 42; /* #0F172A (Textos principales oscuros) */
+                    --color-brand-mute: 71 85 105; /* #475569 (Textos secundarios grises) */
+                    --color-brand-deep: 226 232 240; /* #E2E8F0 (Fondos profundos secundarios) */
+                    --color-glass-nav: rgba(241, 245, 249, 0.85);
+                    --color-border-subtle: rgba(15, 23, 42, 0.08);
+                }
+
+            /* Efectos visuales de iluminación */
+            .glow-effect {
+                box-shadow: 0 0 45px rgba(56, 189, 248, 0.2);
+            }
+
+            .glow-gold {
+                box-shadow: 0 0 35px rgba(245, 158, 11, 0.15);
+            }
+
+            /* Navbar con efecto blur adaptativo */
+            .glass-nav {
+                background-color: var(--color-glass-nav);
+                webkit-backdrop-filter: blur(16px);
+                border-bottom: 1px solid var(--color-border-subtle);
+                transition: background-color 0.3s ease, border-color 0.3s ease;
+            }
+
+            /* Transición suave para todos los cambios de color del tema */
+            body {
+                transition: background-color 0.3s ease, color 0.3s ease;
+            }
+    </style>
+</head>
+<body class="bg-brandDark text-brandMute font-sans antialiased overflow-x-hidden">
+
+    <!-- ==========================================
+         1. CABECERA (Header / Navegación)
+         ========================================== -->
+    <header class="fixed top-0 left-0 w-full z-50 glass-nav transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <!-- Logotipo oficial integrado en la barra superior -->
+            <a href="#inicio" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 rounded-full bg-white p-0.5 flex items-center justify-center shadow-[0_0_15px_rgba(56,189,248,0.4)] border border-brandBlue/30 transition-transform group-hover:scale-105">
+                    <img src="~/img/Logo.png" alt="CoreForge Logo" class="w-full h-full object-contain rounded-full">
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-heading font-bold text-brandWhite text-lg tracking-wider leading-none">COREFORGE</span>
+                    <span class="text-[10px] text-brandBlue font-semibold uppercase tracking-widest">Technologies</span>
+                </div>
+            </a>
+
+            <!-- Navegación de Escritorio con saltos de ancla -->
+            <nav class="hidden md:flex items-center gap-8 font-heading text-sm font-medium">
+                <a href="#inicio" class="text-brandMute hover:text-brandBlue transition-colors">Inicio</a>
+                <a href="#servicios" class="text-brandMute hover:text-brandBlue transition-colors">Servicios</a>
+                <a href="#equipo" class="text-brandMute hover:text-brandBlue transition-colors">Quiénes Somos</a>
+                <a href="#metodologia" class="text-brandMute hover:text-brandBlue transition-colors">Metodología</a>
+                <a href="#reglamento" class="text-brandMute hover:text-brandBlue transition-colors">Reglamento</a>
+                <a href="#contacto" class="px-5 py-2.5 rounded-full bg-brandBlue text-brandDark font-bold hover:bg-opacity-90 hover:shadow-[0_0_20px_rgba(56,189,248,0.4)] transition-all">Contáctanos</a>
+            </nav>
+
+            <!-- Botón de Menú Móvil -->
+            <button id="mobile-menu-btn" class="md:hidden text-brandWhite focus:outline-none" aria-label="Abrir menú">
+                <i class="fa-solid fa-bars text-2xl"></i>
+            </button>
+        </div>
+
+        <!-- Menú Desplegable Móvil -->
+        <div id="mobile-menu" class="hidden md:hidden bg-brandDeep border-b border-white/5 px-6 py-4 flex flex-col gap-4 font-heading">
+            <a href="#inicio" class="text-brandWhite py-2 hover:text-brandBlue" onclick="toggleMenu()">Inicio</a>
+            <a href="#servicios" class="text-brandWhite py-2 hover:text-brandBlue" onclick="toggleMenu()">Servicios</a>
+            <a href="#equipo" class="text-brandWhite py-2 hover:text-brandBlue" onclick="toggleMenu()">Quiénes Somos</a>
+            <a href="#metodologia" class="text-brandWhite py-2 hover:text-brandBlue" onclick="toggleMenu()">Metodología</a>
+            <a href="#reglamento" class="text-brandWhite py-2 hover:text-brandBlue" onclick="toggleMenu()">Reglamento</a>
+            <a href="#contacto" class="w-full text-center py-3 rounded-full bg-brandBlue text-brandDark font-bold hover:bg-opacity-90" onclick="toggleMenu()">Contáctanos</a>
+        </div>
+    </header>
+
+
+    <!-- ==========================================
+         2. PANTALLA DE BIENVENIDA (Hero Section)
+         ========================================== -->
+    <section id="inicio" class="relative pt-32 pb-24 md:pt-48 md:pb-36 flex items-center overflow-hidden">
+        <!-- Resplandores ambientales decorativos -->
+        <div class="absolute top-1/4 right-0 w-96 h-96 bg-brandBlue/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="absolute bottom-10 left-0 w-80 h-80 bg-brandGold/5 rounded-full blur-[80px] pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-12 gap-12 items-center w-full">
+            <!-- Bloque de Texto e Identidad -->
+            <div class="md:col-span-7 flex flex-col items-start text-left">
+                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brandBlue/10 border border-brandBlue/20 text-brandBlue text-xs font-heading font-semibold tracking-wider uppercase mb-6">
+                    <i class="fa-solid fa-graduation-cap"></i> Universidad CENFOTEC • BISOFT-13
+                </span>
+                <h1 class="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-brandWhite leading-[1.1] mb-6">
+                    Descubre Nuestro Mundo <br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-brandBlue to-brandGold">Potenciando tu Éxito</span>
+                </h1>
+                <p class="text-lg md:text-xl text-brandMute mb-8 max-w-2xl leading-relaxed">
+                    Bienvenido a <span class="text-brandWhite font-semibold">CoreForge Technologies</span>. Forjamos soluciones de software a la medida para digitalizar pymes y empresas, optimizando la experiencia del cliente con calidad y seguridad técnica de grado corporativo.
+                </p>
+                <div class="flex flex-wrap gap-4 w-full sm:w-auto">
+                    <a href="#servicios" class="w-full sm:w-auto text-center px-8 py-4 rounded-full bg-brandBlue text-brandDark font-heading font-bold hover:bg-opacity-90 hover:shadow-[0_0_25px_rgba(56,189,248,0.4)] transition-all">
+                        Explorar Servicios <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                    </a>
+                    <a href="#equipo" class="w-full sm:w-auto text-center px-8 py-4 rounded-full bg-brandCard border border-white/10 text-brandWhite font-heading font-semibold hover:bg-white/5 hover:border-white/20 transition-all">
+                        Conocer Equipo
+                    </a>
+                </div>
+            </div>
+
+            <!-- Bloque del Logotipo Oficial Enmarcado con Estilo Premium -->
+            <div class="md:col-span-5 flex justify-center items-center">
+                <div class="relative w-72 h-72 md:w-96 md:h-96 flex items-center justify-center">
+                    <!-- Efectos de órbita giratoria de fondo -->
+                    <div class="absolute inset-0 border border-brandBlue/25 rounded-full animate-[spin_30s_linear_infinite]"></div>
+                    <div class="absolute inset-4 border border-brandGold/15 rounded-full animate-[spin_20s_linear_infinite_reverse]"></div>
+
+                    <!-- Tarjeta / Contenedor circular con el logotipo oficial -->
+                    <div class="w-56 h-56 md:w-76 md:h-76 rounded-full bg-white flex items-center justify-center glow-effect border-4 border-brandBlue relative z-10 p-4 overflow-hidden shadow-[0_0_50px_rgba(56,189,248,0.3)] hover:scale-105 transition-transform duration-500">
+                        <!-- Brillo dinámico de fondo -->
+                        <div class="absolute inset-0 bg-gradient-to-tr from-brandBlue/5 to-transparent"></div>
+                        <img src="~/img/Logo.png" alt="CoreForge Technologies Ojo Cibernético Logo" class="w-[85%] h-[85%] object-contain relative z-10">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         3. SECCIÓN SERVICIOS DE ESPECIALIDAD
+         ========================================== -->
+    <section id="servicios" class="py-24 bg-brandDeep border-y border-white/5 relative">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <span class="text-brandBlue font-heading font-bold text-sm tracking-widest uppercase">Nuestras Capacidades</span>
+                <h2 class="font-heading text-4xl font-bold text-brandWhite mt-2 mb-4">Servicios de Especialidad</h2>
+                <p class="text-brandMute text-lg">Estructuramos y forjamos ecosistemas digitales a su medida para asegurar la máxima escalabilidad y protección de sus operaciones corporativas.</p>
+            </div>
+
+            <!-- Grilla de Servicios -->
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Servicio 1: Software a la Medida -->
+                <div class="bg-brandCard rounded-2xl p-8 border border-white/5 flex flex-col justify-between hover:border-brandBlue/30 hover:shadow-[0_10px_30px_rgba(56,189,248,0.05)] transition-all group min-h-[380px]">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-brandBlue/10 flex items-center justify-center text-brandBlue text-xl mb-6 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-laptop-code"></i>
+                        </div>
+                        <h3 class="font-heading text-2xl font-semibold text-brandWhite mb-4">Software a la Medida</h3>
+                        <p class="text-brandMute leading-relaxed">
+                            Ingeniería de software de alta robustez, arquitecturas escalables en .NET/C# y desarrollo de aplicaciones web ágiles listas para producción.
+                        </p>
+                    </div>
+                    <div class="mt-8 pt-6 border-t border-white/5 flex items-end justify-between">
+                        <div>
+                            <span class="text-xs text-brandMute uppercase tracking-wider block">Inversión Estimada</span>
+                            <span class="text-2xl font-bold text-brandGold font-heading">₡20 000 000</span>
+                        </div>
+                        <a href="#contacto" class="text-brandBlue hover:text-brandWhite transition-colors font-semibold flex items-center gap-2">
+                            Cotizar <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Servicio 2: Consultoría Técnica -->
+                <div class="bg-brandCard rounded-2xl p-8 border border-brandBlue/30 hover:border-brandBlue/60 flex flex-col justify-between hover:shadow-[0_10px_30px_rgba(56,189,248,0.08)] transition-all group min-h-[380px] relative">
+                    <span class="absolute -top-3.5 right-6 px-3 py-1 rounded-full bg-brandBlue text-brandDark font-heading text-xs font-bold uppercase tracking-wider shadow">Más Solicitado</span>
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-brandBlue/10 flex items-center justify-center text-brandBlue text-xl mb-6 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-comments"></i>
+                        </div>
+                        <h3 class="font-heading text-2xl font-semibold text-brandWhite mb-4">Consultoría Técnica</h3>
+                        <p class="text-brandMute leading-relaxed">
+                            Asesoría en el modelado de bases de datos, auditoría de vulnerabilidades del sistema, optimización de infraestructura crítica y refactorización core.
+                        </p>
+                    </div>
+                    <div class="mt-8 pt-6 border-t border-white/5 flex items-end justify-between">
+                        <div>
+                            <span class="text-xs text-brandMute uppercase tracking-wider block">Tarifa por Hora</span>
+                            <span class="text-2xl font-bold text-brandGold font-heading">₡150 000</span>
+                        </div>
+                        <a href="#contacto" class="text-brandBlue hover:text-brandWhite transition-colors font-semibold flex items-center gap-2">
+                            Reservar <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Servicio 3: Integración de Sistemas -->
+                <div class="bg-brandCard rounded-2xl p-8 border border-white/5 flex flex-col justify-between hover:border-brandBlue/30 hover:shadow-[0_10px_30px_rgba(56,189,248,0.05)] transition-all group min-h-[380px]">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-brandBlue/10 flex items-center justify-center text-brandBlue text-xl mb-6 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-network-wired"></i>
+                        </div>
+                        <h3 class="font-heading text-2xl font-semibold text-brandWhite mb-4">Integración de Sistemas</h3>
+                        <p class="text-brandMute leading-relaxed">
+                            Unificación de software existente, APIs de alta seguridad, sincronización de bases de datos relacionales y automatización completa de procesos empresariales.
+                        </p>
+                    </div>
+                    <div class="mt-8 pt-6 border-t border-white/5 flex items-end justify-between">
+                        <div>
+                            <span class="text-xs text-brandMute uppercase tracking-wider block">Inversión Base</span>
+                            <span class="text-2xl font-bold text-brandGold font-heading">₡15 000 000</span>
+                        </div>
+                        <a href="#contacto" class="text-brandBlue hover:text-brandWhite transition-colors font-semibold flex items-center gap-2">
+                            Integrar <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- ==========================================
+         3.5 SECCIÓN PORTAFOLIO DE PROYECTOS (Proyecto Real + Rellenos Profesionales)
+         ========================================== -->
+    <section id="portafolio" class="py-24 relative overflow-hidden transition-colors">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brandGold/5 rounded-full blur-[120px] pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <span class="text-brandGold font-heading font-bold text-sm tracking-widest uppercase">Casos de Éxito e Innovación</span>
+                <h2 class="font-heading text-4xl font-bold text-brandWhite mt-2 mb-4 transition-colors">Portafolio de Proyectos</h2>
+                <p class="text-brandMute text-lg transition-colors">Explora nuestro ecosistema de desarrollo. Contamos con un proyecto insignia totalmente activo y módulos de expansión en fase de planeación estratégica.</p>
+            </div>
+
+            <!-- Grilla de Proyectos -->
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- PROYECTO 1: El proyecto real del curso -->
+                <div class="bg-brandCard rounded-2xl p-8 border-2 border-brandBlue flex flex-col justify-between hover:shadow-[0_0_30px_rgba(56,189,248,0.15)] transition-all relative group min-h-[420px]">
+                    <span class="absolute -top-3.5 left-6 px-3.5 py-1 rounded-full bg-brandBlue text-slate-900 font-heading text-[10px] font-bold uppercase tracking-wider shadow animate-pulse">Plataforma • SGDE Enterprise</span>
+                    <div>
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="w-12 h-12 rounded-xl bg-brandBlue/10 flex items-center justify-center text-brandBlue text-xl">
+                                <i class="fa-solid fa-cubes"></i>
+                            </div>
+                            <span class="text-xs px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 font-bold border border-green-500/20"><i class="fa-solid fa-circle text-[8px] mr-1.5 animate-ping"></i>65% Funcional</span>
+                        </div>
+                        <h3 class="font-heading text-2xl font-bold text-brandWhite mb-3 transition-colors">CoreForge Enterprise Portal</h3>
+                        <p class="text-brandMute text-sm leading-relaxed mb-4 transition-colors">
+                            Plataforma que centraliza la operación del parque de generación eólica: monitoreo de turbinas en tiempo real, consolidación de energía en el Banco Central, pronósticos de demanda de los compradores y distribución comercial mensual con facturación y auditoría trazable de principio a fin.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <span class="text-[10px] bg-brandDark/50 px-2 py-1 rounded border border-brandWhite/10 text-brandBlue"> CSS</span>
+                            <span class="text-[10px] bg-brandDark/50 px-2 py-1 rounded border border-brandWhite/10 text-brandBlue">JavaScript</span>
+                            <span class="text-[10px] bg-brandDark/50 px-2 py-1 rounded border border-brandWhite/10 text-brandBlue">C#</span>
+                        </div>
+                    </div>
+                    <div class="mt-8 pt-6 border-t border-brandWhite/10 flex items-center justify-between">
+                        <span class="text-xs text-brandGold font-semibold"><i class="fa-solid fa-certificate mr-1.5"></i>Entregable de Cátedra</span>
+                        <a href=https://localhost:7202/ class="text-brandWhite hover:text-brandBlue text-xs font-bold flex items-center gap-1.5 transition-colors">
+                            Ver Demo <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- PROYECTO 2: Relleno 1 (Futuro/Diseño) -->
+                <div class="bg-brandCard rounded-2xl p-8 border border-brandWhite/10 flex flex-col justify-between opacity-80 hover:opacity-100 hover:border-brandWhite/20 transition-all relative min-h-[420px]">
+                    <span class="absolute -top-3.5 left-6 px-3 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700 font-heading text-[10px] font-bold uppercase tracking-wider">Concepto Planificado</span>
+                    <div>
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="w-12 h-12 rounded-xl bg-brandWhite/5 flex items-center justify-center text-brandMute text-xl">
+                                <i class="fa-solid fa-store"></i>
+                            </div>
+                            <span class="text-xs px-2.5 py-1 rounded-full bg-brandGold/10 text-brandGold font-bold border border-brandGold/20">Fase de Diseño</span>
+                        </div>
+                        <h3 class="font-heading text-2xl font-bold text-brandWhite/70 mb-3 transition-colors">SmartCommerce Suite</h3>
+                        <p class="text-brandMute text-sm leading-relaxed mb-4 transition-colors">
+                            Módulo de expansión diseñado para la automatización e integración de inventarios inteligentes y facturación en tiempo real dirigida a PYMES costarricenses en crecimiento técnico.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <span class="text-[10px] bg-brandDark/50 px-2 py-1 rounded border border-brandWhite/10 text-brandMute">En Planeación</span>
+                            <span class="text-[10px] bg-brandDark/50 px-2 py-1 rounded border border-brandWhite/10 text-brandMute">API Rest</span>
+                        </div>
+                    </div>
+                    <div class="mt-8 pt-6 border-t border-brandWhite/10 flex items-center justify-between">
+                        <span class="text-xs text-brandMute"><i class="fa-solid fa-clock mr-1.5"></i>Próximo Desarrollo</span>
+                        <span class="text-xs text-brandMute/60 font-semibold italic">Pendiente de inicio</span>
+                    </div>
+                </div>
+
+                <!-- PROYECTO 3: Relleno 2 (Futuro/Diseño) -->
+                <div class="bg-brandCard rounded-2xl p-8 border border-brandWhite/10 flex flex-col justify-between opacity-80 hover:opacity-100 hover:border-brandWhite/20 transition-all relative min-h-[420px]">
+                    <span class="absolute -top-3.5 left-6 px-3 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700 font-heading text-[10px] font-bold uppercase tracking-wider">Concepto Planificado</span>
+                    <div>
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="w-12 h-12 rounded-xl bg-brandWhite/5 flex items-center justify-center text-brandMute text-xl">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <span class="text-xs px-2.5 py-1 rounded-full bg-brandGold/10 text-brandGold font-bold border border-brandGold/20">Fase de Diseño</span>
+                        </div>
+                        <h3 class="font-heading text-2xl font-bold text-brandWhite/70 mb-3 transition-colors">CoreShield Audit Tool</h3>
+                        <p class="text-brandMute text-sm leading-relaxed mb-4 transition-colors">
+                            Herramienta automatizada de análisis para auditar vulnerabilidades críticas de bases de datos relacionales SQL, brindando reportes inmediatos y blindaje a nivel de código de producción.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <span class="text-[10px] bg-brandDark/50 px-2 py-1 rounded border border-brandWhite/10 text-brandMute">C#/.NET Core</span>
+                            <span class="text-[10px] bg-brandDark/50 px-2 py-1 rounded border border-brandWhite/10 text-brandMute">Cybersecurity</span>
+                        </div>
+                    </div>
+                    <div class="mt-8 pt-6 border-t border-brandWhite/10 flex items-center justify-between">
+                        <span class="text-xs text-brandMute"><i class="fa-solid fa-clock mr-1.5"></i>Próximo Desarrollo</span>
+                        <span class="text-xs text-brandMute/60 font-semibold italic">Pendiente de inicio</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         4. SECCIÓN QUIÉNES SOMOS (Equipo e Identidad)
+         ========================================== -->
+
+    <section id="equipo" class="py-24 bg-brandDeep border-y border-brandWhite/10 relative transition-colors">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <span class="text-brandBlue font-heading font-bold text-sm tracking-widest uppercase">Nuestras Capacidades</span>
+                <h2 class="font-heading text-4xl font-bold text-brandWhite mt-2 mb-4 transition-colors">Servicios de Especialidad</h2>
+                <p class="text-brandMute text-lg transition-colors">Estructuramos y forjamos ecosistemas digitales a su medida para asegurar la máxima escalabilidad y protección de sus operaciones corporativas.</p>
+            </div>
+
+
+            <!-- Grilla de Integrantes con perfiles individuales -->
+            <!-- <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"> -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                <!-- Erick (Product Owner) -->
+                <div class="bg-brandCard rounded-2xl p-6 border border-white/5 flex flex-col justify-between hover:border-brandBlue/20 transition-all">
+                    <div>
+                        <span class="inline-block px-3 py-1 rounded-full bg-brandBlue/10 text-brandBlue font-heading text-[11px] font-bold uppercase tracking-wider mb-4">Product Owner</span>
+                        <h3 class="font-heading text-xl font-bold text-brandWhite mb-1">Erick Masís C.</h3>
+                        <span class="text-xs text-brandBlue block mb-4"><i class="fa-solid fa-envelope mr-1.5"></i>emasisca@ucenfotec.ac.cr</span>
+                        <p class="text-sm text-brandMute leading-relaxed mb-4">
+                            <strong>Fortalezas:</strong> Capacidad de liderazgo, comunicación asertiva, visión del negocio y organización de flujos.
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t border-white/5">
+                        <span class="text-xs text-brandGold block"><i class="fa-solid fa-location-dot mr-1.5"></i>Alajuela, Costa Rica</span>
+                    </div>
+                </div>
+
+                <!-- Kianny (Coordinadora de Calidad) -->
+                <div class="bg-brandCard rounded-2xl p-6 border border-white/5 flex flex-col justify-between hover:border-brandBlue/20 transition-all">
+                    <div>
+                        <span class="inline-block px-3 py-1 rounded-full bg-brandGold/10 text-brandGold font-heading text-[11px] font-bold uppercase tracking-wider mb-4">Coordinador Calidad</span>
+                        <h3 class="font-heading text-xl font-bold text-brandWhite mb-1">Kianny Porras G.</h3>
+                        <span class="text-xs text-brandBlue block mb-4"><i class="fa-solid fa-envelope mr-1.5"></i>kporrasgo@ucenfotec.ac.cr</span>
+                        <p class="text-sm text-brandMute leading-relaxed mb-4">
+                            <strong>Fortalezas:</strong> Diseño de pruebas automatizadas, configuración de flujos CI/CD, despliegues en la nube y monitoreo.
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t border-white/5">
+                        <span class="text-xs text-brandGold block"><i class="fa-solid fa-location-dot mr-1.5"></i>Puntarenas, Costa Rica</span>
+                    </div>
+                </div>
+
+                <!-- Mauricio (Coordinador Dev) -->
+                <div class="bg-brandCard rounded-2xl p-6 border border-white/5 flex flex-col justify-between hover:border-brandBlue/20 transition-all">
+                    <div>
+                        <span class="inline-block px-3 py-1 rounded-full bg-brandBlue/10 text-brandBlue font-heading text-[11px] font-bold uppercase tracking-wider mb-4">Coordinador Dev</span>
+                        <h3 class="font-heading text-xl font-bold text-brandWhite mb-1">Mauricio Bejarano</h3>
+                        <span class="text-xs text-brandBlue block mb-4"><i class="fa-solid fa-envelope mr-1.5"></i>jbejaranoa@ucenfotec.ac.cr</span>
+                        <p class="text-sm text-brandMute leading-relaxed mb-4">
+                            <strong>Fortalezas:</strong> Análisis de código legado, optimización de algoritmos de alto desempeño y resolución de problemas.
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t border-white/5">
+                        <span class="text-xs text-brandGold block"><i class="fa-solid fa-location-dot mr-1.5"></i>San José, Costa Rica</span>
+                    </div>
+                </div>
+
+                
+                <!-- Harry (Scrum Master) -->
+                <div class="bg-brandCard rounded-2xl p-6 border border-white/5 flex flex-col justify-between hover:border-brandBlue/20 transition-all">
+                    <div>
+                        <span class="inline-block px-3 py-1 rounded-full bg-brandGold/10 text-brandGold font-heading text-[11px] font-bold uppercase tracking-wider mb-4">Scrum Master</span>
+                        <h3 class="font-heading text-xl font-bold text-brandWhite mb-1">Harry Flores Q.</h3>
+                        <span class="text-xs text-brandBlue block mb-4"><i class="fa-solid fa-envelope mr-1.5"></i>hfloresq@ucenfotec.ac.cr</span>
+                        <p class="text-sm text-brandMute leading-relaxed mb-4">
+                            <strong>Fortalezas:</strong> Dominio de patrones de diseño, estructuración de bases de datos SQL relacionales y análisis de seguridad.
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t border-white/10">
+                        <span class="text-xs text-brandGold block"><i class="fa-solid fa-location-dot mr-1.5"></i>San José, Costa Rica</span>
+                    </div>
+                </div>
+
+                <!--Josue (Coordinador Dev)-->
+                <div class="bg-brandCard rounded-2xl p-6 border border-white/5 flex flex-col justify-between hover:border-brandBlue/20 transition-all">
+
+                    <div>
+                        <span class="inline-block px-3 py-1 rounded-full bg-brandGold/10 text-brandGold font-heading text-[11px] font-bold uppercase tracking-wider mb-4">Coordinador Dev</span>
+                        <h3 class="font-heading text-xl font-bold text-brandWhite mb-1">Josue Francisco Solano Arce.</h3>
+                        <span class="text-xs text-brandBlue block mb-4"><i class="fa-solid fa-envelope mr-1.5"></i>jfsolanoa@ucenfotec.ac.cr</span>
+                        <p class="text-sm text-brandMute leading-relaxed mb-4">
+                            <strong>Fortalezas:Resolución de problemas, pensamiento lógico, trabajo en equipo y aprendizaje continuo. Me enfoco en desarrollar soluciones eficientes, mantener un código organizado. </strong> .
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t border-white/5">
+                        <span class="text-xs text-brandGold block"><i class="fa-solid fa-location-dot mr-1.5"></i>San José, Costa Rica</span>
+                    </div>
+                </div>
+            </div>
+
+            
+            
+            <!-- Misión y Visión -->
+            <div class="grid md:grid-cols-2 gap-8 mt-16">
+                <div class="bg-brandCard rounded-2xl p-8 border border-white/5 relative overflow-hidden">
+                    <div class="absolute -right-8 -bottom-8 text-white/5 text-8xl font-bold"><i class="fa-solid fa-bullseye"></i></div>
+                    <h3 class="font-heading text-2xl font-bold text-brandWhite mb-4 flex items-center gap-3">
+                        <i class="fa-solid fa-circle-nodes text-brandBlue"></i> Nuestra Misión
+                    </h3>
+                    <p class="text-brandMute text-base leading-relaxed">
+                        Desarrollar soluciones de software a la medida para digitalizar pymes y empresas, optimizando la experiencia del cliente con calidad, seguridad nativa de bases de datos y la máxima excelencia técnica.
+                    </p>
+                </div>
+
+                <div class="bg-brandCard rounded-2xl p-8 border border-white/5 relative overflow-hidden">
+                    <div class="absolute -right-8 -bottom-8 text-white/5 text-8xl font-bold"><i class="fa-solid fa-eye"></i></div>
+                    <h3 class="font-heading text-2xl font-bold text-brandWhite mb-4 flex items-center gap-3">
+                        <i class="fa-solid fa-compass text-brandGold"></i> Nuestra Visión
+                    </h3>
+                    <p class="text-brandMute text-base leading-relaxed">
+                        Promover la transición digital de las pymes con soluciones de software robustas y seguras, liderando el mercado nacional en cinco años con proyección asertiva hacia América Latina.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Valores Corporativos -->
+            <div class="mt-16">
+                <h3 class="font-heading text-2xl font-bold text-brandWhite text-center mb-8">Nuestros 5 Valores Clave</h3>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
+                    <div class="text-center">
+                        <div class="w-12 h-12 rounded-full bg-brandBlue/10 flex items-center justify-center text-brandBlue text-xl mx-auto mb-3">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <h4 class="font-heading text-sm font-bold text-brandWhite mb-1">Seguridad</h4>
+                        <p class="text-xs text-brandMute">Garantizar el blindaje de datos nativos.</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-12 h-12 rounded-full bg-brandGold/10 flex items-center justify-center text-brandGold text-xl mx-auto mb-3">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <h4 class="font-heading text-sm font-bold text-brandWhite mb-1">Proactividad</h4>
+                        <p class="text-xs text-brandMute">Resolver retos técnicos con autonomía.</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-12 h-12 rounded-full bg-brandBlue/10 flex items-center justify-center text-brandBlue text-xl mx-auto mb-3">
+                            <i class="fa-solid fa-people-group"></i>
+                        </div>
+                        <h4 class="font-heading text-sm font-bold text-brandWhite mb-1">Liderazgo</h4>
+                        <p class="text-xs text-brandMute">Comunicación ágil y constante.</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-12 h-12 rounded-full bg-brandGold/10 flex items-center justify-center text-brandGold text-xl mx-auto mb-3">
+                            <i class="fa-solid fa-code"></i>
+                        </div>
+                        <h4 class="font-heading text-sm font-bold text-brandWhite mb-1">Calidad</h4>
+                        <p class="text-xs text-brandMute">Código limpio, modular y estructurado.</p>
+                    </div>
+                    <div class="text-center col-span-2 md:col-span-1">
+                        <div class="w-12 h-12 rounded-full bg-brandBlue/10 flex items-center justify-center text-brandBlue text-xl mx-auto mb-3">
+                            <i class="fa-solid fa-briefcase"></i>
+                        </div>
+                        <h4 class="font-heading text-sm font-bold text-brandWhite mb-1">Compromiso Real</h4>
+                        <p class="text-xs text-brandMute">Soluciones de valor real al negocio.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         5. SECCIÓN METODOLOGÍA DE TRABAJO (Scrum)
+         ========================================== -->
+    <section id="metodologia" class="py-24 bg-brandDeep border-y border-white/5 relative">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <span class="text-brandBlue font-heading font-bold text-sm tracking-widest uppercase">Garantía de Calidad Ágil</span>
+                <h2 class="font-heading text-4xl font-bold text-brandWhite mt-2 mb-4">Metodología de Trabajo</h2>
+                <p class="text-brandMute text-lg">Nos basamos en el marco ágil Scrum con Sprints de 2 semanas de duración para asegurar entregas continuas de alto valor y sin errores.</p>
+            </div>
+
+            <!-- Grids de DoR y DoD -->
+            <div class="grid md:grid-cols-2 gap-8 mb-16">
+                <div class="bg-brandCard rounded-2xl p-8 border border-white/5">
+                    <h3 class="font-heading text-2xl font-bold text-brandBlue mb-6 flex items-center gap-3">
+                        <i class="fa-solid fa-clipboard-question"></i> Definition of Ready (DoR)
+                    </h3>
+                    <p class="text-brandMute text-sm mb-6">Condiciones requeridas antes de iniciar el desarrollo en el Sprint:</p>
+                    <ul class="space-y-4">
+                        <li class="flex items-start gap-3">
+                            <i class="fa-solid fa-check text-brandBlue mt-1"></i>
+                            <span class="text-brandWhite text-sm">Historia de usuario redactada en formato formal (rol, acción, beneficio).</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fa-solid fa-check text-brandBlue mt-1"></i>
+                            <span class="text-brandWhite text-sm">Criterios de aceptación claros, objetivos y 100% verificables.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fa-solid fa-check text-brandBlue mt-1"></i>
+                            <span class="text-brandWhite text-sm">Dependencias técnicas identificadas y resueltas de antemano.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fa-solid fa-check text-brandBlue mt-1"></i>
+                            <span class="text-brandWhite text-sm">Estimación y dimensionamiento en puntos de historia acordados por el equipo.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-brandCard rounded-2xl p-8 border border-white/5">
+                    <h3 class="font-heading text-2xl font-bold text-brandGold mb-6 flex items-center gap-3">
+                        <i class="fa-solid fa-clipboard-check"></i> Definition of Done (DoD)
+                    </h3>
+                    <p class="text-brandMute text-sm mb-6">Requisitos técnicos indispensables para considerar una tarea finalizada:</p>
+                    <ul class="space-y-4">
+                        <li class="flex items-start gap-3">
+                            <i class="fa-solid fa-circle-check text-brandGold mt-1"></i>
+                            <span class="text-brandWhite text-sm">Código fuente programado en su totalidad y libre de fallos evidentes.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fa-solid fa-circle-check text-brandGold mt-1"></i>
+                            <span class="text-brandWhite text-sm">Código revisado, aprobado y fusionado mediante Pull Request en GitHub.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fa-solid fa-circle-check text-brandGold mt-1"></i>
+                            <span class="text-brandWhite text-sm">Cumplimiento total con estándares de arquitectura limpia del curso.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fa-solid fa-circle-check text-brandGold mt-1"></i>
+                            <span class="text-brandWhite text-sm">Pruebas unitarias ejecutadas, superadas y desplegadas en el entorno.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Ceremonias de Sprints -->
+            <div>
+                <h3 class="font-heading text-2xl font-bold text-brandWhite text-center mb-12">Ceremonias en Sprints de 2 Semanas</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+                    <div class="bg-brandCard rounded-xl p-5 border border-white/5 text-center relative hover:border-brandBlue/30 transition-colors">
+                        <span class="block text-xs font-bold text-brandBlue uppercase tracking-wider mb-2">Día 1</span>
+                        <h4 class="font-heading text-base font-bold text-brandWhite mb-2">Sprint Planning</h4>
+                        <p class="text-xs text-brandMute">Definición de metas del sprint, selección de historias y estimaciones precisas.</p>
+                    </div>
+                    <div class="bg-brandCard rounded-xl p-5 border border-white/5 text-center hover:border-brandGold/30 transition-colors">
+                        <span class="block text-xs font-bold text-brandGold uppercase tracking-wider mb-2">Diario (15 min)</span>
+                        <h4 class="font-heading text-base font-bold text-brandWhite mb-2">Daily Standup</h4>
+                        <p class="text-xs text-brandMute">Sincronización de avances de desarrollo e identificación de bloqueos.</p>
+                    </div>
+                    <div class="bg-brandCard rounded-xl p-5 border border-white/5 text-center hover:border-brandBlue/30 transition-colors">
+                        <span class="block text-xs font-bold text-brandBlue uppercase tracking-wider mb-2">Día 5</span>
+                        <h4 class="font-heading text-base font-bold text-brandWhite mb-2">Refinement</h4>
+                        <p class="text-xs text-brandMute">Análisis, clarificación de dudas y dimensionamiento de historias futuras.</p>
+                    </div>
+                    <div class="bg-brandCard rounded-xl p-5 border border-white/5 text-center hover:border-brandGold/30 transition-colors">
+                        <span class="block text-xs font-bold text-brandGold uppercase tracking-wider mb-2">Fin de Sprint</span>
+                        <h4 class="font-heading text-base font-bold text-brandWhite mb-2">Sprint Review</h4>
+                        <p class="text-xs text-brandMute">Demostración formal del incremento de software funcional listo al cliente.</p>
+                    </div>
+                    <div class="bg-brandCard rounded-xl p-5 border border-white/5 text-center col-span-1 sm:col-span-3 lg:col-span-1 hover:border-brandBlue/30 transition-colors">
+                        <span class="block text-xs font-bold text-brandBlue uppercase tracking-wider mb-2">Fin de Sprint</span>
+                        <h4 class="font-heading text-base font-bold text-brandWhite mb-2">Retrospective</h4>
+                        <p class="text-xs text-brandMute">Inspección de procesos internos del equipo y definición de mejoras continuas.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         6. SECCIÓN REGLAMENTO Y SANCIONES
+         ========================================== -->
+    <section id="reglamento" class="py-24">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <span class="text-brandBlue font-heading font-bold text-sm tracking-widest uppercase">Normas de Convivencia</span>
+                <h2 class="font-heading text-4xl font-bold text-brandWhite mt-2 mb-4">Régimen Disciplinario</h2>
+                <p class="text-brandMute text-lg">Para garantizar un rendimiento de calidad académica superior, aplicamos rebajos directos e individuales sobre las entregas según los siguientes criterios.</p>
+            </div>
+
+            <!-- Tabla de Sanciones -->
+            <div class="bg-brandCard rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-brandBlue/10 border-b border-brandBlue/20 text-brandWhite font-heading text-xs uppercase tracking-wider">
+                                <th class="py-5 px-6">Regla / Infracción Interna de Reglamento</th>
+                                <th class="py-5 px-6">Tolerancia / Condición</th>
+                                <th class="py-5 px-6 text-right">Deducción de Puntos</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5 text-sm">
+                            <tr class="hover:bg-white/2 transition-colors">
+                                <td class="py-4 px-6 text-brandWhite font-semibold">Inasistencia injustificada a reuniones u ceremonias ágiles</td>
+                                <td class="py-4 px-6">Falta de comunicación oportuna en canales oficiales</td>
+                                <td class="py-4 px-6 text-right font-bold text-red-500">-3 Pts</td>
+                            </tr>
+                            <tr class="hover:bg-white/2 transition-colors">
+                                <td class="py-4 px-6 text-brandWhite font-semibold">Incumplimiento injustificado de asignaciones de Sprint comprometidas</td>
+                                <td class="py-4 px-6">Afecta de manera directa el release técnico acordado</td>
+                                <td class="py-4 px-6 text-right font-bold text-red-500">-3 Pts</td>
+                            </tr>
+                            <tr class="hover:bg-white/2 transition-colors">
+                                <td class="py-4 px-6 text-brandWhite font-semibold">Falta de respuesta/comunicación en canales oficiales de desarrollo</td>
+                                <td class="py-4 px-6">Inactividad superior a las 24 horas continuas</td>
+                                <td class="py-4 px-6 text-right font-bold text-red-500">-2 Pts</td>
+                            </tr>
+                            <tr class="hover:bg-white/2 transition-colors">
+                                <td class="py-4 px-6 text-brandWhite font-semibold">Integración de código a la rama principal (Main) sin revisión de pares</td>
+                                <td class="py-4 px-6">Se salta el Pull Request o tiene fallos de compilación evidentes</td>
+                                <td class="py-4 px-6 text-right font-bold text-red-500">-2 Pts</td>
+                            </tr>
+                            <tr class="hover:bg-white/2 transition-colors">
+                                <td class="py-4 px-6 text-brandWhite font-semibold">Llegada tardía injustificada a las sesiones o ceremonias programadas</td>
+                                <td class="py-4 px-6">Supera los 10 minutos de tolerancia formal acordados</td>
+                                <td class="py-4 px-6 text-right font-bold text-red-500">-1 Pt</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-6 bg-brandDark/40 border-t border-white/5 text-xs text-brandMute flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-brandGold"></i>
+                    <span><strong>Nota de Cátedra:</strong> Las sanciones se acumulan de forma individual en cada sprint de entrega, con un límite máximo de deducción de 5 puntos por entregable.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!--  -->
+    <!-- ==========================================
+         7. SECCIÓN DE CONTACTO
+         ========================================== -->
+    <section id="contacto" class="py-24 bg-brandDeep border-t border-white/5 relative">
+        <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-12 gap-12 items-center">
+            <div class="md:col-span-5">
+                <span class="text-brandBlue font-heading font-bold text-sm tracking-widest uppercase">Canal de Comunicación Directo</span>
+                <h2 class="font-heading text-4xl font-bold text-brandWhite mt-2 mb-6">¿Preguntas o Proyectos?</h2>
+                <p class="text-brandMute text-lg mb-8 leading-relaxed">
+                    Estamos listos para forjar el núcleo tecnológico de su organización de forma ágil, segura y robusta. Envíanos tus requerimientos de software y nos pondremos en contacto de inmediato.
+                </p>
+
+                <div class="space-y-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-brandBlue/10 flex items-center justify-center text-brandBlue text-lg">
+                            <i class="fa-solid fa-envelope"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs text-brandMute uppercase block">Correo de Enlace</span>
+                            <a href="mailto:coreforge.team@gmail.com" class="text-base font-semibold text-brandWhite hover:text-brandBlue transition-colors">coreforge.team@gmail.com</a>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-brandBlue/10 flex items-center justify-center text-brandBlue text-lg">
+                            <i class="fa-solid fa-phone"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs text-brandMute uppercase block">Soporte Inmediato</span>
+                            <a href="tel:+50688292124" class="text-base font-semibold text-brandWhite hover:text-brandBlue transition-colors">+506 8829-2124</a>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-brandBlue/10 flex items-center justify-center text-brandBlue text-lg">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs text-brandMute uppercase block">Sede Operativa</span>
+                            <span class="text-base font-semibold text-brandWhite">San José, Costa Rica</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario interactivo con feedback -->
+            <div class="md:col-span-7 bg-brandCard rounded-2xl p-8 border border-white/5 relative">
+                <form id="contact-form" onsubmit="handleSubmit(event)" class="space-y-6">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label for="nombre" class="block text-xs font-heading font-bold text-brandWhite uppercase tracking-wider mb-2">Nombre</label>
+                            <input id="nombre" name="nombre" type="text" required class="w-full bg-brandDark/60 border border-white/10 rounded-xl px-4 py-3 text-brandWhite focus:outline-none focus:border-brandBlue transition-colors">
+                        </div>
+                        <div>
+                            <label for="apellido" class="block text-xs font-heading font-bold text-brandWhite uppercase tracking-wider mb-2">Apellido</label>
+                            <input id="apellido" name="apellido" type="text" required class="w-full bg-brandDark/60 border border-white/10 rounded-xl px-4 py-3 text-brandWhite focus:outline-none focus:border-brandBlue transition-colors">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-xs font-heading font-bold text-brandWhite uppercase tracking-wider mb-2">Correo Electrónico</label>
+                        <input id="email" name="email" type="email" required class="w-full bg-brandDark/60 border border-white/10 rounded-xl px-4 py-3 text-brandWhite focus:outline-none focus:border-brandBlue transition-colors">
+                    </div>
+
+                    <div>
+                        <label for="detalle" class="block text-xs font-heading font-bold text-brandWhite uppercase tracking-wider mb-2">Detalle de su Requerimiento</label>
+                        <textarea id="detalle" name="detalle" rows="4" required class="w-full bg-brandDark/60 border border-white/10 rounded-xl px-4 py-3 text-brandWhite focus:outline-none focus:border-brandBlue transition-colors resize-none" placeholder="Describa el tipo de software que desea que desarrollemos..."></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full py-4 rounded-xl bg-brandBlue text-brandDark font-heading font-bold hover:bg-opacity-90 hover:shadow-[0_0_20px_rgba(56,189,248,0.3)] transition-all">
+                        Enviar Mensaje Corporativo
+                    </button>
+                </form>
+
+                <!-- Mensaje de Éxito en el Envío (Oculto de entrada) -->
+                <div id="toast" class="hidden absolute inset-0 bg-brandCard rounded-2xl flex flex-col items-center justify-center text-center p-8 z-10 transition-all">
+                    <div class="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center text-green-500 text-3xl mb-4">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <h3 class="font-heading text-2xl font-bold text-brandWhite mb-2">¡Requerimiento Recibido!</h3>
+                    <p class="text-brandMute max-w-sm mb-6">Hemos enviado los detalles de su solicitud a los ingenieros de CoreForge Technologies. Le contactaremos en menos de 12 horas.</p>
+                    <button onclick="resetForm()" class="px-6 py-2.5 rounded-full bg-brandBlue text-brandDark font-heading font-bold hover:bg-opacity-90 transition-all">Enviar otro mensaje</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         8. PIE DE PÁGINA (Footer)
+         ========================================== -->
+    <footer class="bg-brandDeep border-t border-white/5 py-12 text-sm">
+        <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-8 mb-12">
+            <!-- Columna 1: Branding y Cátedra -->
+            <div class="md:col-span-2">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-full bg-white p-0.5 flex items-center justify-center shadow-[0_0_10px_rgba(56,189,248,0.3)] border border-brandBlue/20">
+                        <img src="~/img/Logo.png" alt="CoreForge Logo" class="w-full h-full object-contain rounded-full">
+                    </div>
+                    <span class="font-heading font-bold text-brandWhite text-base tracking-wider">COREFORGE TECHNOLOGIES</span>
+                </div>
+                <p class="text-brandMute max-w-sm mb-4">
+                    El núcleo de tu transformación digital. Formado por ingenieros comprometidos de la Universidad CENFOTEC para la asignatura de Ingeniería del Software 2.
+                </p>
+                <p class="text-xs text-brandBlue/70">
+                    Profesores: Isaías Chavarría Mora • Dennis Córdoba López • Jessica Cerdas Álvarez
+                </p>
+            </div>
+
+            <!-- Columna 2: Enlaces Rápidos -->
+            <div>
+                <h4 class="font-heading font-bold text-brandWhite text-sm uppercase tracking-wider mb-4">Navegación</h4>
+                <ul class="space-y-2">
+                    <li><a href="#inicio" class="text-brandMute hover:text-brandBlue transition-colors">Inicio</a></li>
+                    <li><a href="#servicios" class="text-brandMute hover:text-brandBlue transition-colors">Servicios de Especialidad</a></li>
+                    <li><a href="#equipo" class="text-brandMute hover:text-brandBlue transition-colors">Quiénes Somos</a></li>
+                    <li><a href="#metodologia" class="text-brandMute hover:text-brandBlue transition-colors">Marco Scrum</a></li>
+                    <li><a href="#reglamento" class="text-brandMute hover:text-brandBlue transition-colors">Reglamento Disciplinario</a></li>
+                </ul>
+            </div>
+
+            <!-- Columna 3: Información de Contacto -->
+            <div>
+                <h4 class="font-heading font-bold text-brandWhite text-sm uppercase tracking-wider mb-4">Contacto de Soporte</h4>
+                <ul class="space-y-2 text-brandMute">
+                    <li>Costa Rica, San José</li>
+                    <li><i class="fa-solid fa-envelope mr-1.5 text-brandBlue"></i><a href="mailto:coreforge.team@gmail.com" class="hover:text-brandBlue transition-colors">coreforge.team@gmail.com</a></li>
+                    <li><i class="fa-solid fa-phone mr-1.5 text-brandBlue"></i>+506 8829-2124</li>
+
+                </ul>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-6 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+            <span class="text-xs text-brandMute">© 2026 CoreForge Technologies. Todos los derechos reservados.</span>
+            <div class="flex gap-6 text-xs text-brandMute">
+                <a href="#" class="hover:text-brandBlue transition-colors">Políticas de Privacidad</a>
+                <a href="#" class="hover:text-brandBlue transition-colors">Términos y Condiciones</a>
+
+            </div>
+        </div>
+    </footer>
+
+
+    <!-- ==========================================
+         9. BOTÓN FLOTANTE: CONMUTADOR DE TEMA
+         ========================================== -->
+    <button id="theme-toggle" class="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-brandBlue text-slate-900 shadow-[0_4px_25px_rgba(56,189,248,0.5)] flex items-center justify-center hover:scale-110 active:scale-95 hover:rotate-45 transition-all focus:outline-none" aria-label="Cambiar tema de color">
+        <!-- El icono por defecto es el Sol porque el tema inicial es Oscuro -->
+        <i id="theme-icon" class="fa-solid fa-sun text-xl"></i>
+    </button>
+
+
+    <!-- ==========================================
+         JAVASCRIPT PARA INTERACTIVIDAD
+         ========================================== -->
+    <script>
+            // Manejo del menú móvil desplegable
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+
+            btn.addEventListener('click', () => {
+                menu.classList.toggle('hidden');
+            });
+
+            function toggleMenu() {
+                menu.classList.add('hidden');
+            }
+
+            // Simulación interactiva del formulario de contacto (sin alerts)
+            function handleSubmit(event) {
+                event.preventDefault();
+                const toast = document.getElementById('toast');
+                toast.classList.remove('hidden');
+            }
+
+            function resetForm() {
+                const toast = document.getElementById('toast');
+                const form = document.getElementById('contact-form');
+                form.reset();
+                toast.classList.add('hidden');
+            }
+
+            // Efecto visual al hacer scroll (Cambio de opacidad y altura del header)
+            window.addEventListener('scroll', () => {
+                const header = document.querySelector('header');
+                if (window.scrollY > 50) {
+                    header.classList.add('py-2', 'bg-brandDeep');
+                    header.classList.remove('py-4');
+                } else {
+                    header.classList.add('py-4');
+                    header.classList.remove('py-2', 'bg-brandDeep');
+                }
+            });
+
+            // LÓGICA DE CONTROL DE MODO CLARO / OSCURO
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const themeIcon = document.getElementById('theme-icon');
+
+            // Función para aplicar el tema de forma limpia
+            function applyTheme(theme) {
+                if (theme === 'light') {
+                    document.documentElement.classList.add('light');
+                    themeIcon.classList.replace('fa-sun', 'fa-moon');
+                } else {
+                    document.documentElement.classList.remove('light');
+                    themeIcon.classList.replace('fa-moon', 'fa-sun');
+                }
+            }
+
+            // Buscar si hay preferencia previa guardada o usar la del sistema operativo (por defecto preferimos oscuro para ingenieros)
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+
+            if (savedTheme === 'light' || (!savedTheme && systemPrefersLight)) {
+                applyTheme('light');
+            } else {
+                applyTheme('dark'); // Por defecto se mantiene en la paleta premium oscura
+            }
+
+            // Evento click para realizar el cambio interactivo de modo
+            themeToggleBtn.addEventListener('click', () => {
+                if (document.documentElement.classList.contains('light')) {
+                    applyTheme('dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    applyTheme('light');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+    </script>
+</body>
+</html>
