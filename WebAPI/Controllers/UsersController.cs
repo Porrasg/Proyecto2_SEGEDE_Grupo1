@@ -241,10 +241,6 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost]
-        [Route("LoginStep1")]
-        public ActionResult LoginStep1(LoginRequest request) => Login(request);
-
-        [HttpPost]
         [Route("ValidateLoginOtp")]
         public ActionResult ValidateLoginOtp(OtpRequest request)
         {
@@ -253,42 +249,6 @@ namespace WebAPI.Controllers
                 var um = new UserManager();
                 var user = um.ValidateLoginOtp(request.Email, request.OtpCode);
                 return Ok(user);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
-
-        [HttpPost]
-        [Route("LoginStep2")]
-        public ActionResult LoginStep2(OtpRequest request) => ValidateLoginOtp(request);
-
-        [HttpPost]
-        [Route("ChangePassword")]
-        public ActionResult ChangePassword(ChangePasswordRequest request)
-        {
-            try
-            {
-                var um = new UserManager();
-                um.ChangePassword(request.UserId, request.CurrentPassword, request.NewPassword, request.ConfirmPassword);
-                return Ok("Solicitud de cambio de contraseña enviada.");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
-
-        [HttpPost]
-        [Route("ConfirmChangePassword")]
-        public ActionResult ConfirmChangePassword(ChangePasswordRequest request, string tokenCode)
-        {
-            try
-            {
-                var um = new UserManager();
-                um.ConfirmChangePassword(request.UserId, tokenCode, request.NewPassword, request.ConfirmPassword);
-                return Ok("Contraseña actualizada correctamente.");
             }
             catch (Exception ex)
             {
