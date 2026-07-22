@@ -240,6 +240,18 @@ namespace DataAccess.CRUD
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
+        // Activa la cuenta del usuario y valida el OTP en la base de datos.
+        public void ActivateAccount(string email, string tokenCode)
+        {
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "ACTIVATE_USER_ACCOUNT_PR";
+
+            sqlOperation.AddStringParameter("Email", email);
+            sqlOperation.AddStringParameter("TokenCode", tokenCode);
+
+            sqlDao.ExecuteProcedure(sqlOperation);
+        }
+
         //Metodo que construye el DTO del User a partir de la data que viene en la consulta de la BD
         private User BuildUser(Dictionary<string, object> row)
         {

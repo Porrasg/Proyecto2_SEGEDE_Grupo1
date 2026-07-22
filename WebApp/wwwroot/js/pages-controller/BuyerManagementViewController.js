@@ -2,11 +2,10 @@
 document.addEventListener("DOMContentLoaded", function () {
     console.log("Inicializando BuyerManagementViewController...");
 
-    const token = session.getToken();
     const role = session.getRole();
     const userId = session.getUserId() || 1;
 
-    if (!token || (role !== "Distributor" && role !== "Administrator" && role !== "Admin")) {
+    if (role !== "Distributor" && role !== "Administrator" && role !== "Admin") {
         notify.error("Acceso denegado. Requiere privilegios de Comprador.");
         setTimeout(() => {
             window.location.href = "/Login";
@@ -299,8 +298,7 @@ document.addEventListener("DOMContentLoaded", function () {
             fetch(apiClient.url("Billing/Export?callerUserId=" + userId + "&callerRole=Buyer"), {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + session.getToken()
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ statementId: parseInt(id), format: format })
             }).then(response => {

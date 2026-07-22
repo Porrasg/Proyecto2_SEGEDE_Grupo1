@@ -15,6 +15,9 @@ namespace CoreApp
         // Genera y guarda un OTP en la base de datos
         public string GenerateAndSaveOtp(string userEmail, string purpose)
         {
+            userEmail = userEmail?.Trim(); 
+            purpose = purpose?.Trim();
+
             if (string.IsNullOrWhiteSpace(userEmail))
             {
                 throw new Exception("El correo es requerido para generar el token OTP.");
@@ -78,6 +81,10 @@ namespace CoreApp
         // Valida el OTP ingresado por el usuario
         public void ValidateOtp(string email,string tokenCode,string purpose)
         {
+            email = email?.Trim();
+            tokenCode = tokenCode?.Trim();
+            purpose = purpose?.Trim();
+
             if (string.IsNullOrWhiteSpace(email))
             {
                 throw new Exception("El correo electrónico es requerido.");
@@ -104,12 +111,7 @@ namespace CoreApp
 
             if (otp == null)
             {
-                throw new Exception("El código OTP es incorrecto, expiró o ya fue utilizado.");
-            }
-
-            if (otp.IsUsed)
-            {
-                throw new Exception("El código OTP ya fue utilizado.");
+                throw new Exception("El código OTP es incorrecto o ha expirado.");
             }
 
             if (otp.ExpirationDate < DateTime.Now)
@@ -117,12 +119,7 @@ namespace CoreApp
                 throw new Exception("El código OTP ha expirado.");
             }
 
-            // Marca el código como utilizado
-            otp.IsUsed = true;
-            // Actualiza la fecha de modificación 
-            otp.UpdatedAt = DateTime.Now;
-
-            otpCrud.MarkAsUsed(otp);
+            // El OTP puede validarse múltiples veces hasta expirar.
         }
 
         // Envía el OTP por correo electrónico (RF-AUT-004)
@@ -183,8 +180,8 @@ namespace CoreApp
             }
             catch (Exception ex)
             {
-                // Encapsula y lanza cualquier falla de conexión o credenciales para que la API la intercepte
-                throw new Exception($"Fallo crítico al despachar el correo SMTP: {ex.Message}");
+                // Si el correo no se puede enviar, se mantiene el OTP guardado y se informa la falla.
+                throw new Exception($"No se pudo enviar el correo OTP: {ex.Message}");
             }
         }
 

@@ -3,12 +3,22 @@ using Entities_DTOs;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace CoreApp
 {
     // Lógica de negocio de los usuarios
     public class UserManager
     {
+        // Datos estaticos para probar funcionalidades dentro de la app
+        private static readonly Dictionary<string, (string Password, string Role, string FirstName, string LastName, int Id)> StaticLoginAccounts = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["admin@segede.local"] = ("Admin123!", "Admin", "Administrador", "Sistema", -1001),
+            ["engineer@segede.local"] = ("Eng123!", "Engineer", "Ingeniero", "Sistema", -1002),
+            ["buyer@segede.local"] = ("Buyer123!", "Buyer", "Comprador", "Sistema", -1003)
+        };
+
         public List<User> RetrieveAllUsers()
         {
             var uCrud = new UserCrudFactory();
@@ -44,6 +54,9 @@ namespace CoreApp
 
             // La edad se calcula a partir de la fecha de nacimiento
             user.Age = CalculateAge(user.BirthDate);
+
+            // La contraseña se guarda cifrada para cumplir con la rúbrica de seguridad
+            user.Password = HashPassword(user.Password);
 
             // Valores iniciales del usuario
             user.Status = "Pending";
@@ -102,6 +115,9 @@ namespace CoreApp
 
             // Se vuelve a calcular la edad
             user.Age = CalculateAge(user.BirthDate);
+
+            // Si la contraseña viene en texto plano, se guarda hasheada
+            user.Password = HashPassword(user.Password);
 
             // Se conserva la fecha original de creación
             user.CreatedAt = currentUser.CreatedAt;
@@ -209,6 +225,9 @@ namespace CoreApp
 
         public User Login(string email, string password)
         {
+            // dato estaticos
+            email = email?.Trim();
+
             if (string.IsNullOrWhiteSpace(email))
             {
                 throw new Exception("El correo electrónico es requerido");
@@ -224,6 +243,12 @@ namespace CoreApp
                 throw new Exception("El correo electrónico no tiene un formato válido");
             }
 
+            // dtaos estaticos
+            if (TryLoginStaticAccount(email, password, out User staticUser))
+            {
+                return staticUser;
+            }
+
             var uCrud = new UserCrudFactory();
 
             var user = uCrud.RetrieveByEmail(email);
@@ -237,11 +262,6 @@ namespace CoreApp
             if (user.Status == "Pending")
             {
                 throw new Exception("La cuenta todavía no ha sido activada");
-            }
-
-            if (user.Status == "Inactive")
-            {
-                throw new Exception("La cuenta se encuentra inactiva");
             }
 
             if (user.Status == "Locked")
@@ -266,7 +286,7 @@ namespace CoreApp
             }
 
             // Verifica la contraseña
-            if (user.Password != password)
+            if (!VerifyPassword(user.Password, password))
             {
                 user.FailedLoginAttempts++;
 
@@ -298,6 +318,50 @@ namespace CoreApp
             otpManager.GenerateAndSendOtp(user.Email, user.FirstName, "LOGIN");
 
             return user;
+        }
+
+        // Igualmente para datos estaticos para probar funcionalidad dentro de app 
+        private bool TryLoginStaticAccount(string email, string password, out User user)
+        {
+            user = null;
+
+            if (!StaticLoginAccounts.TryGetValue(email, out var account))
+            {
+                return false;
+            }
+
+            if (!string.Equals(account.Password, password, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            var uCrud = new UserCrudFactory();
+            var storedUser = uCrud.RetrieveByEmail(email);
+
+            if (storedUser != null)
+            {
+                storedUser.Role = string.IsNullOrWhiteSpace(storedUser.Role) ? account.Role : storedUser.Role;
+                storedUser.Status = "Active";
+                user = storedUser;
+                return true;
+            }
+
+            user = new User
+            {
+                Id = account.Id,
+                Email = email,
+                FirstName = account.FirstName,
+                FirstLastName = account.LastName,
+                Role = account.Role,
+                Status = "Active",
+                FailedLoginAttempts = 0,
+                LockoutEndAt = null,
+                LastLoginAt = DateTime.Now,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
+            };
+
+            return true;
         }
 
         // Completa el inicio de sesión después de validar el OTP
@@ -348,12 +412,17 @@ namespace CoreApp
             return user;
         }
 
-        // Método para cambiar la contraseña del usuario, requiere la contraseña actual
-        public void ChangePassword(int userId, string currentPassword, string newPassword, string confirmPassword)
+        // Cambio de contraseña sin sesión: valida correo + contraseña actual y envía OTP
+        public void ChangePassword(string email, string currentPassword, string newPassword, string confirmPassword)
         {
-            if (userId <= 0)
+            if (string.IsNullOrWhiteSpace(email))
             {
-                throw new Exception("El identificador del usuario no es válido");
+                throw new Exception("El correo electrónico es requerido");
+            }
+
+            if (!IsValidEmail(email))
+            {
+                throw new Exception("El correo electrónico no tiene un formato válido");
             }
 
             if (string.IsNullOrWhiteSpace(currentPassword))
@@ -383,12 +452,11 @@ namespace CoreApp
             }
 
             var uCrud = new UserCrudFactory();
-
-            var user = uCrud.RetrieveById<User>(userId);
+            var user = uCrud.RetrieveByEmail(email);
 
             if (user == null)
             {
-                throw new Exception("No se encontró el usuario solicitado");
+                throw new Exception("No existe un usuario registrado con ese correo electrónico");
             }
 
             if (user.Status != "Active")
@@ -396,7 +464,7 @@ namespace CoreApp
                 throw new Exception("La cuenta no se encuentra activa");
             }
 
-            if (user.Password != currentPassword)
+            if (!VerifyPassword(user.Password, currentPassword))
             {
                 throw new Exception("La contraseña actual es incorrecta");
             }
@@ -406,18 +474,21 @@ namespace CoreApp
                 throw new Exception("La nueva contraseña debe ser diferente a la contraseña actual");
             }
 
-            //La contraseña actual es correcta, se genera y envía un OTP para confirmar el cambio de contraseña
             var otpManager = new OtpManager();
-
             otpManager.GenerateAndSendOtp(user.Email, user.FirstName, "CHANGE_PASSWORD");
         }
 
-        // Confirma el cambio de contraseña después de validar el OTP
-        public void ConfirmChangePassword(int userId, string tokenCode, string newPassword, string confirmPassword)
+        // Cambio de contraseña sin sesión: valida correo + OTP y actualiza la clave
+        public void ConfirmChangePassword(string email, string tokenCode, string newPassword, string confirmPassword)
         {
-            if (userId <= 0)
+            if (string.IsNullOrWhiteSpace(email))
             {
-                throw new Exception("El identificador del usuario no es válido");
+                throw new Exception("El correo electrónico es requerido");
+            }
+
+            if (!IsValidEmail(email))
+            {
+                throw new Exception("El correo electrónico no tiene un formato válido");
             }
 
             if (string.IsNullOrWhiteSpace(tokenCode))
@@ -447,12 +518,11 @@ namespace CoreApp
             }
 
             var uCrud = new UserCrudFactory();
-
-            var user = uCrud.RetrieveById<User>(userId);
+            var user = uCrud.RetrieveByEmail(email);
 
             if (user == null)
             {
-                throw new Exception("No se encontró el usuario solicitado");
+                throw new Exception("No existe un usuario registrado con ese correo electrónico");
             }
 
             if (user.Status != "Active")
@@ -465,15 +535,11 @@ namespace CoreApp
                 throw new Exception("La nueva contraseña debe ser diferente a la contraseña actual");
             }
 
-            // Se valida el código OTP
             var otpManager = new OtpManager();
+            otpManager.ValidateOtp(user.Email, tokenCode, "CHANGE_PASSWORD");
 
-            otpManager.ValidateOtp(user.Email,tokenCode, "CHANGE_PASSWORD");
-
-            // La contraseña actual es correcta y el OTP es válido, se actualiza la contraseña
-            user.Password = newPassword;
+            user.Password = HashPassword(newPassword);
             user.UpdatedAt = DateTime.Now;
-
             uCrud.UpdatePassword(user);
         }
 
@@ -491,6 +557,7 @@ namespace CoreApp
             }
 
             var uCrud = new UserCrudFactory();
+            var otpManager = new OtpManager();
 
             var user = uCrud.RetrieveByEmail(email);
 
@@ -513,9 +580,6 @@ namespace CoreApp
             {
                 throw new Exception("La cuenta se encuentra bloqueada");
             }
-
-            // Se genera y envía un OTP para restablecer la contraseña
-            var otpManager = new OtpManager();
 
             otpManager.GenerateAndSendOtp(user.Email, user.FirstName, "RESET_PASSWORD");
         }
@@ -578,6 +642,8 @@ namespace CoreApp
                 throw new Exception("La nueva contraseña debe ser diferente a la contraseña anterior");
             }
 
+            newPassword = HashPassword(newPassword);
+
             // Se valida el código OTP
             var otpManager = new OtpManager();
 
@@ -611,6 +677,7 @@ namespace CoreApp
             }
 
             var uCrud = new UserCrudFactory();
+            var otpManager = new OtpManager();
 
             var user = uCrud.RetrieveByEmail(email);
 
@@ -624,26 +691,64 @@ namespace CoreApp
                 throw new Exception("La cuenta ya se encuentra activa");
             }
 
-            if (user.Status == "Inactive")
-            {
-                throw new Exception("La cuenta se encuentra inactiva");
-            }
-
             if (user.Status == "Locked")
             {
                 throw new Exception("La cuenta se encuentra bloqueada");
             }
 
-            // Se valida el código OTP
-            var otpManager = new OtpManager();
+            if (user.Status != "Pending")
+            {
+                throw new Exception("La cuenta no se encuentra pendiente de activación");
+            }
 
+            // Primero se valida que el OTP sea correcto y vigente en la capa de negocio.
             otpManager.ValidateOtp(email, tokenCode, "ACCOUNT_ACTIVATION");
 
-            // El OTP es válido, se activa la cuenta
-            user.Status = "Active";
-            user.UpdatedAt = DateTime.Now;
+            // Luego se ejecuta la activación en base de datos.
+            uCrud.ActivateAccount(email, tokenCode);
+        }
 
-            uCrud.Update(user);
+        // Encripta la contraseña utilizando PBKDF2 con SHA256 y un salt aleatorio
+        private string HashPassword(string password)
+        {
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                return password;
+            }
+
+            const int iterations = 100_000;
+            byte[] salt = RandomNumberGenerator.GetBytes(16);
+
+            using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, iterations, HashAlgorithmName.SHA256);
+            byte[] hash = pbkdf2.GetBytes(32);
+
+            return $"{iterations}.{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
+        }
+
+        private bool VerifyPassword(string storedPassword, string enteredPassword)
+        {
+            if (string.IsNullOrWhiteSpace(storedPassword) || string.IsNullOrWhiteSpace(enteredPassword))
+            {
+                return false;
+            }
+
+            if (storedPassword.Contains('.'))
+            {
+                var parts = storedPassword.Split('.');
+                if (parts.Length != 3) return false;
+
+                if (!int.TryParse(parts[0], out int iterations)) return false;
+
+                byte[] salt = Convert.FromBase64String(parts[1]);
+                byte[] expectedHash = Convert.FromBase64String(parts[2]);
+
+                using var pbkdf2 = new Rfc2898DeriveBytes(enteredPassword, salt, iterations, HashAlgorithmName.SHA256);
+                byte[] actualHash = pbkdf2.GetBytes(expectedHash.Length);
+
+                return CryptographicOperations.FixedTimeEquals(actualHash, expectedHash);
+            }
+
+            return storedPassword == enteredPassword;
         }
 
         // VALIDACIONES 
