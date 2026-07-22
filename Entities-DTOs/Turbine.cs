@@ -13,13 +13,13 @@ namespace Entities_DTOs
 
         public string Location { get; set; } = string.Empty;
 
-        public string Brand { get; set; } = string.Empty;
+        public string Brand { get; set; } = string.Empty; // marca del fabricante de la turbina
 
-        public string Model { get; set; } = string.Empty;
+        public string Model { get; set; } = string.Empty; // modelo de la turbina
 
         public int ManufactureYear { get; set; }
 
-        public decimal NominalWeeklyCapacityMWh { get; set; }
+        public decimal NominalWeeklyCapacityMWh { get; set; } // capacidad de generación de energía en MWh por semana
 
         public string Status { get; set; } = string.Empty;
     }

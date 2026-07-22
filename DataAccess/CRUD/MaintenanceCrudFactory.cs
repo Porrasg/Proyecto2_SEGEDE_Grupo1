@@ -10,81 +10,108 @@ namespace DataAccess.CRUD
     {
 
         public MaintenanceCrudFactory() {
-
             sqlDao = SqlDao.GetInstance();
 
         }
 
         public override void Create(BaseDTO baseDTO)
         {
+            // Convirtiendo el baseDTO en un objeto Maintenance
             var maintenance = baseDTO as Maintenance;
+
+            // Definir el SP por medio del sql operation
             var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "CRE_MAINTENANCE_PR";
 
+            // Mapeo exacto con los nombres del Stored Procedure en la BD
             sqlOperation.AddIntParameter("TurbineId", maintenance.TurbineId);
             sqlOperation.AddIntParameter("EngineerId", maintenance.EngineerId);
             sqlOperation.AddStringParameter("MaintenanceType", maintenance.MaintenanceType);
             sqlOperation.AddStringParameter("Description", maintenance.Description);
             sqlOperation.AddDateTimeParameter("EstimatedStartDate", maintenance.EstimatedStartDate);
             sqlOperation.AddDateTimeParameter("EstimatedEndDate", maintenance.EstimatedEndDate);
-            sqlOperation.AddDateTimeParameter("ActualStartDate", maintenance.ActualStartDate ?? default(DateTime));
-            sqlOperation.AddDateTimeParameter("ActualEndDate", maintenance.ActualEndDate ?? default(DateTime));
-            sqlOperation.AddStringParameter("Result", maintenance.Result);
+            sqlOperation.AddNullableDateTimeParameter("ActualStartDate", maintenance.ActualStartDate); // puede ser nulo si el mantenimiento aun no empieza
+            sqlOperation.AddNullableDateTimeParameter("ActualEndDate", maintenance.ActualEndDate); // puede ser nulo si el mantenimiento aun no termina
+            sqlOperation.AddNullableStringParameter("Result", maintenance.Result); // puede ser nulo si el mantenimiento no tiene resultado todavia
             sqlOperation.AddStringParameter("Status", maintenance.Status);
             sqlOperation.AddDateTimeParameter("CreatedAt", maintenance.CreatedAt);
-            sqlOperation.AddDateTimeParameter("UpdatedAt", maintenance.UpdatedAt);
+            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", maintenance.UpdatedAt); // puede ser nulo
 
+            // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
         public override void Delete(BaseDTO baseDTO)
         {
+            // Convertir el baseDTO en un objeto Maintenance
             var maintenance = baseDTO as Maintenance;
+
+            // Definir el SP
             var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "DEL_MAINTENANCE_PR";
 
             sqlOperation.AddIntParameter("MaintenanceId", maintenance.Id);
             sqlOperation.AddStringParameter("Status", maintenance.Status);
-            sqlOperation.AddDateTimeParameter("UpdatedAt", maintenance.UpdatedAt);
+            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", maintenance.UpdatedAt); // puede ser nulo
 
+            // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
         public override List<T> RetrieveAll<T>()
         {
-            var list = new List<T>();
-            var operation = new SqlOperation();
-            operation.ProcedureName = "RET_ALL_MAINTENANCE_PR";
-            var results = sqlDao.ExecuteQueryProcedure(operation);
-            if (results.Count > 0)
+            // Lista que va a contener a todos los mantenimientos que se obtengan de la consulta a la BD
+            var lsMaintenances = new List<T>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_ALL_MAINTENANCE_PR";
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer la lista de resultados y convertir cada fila en un objeto Maintenance, luego agregarlo a la lista de mantenimientos
+            if (lsResults.Count > 0)
             {
-                foreach (var row in results)
+                foreach (var row in lsResults)
                 {
-                    var m = BuildMaintenance(row);
-                    list.Add((T)Convert.ChangeType(m, typeof(T)));
+                    var maintenance = BuildMaintenance(row);
+                    lsMaintenances.Add((T)Convert.ChangeType(maintenance, typeof(T)));
                 }
             }
-            return list;
+
+            return lsMaintenances;
         }
 
         public override T RetrieveById<T>(int id)
         {
-            var op = new SqlOperation();
-            op.ProcedureName = "RET_BY_ID_MAINTENANCE_PR";
-            op.AddIntParameter("MaintenanceId", id);
-            var results = sqlDao.ExecuteQueryProcedure(op);
-            if (results.Count > 0)
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_ID_MAINTENANCE_PR";
+
+            sqlOperation.AddIntParameter("MaintenanceId", id);
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Si se obtiene un resultado, convertir la primera fila en un objeto Maintenance y devolverlo, de lo contrario devolver null
+            if (lsResults.Count > 0)
             {
-                var m = BuildMaintenance(results[0]);
-                return (T)Convert.ChangeType(m, typeof(T));
+                var item = lsResults[0];
+                var maintenance = BuildMaintenance(lsResults[0]);
+                return (T)Convert.ChangeType(maintenance, typeof(T));
             }
             return default(T);
         }
 
         public override void Update(BaseDTO baseDTO)
         {
+            // Convirtiendo el baseDTO en un objeto Maintenance
             var maintenance = baseDTO as Maintenance;
+
+            // Definir el SP
             var sqlOperation = new SqlOperation();
+
             sqlOperation.ProcedureName = "UPD_MAINTENANCE_PR";
 
             sqlOperation.AddIntParameter("MaintenanceId", maintenance.Id);
@@ -94,18 +121,20 @@ namespace DataAccess.CRUD
             sqlOperation.AddStringParameter("Description", maintenance.Description);
             sqlOperation.AddDateTimeParameter("EstimatedStartDate", maintenance.EstimatedStartDate);
             sqlOperation.AddDateTimeParameter("EstimatedEndDate", maintenance.EstimatedEndDate);
-            sqlOperation.AddDateTimeParameter("ActualStartDate", maintenance.ActualStartDate ?? default(DateTime));
-            sqlOperation.AddDateTimeParameter("ActualEndDate", maintenance.ActualEndDate ?? default(DateTime));
-            sqlOperation.AddStringParameter("Result", maintenance.Result);
+            sqlOperation.AddNullableDateTimeParameter("ActualStartDate", maintenance.ActualStartDate); // puede ser nulo si el mantenimiento aun no empieza
+            sqlOperation.AddNullableDateTimeParameter("ActualEndDate", maintenance.ActualEndDate); // puede ser nulo si el mantenimiento aun no termina
+            sqlOperation.AddNullableStringParameter("Result", maintenance.Result); // puede ser nulo si el mantenimiento no tiene resultado todavia
             sqlOperation.AddStringParameter("Status", maintenance.Status);
-            sqlOperation.AddDateTimeParameter("UpdatedAt", maintenance.UpdatedAt);
+            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", maintenance.UpdatedAt); // puede ser nulo
 
+            //Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
+        //Metodo que construye el DTO del Maintenance a partir de la data que viene en la consulta de la BD
         private Maintenance BuildMaintenance(Dictionary<string, object> row)
         {
-            var m = new Maintenance
+            var maintenance = new Maintenance
             {
                 Id = (int)row["MaintenanceId"],
                 TurbineId = (int)row["TurbineId"],
@@ -114,14 +143,14 @@ namespace DataAccess.CRUD
                 Description = (string)row["Description"],
                 EstimatedStartDate = (DateTime)row["EstimatedStartDate"],
                 EstimatedEndDate = (DateTime)row["EstimatedEndDate"],
-                ActualStartDate = row.ContainsKey("ActualStartDate") && row["ActualStartDate"] != DBNull.Value ? (DateTime?)row["ActualStartDate"] : null,
-                ActualEndDate = row.ContainsKey("ActualEndDate") && row["ActualEndDate"] != DBNull.Value ? (DateTime?)row["ActualEndDate"] : null,
-                Result = row.ContainsKey("Result") && row["Result"] != DBNull.Value ? row["Result"].ToString() : null,
+                ActualStartDate = row["ActualStartDate"] != DBNull.Value ? (DateTime?)row["ActualStartDate"] : null, // para manejar el caso de que ActualStartDate pueda ser nulo
+                ActualEndDate = row["ActualEndDate"] != DBNull.Value ? (DateTime?)row["ActualEndDate"] : null, // para manejar el caso de que ActualEndDate pueda ser nulo
+                Result = row["Result"] != DBNull.Value ? (string)row["Result"] : null, // para manejar el caso de que Result pueda ser nulo
                 Status = (string)row["Status"],
                 CreatedAt = (DateTime)row["CreatedAt"],
-                UpdatedAt = (DateTime)row["UpdatedAt"]
+                UpdatedAt = row["UpdatedAt"] != DBNull.Value ? (DateTime?)row["UpdatedAt"] : null // para manejar el caso de que UpdatedAt pueda ser nulo
             };
-            return m;
+            return maintenance;
         }
     }
 }

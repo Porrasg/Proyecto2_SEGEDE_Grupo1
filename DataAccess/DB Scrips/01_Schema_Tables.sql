@@ -58,6 +58,7 @@ CREATE TABLE dbo.OtpTokens (
     Updated DATETIME DEFAULT GETDATE() NOT NULL,
     Email VARCHAR(150) NOT NULL,
     TokenCode VARCHAR(6) NOT NULL,        -- OTP estrictamente de 6 dígitos numéricos
+    Purpose VARCHAR(30) NOT NULL,
     ExpirationDate DATETIME NOT NULL,     -- Fecha límite de vigencia (Calculada en C#)
     IsUsed BIT DEFAULT 0 NOT NULL,         -- Bandera de seguridad de un solo uso
     CONSTRAINT [PK_OtpTokens] PRIMARY KEY CLUSTERED ([Id] ASC)

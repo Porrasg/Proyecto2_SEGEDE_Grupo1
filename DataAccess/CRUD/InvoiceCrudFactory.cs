@@ -15,95 +15,124 @@ namespace DataAccess.CRUD
 
         public override void Create(BaseDTO baseDTO)
         {
-            var inv = baseDTO as Invoice;
-            var sqlOperation = new SqlOperaton();
+            // Convirtiendo el baseDTO en un objeto Invoice
+            var invoice = baseDTO as Invoice;
+
+            // Definir el SP por medio del sql operation
+            var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "CRE_INVOICE_PR";
 
-            sqlOperation.AddStringParameter("InvoiceNumber", inv.InvoiceNumber);
-            sqlOperation.AddIntParameter("DistributionId", inv.DistributionId);
-            sqlOperation.AddIntParameter("BuyerId", inv.BuyerId);
-            sqlOperation.AddDateTimeParameter("IssueDate", inv.IssueDate);
-            sqlOperation.AddDateTimeParameter("DueDate", inv.DueDate);
-            sqlOperation.AddDecimalParameter("EnergyMWh", inv.EnergyMWh);
-            sqlOperation.AddDecimalParameter("UnitPrice", inv.UnitPrice);
-            sqlOperation.AddDecimalParameter("Subtotal", inv.Subtotal);
-            sqlOperation.AddDecimalParameter("TaxPercentage", inv.TaxPercentage);
-            sqlOperation.AddDecimalParameter("TaxAmount", inv.TaxAmount);
-            sqlOperation.AddDecimalParameter("TotalAmount", inv.TotalAmount);
-            sqlOperation.AddStringParameter("PaymentStatus", inv.PaymentStatus);
-            sqlOperation.AddDateTimeParameter("CreatedAt", inv.CreatedAt);
+            // Mapeo exacto con los nombres del Stored Procedure en la BD
+            sqlOperation.AddStringParameter("InvoiceNumber", invoice.InvoiceNumber);
+            sqlOperation.AddIntParameter("DistributionId", invoice.DistributionId);
+            sqlOperation.AddIntParameter("BuyerId", invoice.BuyerId);
+            sqlOperation.AddDateTimeParameter("IssueDate", invoice.IssueDate);
+            sqlOperation.AddDateTimeParameter("DueDate", invoice.DueDate);
+            sqlOperation.AddDecimalParameter("EnergyMWh", invoice.EnergyMWh);
+            sqlOperation.AddDecimalParameter("UnitPrice", invoice.UnitPrice);
+            sqlOperation.AddDecimalParameter("Subtotal", invoice.Subtotal);
+            sqlOperation.AddDecimalParameter("TaxPercentage", invoice.TaxPercentage);
+            sqlOperation.AddDecimalParameter("TaxAmount", invoice.TaxAmount);
+            sqlOperation.AddDecimalParameter("TotalAmount", invoice.TotalAmount);
+            sqlOperation.AddStringParameter("PaymentStatus", invoice.PaymentStatus);
+            sqlOperation.AddDateTimeParameter("CreatedAt", invoice.CreatedAt);
 
+            // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
         public override void Delete(BaseDTO baseDTO)
         {
-            var inv = baseDTO as Invoice;
+            // Convertir el baseDTO en un objeto Invoice
+            var invoice = baseDTO as Invoice;
+
+            // Definir el SP
             var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "DEL_INVOICE_PR";
 
-            sqlOperation.AddIntParameter("InvoiceId", inv.Id);
+            sqlOperation.AddIntParameter("InvoiceId", invoice.Id);
+            sqlOperation.AddStringParameter("PaymentStatus", invoice.PaymentStatus);
 
+            // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
         public override List<T> RetrieveAll<T>()
         {
-            var list = new List<T>();
-            var op = new SqlOperation();
-            op.ProcedureName = "RET_ALL_INVOICE_PR";
-            var results = sqlDao.ExecuteQueryProcedure(op);
-            if (results.Count > 0)
+            // Lista que va a contener a todas las facturas que se obtengan de la consulta a la BD
+            var lsInvoices = new List<T>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_ALL_INVOICE_PR";
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer la lista de resultados y convertir cada fila en un objeto Invoice, luego agregarlo a la lista de facturas
+            if (lsResults.Count > 0)
             {
-                foreach (var row in results)
+                foreach (var row in lsResults)
                 {
-                    var inv = BuildInvoice(row);
-                    list.Add((T)Convert.ChangeType(inv, typeof(T)));
+                    var invoice = BuildInvoice(row);
+                    lsInvoices.Add((T)Convert.ChangeType(invoice, typeof(T)));
                 }
             }
-            return list;
+            return lsInvoices;
         }
 
         public override T RetrieveById<T>(int id)
         {
-            var op = new SqlOperation();
-            op.ProcedureName = "RET_BY_ID_INVOICE_PR";
-            op.AddIntParameter("InvoiceId", id);
-            var results = sqlDao.ExecuteQueryProcedure(op);
-            if (results.Count > 0)
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_ID_INVOICE_PR";
+
+            sqlOperation.AddIntParameter("InvoiceId", id);
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Si se obtiene un resultado, convertir la primera fila en un objeto Invoice y devolverlo, de lo contrario devolver null
+            if (lsResults.Count > 0)
             {
-                var inv = BuildInvoice(results[0]);
-                return (T)Convert.ChangeType(inv, typeof(T));
+                var invoice = BuildInvoice(lsResults[0]);
+                return (T)Convert.ChangeType(invoice, typeof(T));
             }
             return default(T);
         }
 
         public override void Update(BaseDTO baseDTO)
         {
-            var inv = baseDTO as Invoice;
+            // Convertir el baseDTO en un objeto Invoice
+            var invoice = baseDTO as Invoice;
+
+            // Definir el SP
             var sqlOperation = new SqlOperation();
+
             sqlOperation.ProcedureName = "UPD_INVOICE_PR";
 
-            sqlOperation.AddIntParameter("InvoiceId", inv.Id);
-            sqlOperation.AddStringParameter("InvoiceNumber", inv.InvoiceNumber);
-            sqlOperation.AddIntParameter("DistributionId", inv.DistributionId);
-            sqlOperation.AddIntParameter("BuyerId", inv.BuyerId);
-            sqlOperation.AddDateTimeParameter("IssueDate", inv.IssueDate);
-            sqlOperation.AddDateTimeParameter("DueDate", inv.DueDate);
-            sqlOperation.AddDecimalParameter("EnergyMWh", inv.EnergyMWh);
-            sqlOperation.AddDecimalParameter("UnitPrice", inv.UnitPrice);
-            sqlOperation.AddDecimalParameter("Subtotal", inv.Subtotal);
-            sqlOperation.AddDecimalParameter("TaxPercentage", inv.TaxPercentage);
-            sqlOperation.AddDecimalParameter("TaxAmount", inv.TaxAmount);
-            sqlOperation.AddDecimalParameter("TotalAmount", inv.TotalAmount);
-            sqlOperation.AddStringParameter("PaymentStatus", inv.PaymentStatus);
+            sqlOperation.AddIntParameter("InvoiceId", invoice.Id);
+            sqlOperation.AddStringParameter("InvoiceNumber", invoice.InvoiceNumber);
+            sqlOperation.AddIntParameter("DistributionId", invoice.DistributionId);
+            sqlOperation.AddIntParameter("BuyerId", invoice.BuyerId);
+            sqlOperation.AddDateTimeParameter("IssueDate", invoice.IssueDate);
+            sqlOperation.AddDateTimeParameter("DueDate", invoice.DueDate);
+            sqlOperation.AddDecimalParameter("EnergyMWh", invoice.EnergyMWh);
+            sqlOperation.AddDecimalParameter("UnitPrice", invoice.UnitPrice);
+            sqlOperation.AddDecimalParameter("Subtotal", invoice.Subtotal);
+            sqlOperation.AddDecimalParameter("TaxPercentage", invoice.TaxPercentage);
+            sqlOperation.AddDecimalParameter("TaxAmount", invoice.TaxAmount);
+            sqlOperation.AddDecimalParameter("TotalAmount", invoice.TotalAmount);
+            sqlOperation.AddStringParameter("PaymentStatus", invoice.PaymentStatus);
 
+            // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
+        // Metodo que construye un objeto Invoice a partir a partir de la data que viene en la consulta de la BD
         private Invoice BuildInvoice(Dictionary<string, object> row)
         {
-            var inv = new Invoice
+            var invoice = new Invoice
             {
                 Id = (int)row["InvoiceId"],
                 InvoiceNumber = (string)row["InvoiceNumber"],
@@ -120,7 +149,7 @@ namespace DataAccess.CRUD
                 PaymentStatus = (string)row["PaymentStatus"],
                 CreatedAt = (DateTime)row["CreatedAt"]
             };
-            return inv;
+            return invoice;
         }
     }
 }

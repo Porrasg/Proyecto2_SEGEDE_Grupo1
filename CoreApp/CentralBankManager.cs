@@ -12,67 +12,220 @@ namespace CoreApp
         public List<CentralBank> RetrieveAllCentralBanks()
         {
             var crud = new CentralBankCrudFactory();
-
             return crud.RetrieveAll<CentralBank>();
         }
 
         public CentralBank RetrieveById(int id)
         {
-            var crud = new CentralBankCrudFactory();
+            if (id <= 0)
+            {
+                throw new Exception("El identificador del banco central no es válido");
+            }
 
-            return crud.RetrieveById<CentralBank>(id);
+            var centralBankCrud = new CentralBankCrudFactory();
+
+            // Obtener el banco central registrado
+            var centralBank = centralBankCrud.RetrieveById<CentralBank>(id);
+
+            // Validar que el banco central exista
+            if (centralBank == null)
+            {
+                throw new Exception("No se encontró el banco central solicitado");
+            }
+
+            return centralBank;
         }
 
-        public void Create(CentralBank bank)
+        public void Create(CentralBank centralBank)
         {
+            if (centralBank == null)
+            {
+                throw new Exception("El banco central no puede ser nulo");
+            }
 
-            if (HasEmptyFields(bank))
+            // Asignar el estado inicial
+            centralBank.Status = "Active";
+
+            if (HasEmptyFields(centralBank))
             {
                 throw new Exception("Todos los campos obligatorios deben completarse");
             }
 
-
-            if (bank.MaximumCapacityMWh <= 0)
+            // Validar la capacidad máxima
+            if (centralBank.MaximumCapacityMWh <= 0)
             {
-                throw new Exception("La capacidad máxima debe ser mayor a 0");
+                throw new Exception("La capacidad máxima debe ser mayor a cero");
             }
 
+            var centralBankCrud = new CentralBankCrudFactory();
 
-            if (HasNegativeValues(bank))
+            // Obtener los bancos centrales registrados
+            var centralBanks = centralBankCrud.RetrieveAll<CentralBank>();
+
+            // Validar que no exista otro banco con el mismo nombre
+            foreach (var currentCentralBank in centralBanks)
             {
-                throw new Exception("Los valores de energía no pueden ser negativos");
+                if (currentCentralBank.Name.Trim().ToLower() ==
+                    centralBank.Name.Trim().ToLower())
+                {
+                    throw new Exception("Ya existe un banco central con el nombre indicado");
+                }
             }
 
+            // Asignar los valores iniciales
+            centralBank.CurrentInventoryMWh = 0;
+            centralBank.TotalReceivedMWh = 0;
+            centralBank.TotalDistributedMWh = 0;
+            centralBank.TotalSaturationLossMWh = 0;
+            centralBank.CreatedAt = DateTime.Now;
+            centralBank.UpdatedAt = null;
 
-            var crud = new CentralBankCrudFactory();
-
-            crud.Create(bank);
+            // Crear el banco central
+            centralBankCrud.Create(centralBank);
         }
 
-        public void Update(CentralBank bank)
+        public void Update(CentralBank centralBank)
         {
-            var crud = new CentralBankCrudFactory();
+            if (centralBank == null)
+            {
+                throw new Exception("El banco central no puede ser nulo");
+            }
 
-            crud.Update(bank);
-        }
-        public void Delete(CentralBank bank)
-        {
-            var crud = new CentralBankCrudFactory();
+            if (centralBank.Id <= 0)
+            {
+                throw new Exception("El identificador del banco central no es válido");
+            }
 
-            crud.Delete(bank);
-        }
-        private bool HasEmptyFields(CentralBank bank)
-        {
-            return string.IsNullOrWhiteSpace(bank.Name) ||
-                   string.IsNullOrWhiteSpace(bank.Status);
-        }
-        private bool HasNegativeValues(CentralBank bank)
-        {
-            return bank.CurrentInventoryMWh < 0 ||
-                   bank.TotalReceivedMWh < 0 ||
-                   bank.TotalDistributedMWh < 0 ||
-                   bank.TotalSaturationLossMWh < 0;
+            if (HasEmptyFields(centralBank))
+            {
+                throw new Exception("Todos los campos obligatorios deben completarse");
+            }
+
+            // Validar la capacidad máxima
+            if (centralBank.MaximumCapacityMWh <= 0)
+            {
+                throw new Exception("La capacidad máxima debe ser mayor a cero");
+            }
+
+            // Validar el estado
+            if (!IsValidStatus(centralBank.Status))
+            {
+                throw new Exception("El estado del banco central no es válido");
+            }
+
+            var centralBankCrud = new CentralBankCrudFactory();
+
+            // Obtener el banco central registrado
+            var currentCentralBank =centralBankCrud.RetrieveById<CentralBank>(centralBank.Id);
+
+            // Validar que el banco central exista
+            if (currentCentralBank == null)
+            {
+                throw new Exception("El banco central que desea actualizar no existe");
+            }
+
+            // Validar que el banco central no esté inactivo
+            if (currentCentralBank.Status == "Inactive")
+            {
+                throw new Exception("No se puede modificar un banco central inactivo");
+            }
+
+            // Validar que la nueva capacidad soporte el inventario actual
+            if (centralBank.MaximumCapacityMWh <
+                currentCentralBank.CurrentInventoryMWh)
+            {
+                throw new Exception("La capacidad máxima no puede ser menor que el inventario actual del banco central");
+            }
+
+            // Obtener todos los bancos centrales
+            var centralBanks = centralBankCrud.RetrieveAll<CentralBank>();
+
+            // Validar que no exista otro banco con el mismo nombre
+            foreach (var current in centralBanks)
+            {
+                if (current.Id != centralBank.Id &&
+                    current.Name.Trim().ToLower() ==
+                    centralBank.Name.Trim().ToLower())
+                {
+                    throw new Exception("Ya existe otro banco central con el nombre indicado");
+                }
+            }
+
+            // Mantener los valores energéticos actuales
+            centralBank.CurrentInventoryMWh = currentCentralBank.CurrentInventoryMWh;
+            centralBank.TotalReceivedMWh = currentCentralBank.TotalReceivedMWh;
+            centralBank.TotalDistributedMWh = currentCentralBank.TotalDistributedMWh;
+            centralBank.TotalSaturationLossMWh = currentCentralBank.TotalSaturationLossMWh;
+
+            // Mantener la fecha original de creación
+            centralBank.CreatedAt = currentCentralBank.CreatedAt;
+
+            // Asignar la fecha de actualización
+            centralBank.UpdatedAt = DateTime.Now;
+
+            // Actualizar el banco central
+            centralBankCrud.Update(centralBank);
         }
 
+
+        public void Delete(CentralBank centralBank)
+        {
+            if (centralBank == null)
+            {
+                throw new Exception("El banco central no puede ser nulo");
+            }
+
+            if (centralBank.Id <= 0)
+            {
+                throw new Exception("El identificador del banco central no es válido");
+            }
+
+            var centralBankCrud = new CentralBankCrudFactory();
+
+            // Obtener el banco central registrado
+            var currentCentralBank = centralBankCrud.RetrieveById<CentralBank>(centralBank.Id);
+
+            // Validar que el banco central exista
+            if (currentCentralBank == null)
+            {
+                throw new Exception("El banco central que desea desactivar no existe");
+            }
+
+            // Validar que no se encuentre inactivo
+            if (currentCentralBank.Status == "Inactive")
+            {
+                throw new Exception("El banco central ya se encuentra inactivo");
+            }
+
+            // Validar que no contenga energía
+            if (currentCentralBank.CurrentInventoryMWh > 0)
+            {
+                throw new Exception("No se puede desactivar un banco central que todavía contiene energía");
+            }
+
+            // Asignar el estado inactivo
+            centralBank.Status = "Inactive";
+
+            // Asignar la fecha de actualización
+            centralBank.UpdatedAt = DateTime.Now;
+
+            // Desactivar lógicamente el banco central
+            centralBankCrud.Delete(centralBank);
+        }
+
+        private bool HasEmptyFields(
+            CentralBank centralBank)
+        {
+            return string.IsNullOrWhiteSpace(
+                       centralBank.Name) ||
+                   string.IsNullOrWhiteSpace(
+                       centralBank.Status);
+        }
+
+        private bool IsValidStatus(string status)
+        {
+            return status == "Active" ||
+                   status == "Inactive";
+        }
     }
 }

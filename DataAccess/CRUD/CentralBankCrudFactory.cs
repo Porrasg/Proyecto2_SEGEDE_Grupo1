@@ -15,89 +15,119 @@ namespace DataAccess.CRUD
 
         public override void Create(BaseDTO baseDTO)
         {
-            var cb = baseDTO as CentralBank;
+            // Convirtiendo el baseDTO en un objeto CentralBank
+            var centralBank = baseDTO as CentralBank;
+
+            // Definir el SP por medio del sql operation
             var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "CRE_CENTRAL_BANK_PR";
 
-            sqlOperation.AddStringParameter("Name", cb.Name);
-            sqlOperation.AddDecimalParameter("MaximumCapacityMWh", cb.MaximumCapacityMWh);
-            sqlOperation.AddDecimalParameter("CurrentInventoryMWh", cb.CurrentInventoryMWh);
-            sqlOperation.AddDecimalParameter("TotalReceivedMWh", cb.TotalReceivedMWh);
-            sqlOperation.AddDecimalParameter("TotalDistributedMWh", cb.TotalDistributedMWh);
-            sqlOperation.AddDecimalParameter("TotalSaturationLossMWh", cb.TotalSaturationLossMWh);
-            sqlOperation.AddStringParameter("Status", cb.Status);
-            sqlOperation.AddDateTimeParameter("CreatedAt", cb.CreatedAt);
-            sqlOperation.AddDateTimeParameter("UpdatedAt", cb.UpdatedAt);
+            // Mapeo exacto con los nombres del Stored Procedure en la BD
+            sqlOperation.AddStringParameter("Name", centralBank.Name);
+            sqlOperation.AddDecimalParameter("MaximumCapacityMWh", centralBank.MaximumCapacityMWh);
+            sqlOperation.AddDecimalParameter("CurrentInventoryMWh", centralBank.CurrentInventoryMWh);
+            sqlOperation.AddDecimalParameter("TotalReceivedMWh", centralBank.TotalReceivedMWh);
+            sqlOperation.AddDecimalParameter("TotalDistributedMWh", centralBank.TotalDistributedMWh);
+            sqlOperation.AddDecimalParameter("TotalSaturationLossMWh", centralBank.TotalSaturationLossMWh);
+            sqlOperation.AddStringParameter("Status", centralBank.Status);
+            sqlOperation.AddDateTimeParameter("CreatedAt", centralBank.CreatedAt);
+            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", centralBank.UpdatedAt); // puede ser nulo
 
+            // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
         public override void Delete(BaseDTO baseDTO)
         {
-            var cb = baseDTO as CentralBank;
+            // Convertir el baseDTO en un objeto CentralBank
+            var centralBank = baseDTO as CentralBank;
+
+            // Definir el SP
             var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "DEL_CENTRAL_BANK_PR";
 
-            sqlOperation.AddIntParameter("CentralBankId", cb.Id);
-            sqlOperation.AddStringParameter("Status", cb.Status);
-            sqlOperation.AddDateTimeParameter("UpdatedAt", cb.UpdatedAt);
+            sqlOperation.AddIntParameter("CentralBankId", centralBank.Id);
+            sqlOperation.AddStringParameter("Status", centralBank.Status);
+            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", centralBank.UpdatedAt); // puede ser nulo
 
+            // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
         public override List<T> RetrieveAll<T>()
         {
-            var list = new List<T>();
-            var op = new SqlOperation();
-            op.ProcedureName = "RET_ALL_CENTRAL_BANK_PR";
-            var results = sqlDao.ExecuteQueryProcedure(op);
-            if (results.Count > 0)
+            // Lista que va a contener a todos los bancos centrales que se obtengan de la consulta a la BD
+            var lsCentralBanks = new List<T>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_ALL_CENTRAL_BANK_PR";
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer la lista de resultados y convertir cada fila en un objeto CentralBank, luego agregarlo a la lista de bancos centrales
+            if (lsResults.Count > 0)
             {
-                foreach (var row in results)
+                foreach (var row in lsResults)
                 {
-                    var c = BuildCentralBank(row);
-                    list.Add((T)Convert.ChangeType(c, typeof(T)));
+                    var centralBank = BuildCentralBank(row);
+                    lsCentralBanks.Add((T)Convert.ChangeType(centralBank, typeof(T)));
                 }
             }
-            return list;
+
+            return lsCentralBanks;
         }
 
         public override T RetrieveById<T>(int id)
         {
-            var op = new SqlOperation();
-            op.ProcedureName = "RET_BY_ID_CENTRAL_BANK_PR";
-            op.AddIntParameter("CentralBankId", id);
-            var results = sqlDao.ExecuteQueryProcedure(op);
-            if (results.Count > 0)
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_ID_CENTRAL_BANK_PR";
+
+            sqlOperation.AddIntParameter("CentralBankId", id);
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Si se obtiene un resultado, convertir la primera fila en un objeto CentralBank y devolverlo, de lo contrario devolver null
+            if (lsResults.Count > 0)
             {
-                var c = BuildCentralBank(results[0]);
-                return (T)Convert.ChangeType(c, typeof(T));
+                var item = lsResults[0];
+                var centralBank = BuildCentralBank(lsResults[0]);
+                return (T)Convert.ChangeType(centralBank, typeof(T));
             }
             return default(T);
         }
 
         public override void Update(BaseDTO baseDTO)
         {
-            var cb = baseDTO as CentralBank;
+            // Convirtiendo el baseDTO en un objeto CentralBank
+            var centralBank = baseDTO as CentralBank;
+
+            // Definir el SP
             var sqlOperation = new SqlOperation();
+
             sqlOperation.ProcedureName = "UPD_CENTRAL_BANK_PR";
 
-            sqlOperation.AddIntParameter("CentralBankId", cb.Id);
-            sqlOperation.AddStringParameter("Name", cb.Name);
-            sqlOperation.AddDecimalParameter("MaximumCapacityMWh", cb.MaximumCapacityMWh);
-            sqlOperation.AddDecimalParameter("CurrentInventoryMWh", cb.CurrentInventoryMWh);
-            sqlOperation.AddDecimalParameter("TotalReceivedMWh", cb.TotalReceivedMWh);
-            sqlOperation.AddDecimalParameter("TotalDistributedMWh", cb.TotalDistributedMWh);
-            sqlOperation.AddDecimalParameter("TotalSaturationLossMWh", cb.TotalSaturationLossMWh);
-            sqlOperation.AddStringParameter("Status", cb.Status);
-            sqlOperation.AddDateTimeParameter("UpdatedAt", cb.UpdatedAt);
+            sqlOperation.AddIntParameter("CentralBankId", centralBank.Id);
+            sqlOperation.AddStringParameter("Name", centralBank.Name);
+            sqlOperation.AddDecimalParameter("MaximumCapacityMWh", centralBank.MaximumCapacityMWh);
+            sqlOperation.AddDecimalParameter("CurrentInventoryMWh", centralBank.CurrentInventoryMWh);
+            sqlOperation.AddDecimalParameter("TotalReceivedMWh", centralBank.TotalReceivedMWh);
+            sqlOperation.AddDecimalParameter("TotalDistributedMWh", centralBank.TotalDistributedMWh);
+            sqlOperation.AddDecimalParameter("TotalSaturationLossMWh", centralBank.TotalSaturationLossMWh);
+            sqlOperation.AddStringParameter("Status", centralBank.Status);
+            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", centralBank.UpdatedAt); // puede ser nulo
 
+            //Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
+        //Metodo que construye el DTO del CentralBank a partir de la data que viene en la consulta de la BD
         private CentralBank BuildCentralBank(Dictionary<string, object> row)
         {
-            var c = new CentralBank
+            var centralBank = new CentralBank
             {
                 Id = (int)row["CentralBankId"],
                 Name = (string)row["Name"],
@@ -108,9 +138,9 @@ namespace DataAccess.CRUD
                 TotalSaturationLossMWh = (decimal)row["TotalSaturationLossMWh"],
                 Status = (string)row["Status"],
                 CreatedAt = (DateTime)row["CreatedAt"],
-                UpdatedAt = (DateTime)row["UpdatedAt"]
+                UpdatedAt = row["UpdatedAt"] != DBNull.Value ? (DateTime?)row["UpdatedAt"] : null
             };
-            return c;
+            return centralBank;
         }
     }
 }

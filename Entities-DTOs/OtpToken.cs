@@ -8,6 +8,7 @@ namespace Entities_DTOs
     {
         public string Email { get; set; }
         public string TokenCode { get; set; }
+        public string Purpose { get; set; } // Indica para qué operación se generó el OTP
         public DateTime ExpirationDate { get; set; }
         public bool IsUsed { get; set; }
     }

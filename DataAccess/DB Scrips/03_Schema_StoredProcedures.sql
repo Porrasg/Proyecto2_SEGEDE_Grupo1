@@ -419,9 +419,10 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.CRE_OTP_TOKEN_PR
 (
-    @Email VARCHAR(150),
-    @TokenCode VARCHAR(6),
-    @ExpirationDate DATETIME
+    @P_EMAIL VARCHAR(150),
+    @P_TOKEN_CODE VARCHAR(6),
+    @P_PURPOSE VARCHAR(30),
+    @P_EXPIRATION_DATE DATETIME
 )
 AS
 BEGIN
@@ -431,6 +432,7 @@ BEGIN
     (
         Email,
         TokenCode,
+        Purpose,
         ExpirationDate,
         IsUsed,
         Created,
@@ -438,9 +440,10 @@ BEGIN
     )
     VALUES
     (
-        @Email,
-        @TokenCode,
-        @ExpirationDate,
+        @P_EMAIL,
+        @P_TOKEN_CODE,
+        @P_PURPOSE,
+        @P_EXPIRATION_DATE,
         0,
         GETDATE(),
         GETDATE()
@@ -462,26 +465,30 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.RET_VALID_OTP_TOKEN_PR
 (
-    @Email VARCHAR(150),
-    @TokenCode VARCHAR(6)
+    @P_EMAIL VARCHAR(150),
+    @P_TOKEN_CODE VARCHAR(6),
+    @P_PURPOSE VARCHAR(30)
 )
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    SELECT
+    SELECT TOP 1
         Id,
         Created,
         Updated,
         Email,
         TokenCode,
+        Purpose,
         ExpirationDate,
         IsUsed
     FROM dbo.OtpTokens
-    WHERE Email = @Email
-      AND TokenCode = @TokenCode
+    WHERE Email = @P_EMAIL
+      AND TokenCode = @P_TOKEN_CODE
+      AND Purpose = @P_PURPOSE
       AND IsUsed = 0
-      AND ExpirationDate >= GETDATE();
+      AND ExpirationDate >= GETDATE()
+    ORDER BY Id DESC;
 END;
 GO
 
@@ -526,7 +533,7 @@ BEGIN
         -- Activa la cuenta del usuario.
         UPDATE dbo.tblUsers
         SET
-            Status = 'Activo',
+            Status = 'Active',
             UpdatedAt = GETDATE()
         WHERE Email = @Email;
 
@@ -600,9 +607,35 @@ GO
         emplearse.
 ==============================================================================*/
 
-CREATE OR ALTER PROCEDURE dbo.UPD_OTP_TOKEN_AS_USED_PR
+CREATE OR ALTER PROCEDURE dbo.UPD_USED_OTP_TOKEN_PR
 (
-    @Id INT
+    @P_OTP_ID INT,
+    @P_USED_DATE DATETIME = NULL
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE dbo.OtpTokens
+    SET
+        IsUsed = 1,
+        Updated = ISNULL(@P_USED_DATE, GETDATE())
+    WHERE Id = @P_OTP_ID
+      AND IsUsed = 0;
+END;
+GO
+
+/*==============================================================================
+    PROCEDIMIENTO: UPD_INVALIDATE_OTP_TOKEN_PR
+
+    Descripción:
+        Invalidar códigos anteriores
+==============================================================================*/
+
+CREATE OR ALTER PROCEDURE dbo.UPD_INVALIDATE_OTP_TOKEN_PR
+(
+    @P_EMAIL VARCHAR(150),
+    @P_PURPOSE VARCHAR(30)
 )
 AS
 BEGIN
@@ -612,10 +645,12 @@ BEGIN
     SET
         IsUsed = 1,
         Updated = GETDATE()
-    WHERE Id = @Id
+    WHERE Email = @P_EMAIL
+      AND Purpose = @P_PURPOSE
       AND IsUsed = 0;
 END;
 GO
+
 
 /*==============================================================================
     STORED PROCEDURES: tblTurbines
@@ -1777,9 +1812,6 @@ CREATE OR ALTER PROCEDURE dbo.CRE_FLUSH_PR
     @TurbineId INT,
     @BatteryId INT,
     @CentralBankId INT,
-    @SnapshotEnergyMWh DECIMAL(18,4),
-    @TransferredEnergyMWh DECIMAL(18,4),
-    @SaturationLossMWh DECIMAL(18,4),
     @ExecutionType NVARCHAR(50),
     @Status NVARCHAR(50),
     @ExecutedAt DATETIME,
@@ -1788,37 +1820,153 @@ CREATE OR ALTER PROCEDURE dbo.CRE_FLUSH_PR
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET XACT_ABORT ON;
 
-    INSERT INTO dbo.tblFlushes
-    (
-        FlushBatchId,
-        TurbineId,
-        BatteryId,
-        CentralBankId,
-        SnapshotEnergyMWh,
-        TransferredEnergyMWh,
-        SaturationLossMWh,
-        ExecutionType,
-        Status,
-        ExecutedAt,
-        CreatedAt
-    )
-    VALUES
-    (
-        @FlushBatchId,
-        @TurbineId,
-        @BatteryId,
-        @CentralBankId,
-        @SnapshotEnergyMWh,
-        @TransferredEnergyMWh,
-        @SaturationLossMWh,
-        @ExecutionType,
-        @Status,
-        @ExecutedAt,
-        @CreatedAt
-    );
+    BEGIN TRY
+        BEGIN TRANSACTION;
 
-    SELECT CAST(SCOPE_IDENTITY() AS INT) AS FlushId;
+        DECLARE @SnapshotEnergyMWh DECIMAL(18,4);
+        DECLARE @BankCurrentInventoryMWh DECIMAL(18,4);
+        DECLARE @BankMaximumCapacityMWh DECIMAL(18,4);
+        DECLARE @AvailableCapacityMWh DECIMAL(18,4);
+        DECLARE @TransferredEnergyMWh DECIMAL(18,4);
+        DECLARE @SaturationLossMWh DECIMAL(18,4);
+
+        -- Obtener y bloquear la batería durante la transferencia
+        SELECT
+            @SnapshotEnergyMWh = CurrentEnergyMWh
+        FROM dbo.tblBatteries WITH (UPDLOCK, HOLDLOCK)
+        WHERE BatteryId = @BatteryId
+          AND TurbineId = @TurbineId
+          AND Status = 'Active';
+
+        IF @SnapshotEnergyMWh IS NULL
+        BEGIN
+            THROW 50001,
+                'La batería seleccionada no existe, no pertenece a la turbina o no está activa',
+                1;
+        END;
+
+        IF @SnapshotEnergyMWh <= 0
+        BEGIN
+            THROW 50002,
+                'La batería no contiene energía para realizar el vaciado',
+                1;
+        END;
+
+        -- Obtener y bloquear el banco central
+        SELECT
+            @BankCurrentInventoryMWh = CurrentInventoryMWh,
+            @BankMaximumCapacityMWh = MaximumCapacityMWh
+        FROM dbo.tblCentralBank WITH (UPDLOCK, HOLDLOCK)
+        WHERE CentralBankId = @CentralBankId
+          AND Status = 'Active';
+
+        IF @BankCurrentInventoryMWh IS NULL
+        BEGIN
+            THROW 50003,
+                'El banco central seleccionado no existe o no está activo',
+                1;
+        END;
+
+        -- Calcular la capacidad disponible
+        SET @AvailableCapacityMWh =
+            @BankMaximumCapacityMWh -
+            @BankCurrentInventoryMWh;
+
+        IF @AvailableCapacityMWh < 0
+        BEGIN
+            SET @AvailableCapacityMWh = 0;
+        END;
+
+        -- Calcular la energía transferida y la pérdida
+        IF @SnapshotEnergyMWh <= @AvailableCapacityMWh
+        BEGIN
+            SET @TransferredEnergyMWh =
+                @SnapshotEnergyMWh;
+
+            SET @SaturationLossMWh = 0;
+        END;
+        ELSE
+        BEGIN
+            SET @TransferredEnergyMWh =
+                @AvailableCapacityMWh;
+
+            SET @SaturationLossMWh =
+                @SnapshotEnergyMWh -
+                @AvailableCapacityMWh;
+        END;
+
+        -- Registrar el vaciado
+        INSERT INTO dbo.tblFlushes
+        (
+            FlushBatchId,
+            TurbineId,
+            BatteryId,
+            CentralBankId,
+            SnapshotEnergyMWh,
+            TransferredEnergyMWh,
+            SaturationLossMWh,
+            ExecutionType,
+            Status,
+            ExecutedAt,
+            CreatedAt
+        )
+        VALUES
+        (
+            @FlushBatchId,
+            @TurbineId,
+            @BatteryId,
+            @CentralBankId,
+            @SnapshotEnergyMWh,
+            @TransferredEnergyMWh,
+            @SaturationLossMWh,
+            @ExecutionType,
+            @Status,
+            @ExecutedAt,
+            @CreatedAt
+        );
+
+        -- Vaciar la batería y actualizar sus acumulados
+        UPDATE dbo.tblBatteries
+        SET
+            CurrentEnergyMWh = 0,
+            TotalTransferredMWh =
+                TotalTransferredMWh +
+                @TransferredEnergyMWh,
+            TotalSaturationLossMWh =
+                TotalSaturationLossMWh +
+                @SaturationLossMWh,
+            UpdatedAt = GETDATE()
+        WHERE BatteryId = @BatteryId;
+
+        -- Actualizar el banco central
+        UPDATE dbo.tblCentralBank
+        SET
+            CurrentInventoryMWh =
+                CurrentInventoryMWh +
+                @TransferredEnergyMWh,
+            TotalReceivedMWh =
+                TotalReceivedMWh +
+                @TransferredEnergyMWh,
+            TotalSaturationLossMWh =
+                TotalSaturationLossMWh +
+                @SaturationLossMWh,
+            UpdatedAt = GETDATE()
+        WHERE CentralBankId = @CentralBankId;
+
+        COMMIT TRANSACTION;
+
+        SELECT CAST(SCOPE_IDENTITY() AS INT) AS FlushId;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+        BEGIN
+            ROLLBACK TRANSACTION;
+        END;
+
+        THROW;
+    END CATCH;
 END;
 GO
 
@@ -3269,7 +3417,18 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DELETE FROM dbo.tblInvoices
+    IF NOT EXISTS
+    (
+        SELECT 1
+        FROM dbo.tblInvoices
+        WHERE InvoiceId = @InvoiceId
+    )
+    BEGIN
+        THROW 50001, 'La factura indicada no existe.', 1;
+    END;
+
+    UPDATE dbo.tblInvoices
+    SET PaymentStatus = 'Cancelled'
     WHERE InvoiceId = @InvoiceId;
 END;
 GO
@@ -4043,10 +4202,10 @@ GO
 CREATE OR ALTER PROCEDURE dbo.CRE_AUDIT_PR
 (
     @UserId INT = NULL,
-    @Action NVARCHAR(100),
+    @Action NVARCHAR(50),
     @EntityName NVARCHAR(100),
     @EntityId INT = NULL,
-    @Description NVARCHAR(MAX),
+    @Description NVARCHAR(500),
     @IpAddress NVARCHAR(50) = NULL,
     @CreatedAt DATETIME
 )
@@ -4094,10 +4253,10 @@ CREATE OR ALTER PROCEDURE dbo.UPD_AUDIT_PR
 (
     @AuditId INT,
     @UserId INT = NULL,
-    @Action NVARCHAR(100),
+    @Action NVARCHAR(50),
     @EntityName NVARCHAR(100),
     @EntityId INT = NULL,
-    @Description NVARCHAR(MAX),
+    @Description NVARCHAR(500),
     @IpAddress NVARCHAR(50) = NULL
 )
 AS
