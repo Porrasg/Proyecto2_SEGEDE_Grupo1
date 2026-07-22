@@ -22,7 +22,7 @@ CREATE OR ALTER PROCEDURE dbo.CRE_USER_PR
     @BirthDate DATE,
     @PhoneNumber NVARCHAR(20),
     @Email NVARCHAR(150),
-    @ProfilePhoto NVARCHAR(500) = NULL,
+    @ProfilePhoto NVARCHAR(MAX) = NULL,
     @Password NVARCHAR(255),
     @Age INT,
     @Role NVARCHAR(50),
@@ -77,11 +77,8 @@ BEGIN
         @CreatedAt,
         @UpdatedAt
     );
-
-    SELECT CAST(SCOPE_IDENTITY() AS INT) AS UserId;
 END;
 GO
-
 
 /*==============================================================================
     PROCEDIMIENTO: UPD_USER_PR
@@ -100,7 +97,7 @@ CREATE OR ALTER PROCEDURE dbo.UPD_USER_PR
     @BirthDate DATE,
     @PhoneNumber NVARCHAR(20),
     @Email NVARCHAR(150),
-    @ProfilePhoto NVARCHAR(500) = NULL,
+    @ProfilePhoto NVARCHAR(MAX) = NULL,
     @Password NVARCHAR(255),
     @Age INT,
     @Role NVARCHAR(50),
@@ -108,7 +105,7 @@ CREATE OR ALTER PROCEDURE dbo.UPD_USER_PR
     @FailedLoginAttempts INT,
     @LockoutEndAt DATETIME = NULL,
     @LastLoginAt DATETIME = NULL,
-    @UpdatedAt DATETIME
+    @UpdatedAt DATETIME = NULL
 )
 AS
 BEGIN
@@ -487,7 +484,6 @@ BEGIN
       AND TokenCode = @P_TOKEN_CODE
       AND Purpose = @P_PURPOSE
       AND IsUsed = 0
-      AND ExpirationDate >= GETDATE()
     ORDER BY Id DESC;
 END;
 GO
@@ -497,11 +493,8 @@ GO
     PROCEDIMIENTO: ACTIVATE_USER_ACCOUNT_PR
 
     Descripción:
-        Activa la cuenta de un usuario después de validar correctamente su
-        código OTP.
-
-        También marca el código como utilizado para impedir que pueda volver
-        a emplearse.
+        Activa la cuenta de un usuario. La validación del OTP se realiza en la
+        capa de negocio para permitir reintentos hasta la expiración.
 ==============================================================================*/
 
 CREATE OR ALTER PROCEDURE dbo.ACTIVATE_USER_ACCOUNT_PR
@@ -516,52 +509,88 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- Verifica que exista un código válido y vigente.
         IF NOT EXISTS
         (
             SELECT 1
             FROM dbo.OtpTokens
             WHERE Email = @Email
               AND TokenCode = @TokenCode
+              AND Purpose = 'ACCOUNT_ACTIVATION'
               AND IsUsed = 0
-              AND ExpirationDate >= GETDATE()
         )
         BEGIN
-            THROW 50001, 'El código OTP es inválido, ya fue utilizado o ha expirado.', 1;
+            RAISERROR('El código OTP es inválido, ya fue utilizado o ha expirado.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
         END;
 
-        -- Activa la cuenta del usuario.
         UPDATE dbo.tblUsers
         SET
             Status = 'Active',
             UpdatedAt = GETDATE()
-        WHERE Email = @Email;
+        WHERE Email = @Email
+          AND Status = 'Pending';
 
-        -- Verifica que el usuario exista.
         IF @@ROWCOUNT = 0
         BEGIN
-            THROW 50002, 'No existe un usuario registrado con el correo indicado.', 1;
+            RAISERROR('No existe un usuario registrado con el correo indicado o la cuenta no está pendiente de activación.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
         END;
 
-        -- Marca el código OTP como utilizado.
         UPDATE dbo.OtpTokens
         SET
             IsUsed = 1,
             Updated = GETDATE()
         WHERE Email = @Email
           AND TokenCode = @TokenCode
+          AND Purpose = 'ACCOUNT_ACTIVATION'
           AND IsUsed = 0;
+
+        IF @@ROWCOUNT = 0
+        BEGIN
+            RAISERROR('No se pudo marcar el OTP como utilizado.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END;
 
         COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0
-        BEGIN
             ROLLBACK TRANSACTION;
-        END;
 
         THROW;
     END CATCH;
+END;
+GO
+
+/*==============================================================================
+	PROCEDIMIENTO: ACTIVATE_USER_STATUS_PR
+
+	Descripción:
+		Activa únicamente el estado de la cuenta de usuario.
+==============================================================================*/
+
+CREATE OR ALTER PROCEDURE dbo.ACTIVATE_USER_STATUS_PR
+(
+	@Email NVARCHAR(150)
+)
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	UPDATE dbo.tblUsers
+	SET
+		Status = 'Active',
+		UpdatedAt = GETDATE()
+	WHERE Email = @Email;
+
+	IF @@ROWCOUNT = 0
+	BEGIN
+		RAISERROR('No existe un usuario registrado con el correo indicado.', 16, 1);
+		RETURN;
+	END;
 END;
 GO
 

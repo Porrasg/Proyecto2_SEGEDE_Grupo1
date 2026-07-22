@@ -2,9 +2,8 @@
 document.addEventListener("DOMContentLoaded", function () {
     console.log("Inicializando TurbineManagementViewController...");
 
-    const token = session.getToken();
     const role = session.getRole();
-    if (!token || (role !== "Engineer" && role !== "Administrator" && role !== "Admin")) {
+    if (role !== "Engineer" && role !== "Administrator" && role !== "Admin") {
         notify.error("Acceso denegado. Requiere privilegios de Ingeniero u Operaciones.");
         setTimeout(() => {
             window.location.href = "/Login";

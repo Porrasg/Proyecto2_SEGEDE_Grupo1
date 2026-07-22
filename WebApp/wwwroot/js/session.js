@@ -1,4 +1,4 @@
-// session.js (§24.2) - Módulo de gestión de sesión y JWT en el navegador
+// session.js (§24.2) - Módulo de gestión de sesión en el navegador
 const session = (function () {
     const KEY = 'sgde_session';
 
@@ -13,10 +13,9 @@ const session = (function () {
         return r ? JSON.parse(r) : null; 
     }
 
-    // Devuelve el token JWT o null si no existe (soporta mayúsculas y minúsculas por serialización JSON)
-    function getToken() { 
-        const s = get(); 
-        return s?.token ?? s?.Token ?? null; 
+    // Indica si existe una sesión válida en el navegador
+    function isAuthenticated() {
+        return !!get();
     }
 
     // Devuelve el rol del usuario actual (ej. "Admin", "Engineer", "Buyer")
@@ -42,7 +41,8 @@ const session = (function () {
         const s = get(); 
         if (!s) return true;
         const exp = s.expiration ?? s.Expiration;
-        return !exp || new Date(exp) < new Date(); 
+        if (!exp) return false;
+        return new Date(exp) < new Date(); 
     }
 
     // Limpia la sesión del almacenamiento web
@@ -50,7 +50,7 @@ const session = (function () {
         sessionStorage.removeItem(KEY); 
     }
 
-    return { save, get, getToken, getRole, getUserId, getEmail, isExpired, clear };
+    return { save, get, getRole, getUserId, getEmail, isExpired, isAuthenticated, clear };
 })();
 
 // Exponer en el objeto global con inicial minúscula y mayúscula por compatibilidad

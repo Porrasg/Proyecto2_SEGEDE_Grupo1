@@ -2,11 +2,10 @@
 document.addEventListener("DOMContentLoaded", function () {
     console.log("Inicializando OperationsComplementaryViewController...");
 
-    const token = session.getToken();
     const role = session.getRole();
     const userId = session.getUserId() || 1;
 
-    if (!token || (role !== "Engineer" && role !== "Administrator" && role !== "Admin")) {
+    if (role !== "Engineer" && role !== "Administrator" && role !== "Admin") {
         notify.error("Acceso denegado. Requiere privilegios de Ingeniero u Operaciones.");
         setTimeout(() => {
             window.location.href = "/Login";
