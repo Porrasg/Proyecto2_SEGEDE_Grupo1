@@ -12,4 +12,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CoreApp\CoreApp.csproj" />
+    <ProjectReference Include="..\Entities-DTOs\Entities-DTOs.csproj" />
+  </ItemGroup>
+
 </Project>
