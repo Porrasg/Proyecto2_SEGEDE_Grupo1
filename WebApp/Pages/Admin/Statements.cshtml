@@ -11,12 +11,12 @@
         <div class="d-flex justify-content-between mb-3">
         <div class="d-flex gap-2">
             <input type="text" class="form-control" id="stmtSearch" placeholder="Filtrar por comprador...">
-            <select class="form-select" id="stmtStatus"><option value="">Todos los Estados</option><option value="Issued">Issued</option><option value="Annulled">Annulled</option></select>
+            <select class="form-select" id="stmtStatus"><option value="">Todos los Estados</option><option value="Pending">Pending</option><option value="Paid">Paid</option><option value="Overdue">Overdue</option><option value="Cancelled">Cancelled</option></select>
         </div>
     </div>
     <table class="table table-bordered table-striped">
-        <thead><tr><th>ID</th><th>Comprador</th><th>Período</th><th>MWh</th><th>Subtotal (CRC)</th><th>Impuesto (CRC)</th><th>Total (CRC)</th><th>Estado</th><th>Rev.</th><th>Acciones</th></tr></thead>
-        <tbody id="statementsBody"><tr><td colspan="10" class="text-center">Cargando estados de cuenta...</td></tr></tbody>
+        <thead><tr><th>ID</th><th>Comprador</th><th>Período</th><th>MWh</th><th>Subtotal (CRC)</th><th>Impuesto (CRC)</th><th>Total (CRC)</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody id="statementsBody"><tr><td colspan="9" class="text-center">Cargando estados de cuenta...</td></tr></tbody>
     </table>
     <!-- Modal Anular -->
     <div class="modal fade" id="annulModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Anular Estado de Cuenta</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar diálogo"></button></div><div class="modal-body"><form id="annulForm"><div class="mb-3"><label class="form-label">Motivo de Anulación</label><textarea class="form-control" id="annulReason" required></textarea></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-danger" id="confirmAnnulBtn">Confirmar Anulación</button></div></div></div></div>

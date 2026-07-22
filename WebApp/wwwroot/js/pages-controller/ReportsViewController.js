@@ -56,9 +56,9 @@ document.addEventListener("DOMContentLoaded", function () {
     function turbineStatusBadge(status) {
         const map = {
             "Active": { cls: "bg-success", icon: "bi-check-circle", txt: "Activa" },
-            "UnderMaintenance": { cls: "bg-warning text-dark", icon: "bi-tools", txt: "En Mantenimiento" },
+            "Maintenance": { cls: "bg-warning text-dark", icon: "bi-tools", txt: "En Mantenimiento" },
             "Damaged": { cls: "bg-danger", icon: "bi-exclamation-triangle", txt: "Dañada" },
-            "SuspendedForNonCompliance": { cls: "bg-secondary", icon: "bi-pause-circle", txt: "Suspendida" },
+            "Inactive": { cls: "bg-secondary", icon: "bi-pause-circle", txt: "Suspendida" },
             "Decommissioned": { cls: "bg-dark", icon: "bi-x-circle", txt: "Dada de Baja" }
         };
         const m = map[status] || { cls: "bg-secondary", icon: "bi-question-circle", txt: status };
@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function () {
             list.forEach(t => {
                 const opt = document.createElement("option");
                 opt.value = t.id ?? t.Id;
-                opt.textContent = `${t.uniqueCode ?? t.UniqueCode} — ${t.name ?? t.Name}`;
+                opt.textContent = `${t.code ?? t.Code} — ${t.name ?? t.Name}`;
                 selectEl.appendChild(opt);
             });
             return list;
@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded", function () {
         let lastRows = [];
 
         loadTurbinesInto(sel, true).done(function (res) {
-            (res?.data || res?.Data || []).forEach(t => { turbineNames[t.id ?? t.Id] = `${t.uniqueCode ?? t.UniqueCode} — ${t.name ?? t.Name}`; });
+            (res?.data || res?.Data || []).forEach(t => { turbineNames[t.id ?? t.Id] = `${t.code ?? t.Code} — ${t.name ?? t.Name}`; });
         });
 
         btnRun?.addEventListener("click", function () {
@@ -238,10 +238,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     const grandTotal = results.reduce((s, r) => s + r.total, 0);
                     results.sort((a, b) => b.total - a.total);
                     lastRows = results.map(r => ({
-                        code: r.turbine.uniqueCode ?? r.turbine.UniqueCode,
+                        code: r.turbine.code ?? r.turbine.Code,
                         name: r.turbine.name ?? r.turbine.Name,
                         status: r.turbine.status ?? r.turbine.Status,
-                        capacity: r.turbine.weeklyNominalCapacity ?? r.turbine.WeeklyNominalCapacity,
+                        capacity: r.turbine.nominalWeeklyCapacityMWh ?? r.turbine.NominalWeeklyCapacityMWh,
                         total: r.total,
                         pct: grandTotal > 0 ? (r.total / grandTotal * 100) : 0
                     }));
@@ -286,14 +286,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 const lastM = t.lastMaintenance ?? t.LastMaintenance;
                 const alerts = [];
                 if (status === "Damaged") alerts.push("Avería activa");
-                if (status === "UnderMaintenance") alerts.push("Mantenimiento en curso");
-                if (status === "SuspendedForNonCompliance") alerts.push("Suspendida por incumplimiento");
+                if (status === "Maintenance") alerts.push("Mantenimiento en curso");
+                if (status === "Inactive") alerts.push("Suspendida por incumplimiento");
                 const overdue = !lastM || (now - new Date(lastM)) / 86400000 > OVERDUE_DAYS;
                 if (overdue && status !== "Decommissioned") alerts.push(`Mantenimiento vencido (> ${OVERDUE_DAYS} días)`);
                 return { t, status, lastM, alerts };
             });
             statusBody.innerHTML = lastRows.map(r => `<tr>
-                <td>${esc(r.t.uniqueCode ?? r.t.UniqueCode)}</td>
+                <td>${esc(r.t.code ?? r.t.Code)}</td>
                 <td>${esc(r.t.name ?? r.t.Name)}</td>
                 <td>${esc(r.t.location ?? r.t.Location)}</td>
                 <td>${turbineStatusBadge(r.status)}</td>
@@ -312,7 +312,7 @@ document.addEventListener("DOMContentLoaded", function () {
             downloadCsv("reporte_estado_turbinas.csv",
                 ["Código", "Nombre", "Ubicación", "Estado", "Último Mantenimiento", "Alertas"],
                 lastRows.map(r => [
-                    r.t.uniqueCode ?? r.t.UniqueCode, r.t.name ?? r.t.Name, r.t.location ?? r.t.Location,
+                    r.t.code ?? r.t.Code, r.t.name ?? r.t.Name, r.t.location ?? r.t.Location,
                     r.status, fmtDate(r.lastM), r.alerts.join(" | ") || "Sin alertas"
                 ]));
         });
@@ -341,11 +341,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 lastRows = details.map(d => {
                     const fc = fcById[d.forecastId ?? d.ForecastId];
-                    const label = fc ? `${MONTHS[fc.month ?? fc.Month]} ${fc.year ?? fc.Year}` : `Distribución #${d.distributionId ?? d.DistributionId}`;
-                    const req = Number(d.requestedMWh ?? d.RequestedMWh ?? 0);
-                    const asg = Number(d.assignedMWh ?? d.AssignedMWh ?? 0);
-                    const uns = Number(d.unsuppliedDemand ?? d.UnsuppliedDemand ?? 0);
-                    return { label, req, asg, uns, pct: req > 0 ? (asg / req * 100) : 100, sortKey: fc ? ((fc.year ?? fc.Year) * 100 + (fc.month ?? fc.Month)) : 0 };
+                    const label = fc ? `${MONTHS[fc.forecastMonth ?? fc.ForecastMonth]} ${fc.forecastYear ?? fc.ForecastYear}` : `Distribución #${d.distributionId ?? d.DistributionId}`;
+                    const req = Number(d.requestedEnergyMWh ?? d.RequestedEnergyMWh ?? 0);
+                    const asg = Number(d.assignedEnergyMWh ?? d.AssignedEnergyMWh ?? 0);
+                    const uns = Number(d.unassignedEnergyMWh ?? d.UnassignedEnergyMWh ?? 0);
+                    return { label, req, asg, uns, pct: req > 0 ? (asg / req * 100) : 100, sortKey: fc ? ((fc.forecastYear ?? fc.ForecastYear) * 100 + (fc.forecastMonth ?? fc.ForecastMonth)) : 0 };
                 }).sort((a, b) => a.sortKey - b.sortKey);
 
                 const totReq = lastRows.reduce((s, r) => s + r.req, 0);

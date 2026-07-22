@@ -203,11 +203,14 @@ document.addEventListener("DOMContentLoaded", function () {
             const ln1 = document.getElementById("regLastName1")?.value.trim() || document.getElementById("regLastName")?.value.trim() || "";
             const ln2 = document.getElementById("regLastName2")?.value.trim() || "";
 
+            // Entities-DTOs.User tiene FirstName (un solo campo), FirstLastName y SecondLastName
+            // (nullable) por separado — no un único "lastName" concatenado.
             const dto = {
                 identification: document.getElementById("regId")?.value.trim(),
                 email: document.getElementById("regEmail")?.value.trim(),
                 firstName: fn2 ? `${fn1} ${fn2}` : fn1,
-                lastName: ln2 ? `${ln1} ${ln2}` : ln1,
+                firstLastName: ln1,
+                secondLastName: ln2 || null,
                 phone: document.getElementById("regPhone")?.value.trim(),
                 birthDate: document.getElementById("regBirthDate")?.value,
                 photoUrl: photoDataUrl,

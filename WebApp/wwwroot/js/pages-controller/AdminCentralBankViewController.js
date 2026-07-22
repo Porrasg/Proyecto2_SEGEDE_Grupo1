@@ -1,30 +1,25 @@
-// AdminCentralBankViewController.js (§44, §85 Admin/CentralBank) - Inventario, capacidad manual y bitácora de movimientos
+// AdminCentralBankViewController.js (§44, §85 Admin/CentralBank) - Inventario, capacidad máxima y bitácora de movimientos
 document.addEventListener("DOMContentLoaded", function () {
     const currentEl = document.getElementById("cbCurrent");
     if (!currentEl) return;
 
     const autoCapEl = document.getElementById("cbAutoCap");
-    const effectiveEl = document.getElementById("cbEffective");
-    const manualInput = document.getElementById("cbManualCap");
-    const saveBtn = document.getElementById("btnSaveCap");
     const logsBody = document.getElementById("cbLogsBody");
 
     loadInventory();
     loadLogs();
 
+    // Entities-DTOs.CentralBank solo tiene CurrentInventoryMWh y MaximumCapacityMWh — no existe una
+    // capacidad "automática" separada de una "manual" en el backend, así que se eliminó ese control editable.
     function loadInventory() {
         apiClient.get("CentralBanks/Inventory")
             .done(function (res) {
                 const cb = res?.data || res?.Data || {};
-                const current = Number(cb.currentInventory ?? cb.CurrentInventory ?? 0);
-                const auto = Number(cb.automaticCapacity ?? cb.AutomaticCapacity ?? 0);
-                const manual = cb.manualCapacity ?? cb.ManualCapacity;
-                const effective = manual != null ? Number(manual) : auto;
+                const current = Number(cb.currentInventoryMWh ?? cb.CurrentInventoryMWh ?? 0);
+                const capacity = Number(cb.maximumCapacityMWh ?? cb.MaximumCapacityMWh ?? 0);
 
                 if (currentEl) currentEl.textContent = current.toLocaleString("es-CR", { minimumFractionDigits: 2 }) + " MWh";
-                if (autoCapEl) autoCapEl.textContent = auto.toLocaleString("es-CR", { minimumFractionDigits: 2 }) + " MWh";
-                if (effectiveEl) effectiveEl.textContent = effective.toLocaleString("es-CR", { minimumFractionDigits: 2 }) + " MWh";
-                if (manualInput) manualInput.value = manual != null ? manual : "";
+                if (autoCapEl) autoCapEl.textContent = capacity.toLocaleString("es-CR", { minimumFractionDigits: 2 }) + " MWh";
             })
             .fail(function (xhr) { handleApiError(xhr); });
     }
@@ -58,25 +53,4 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
 
-    if (saveBtn) {
-        saveBtn.addEventListener("click", function () {
-            const raw = manualInput?.value.trim();
-            const capacity = raw === "" ? null : parseFloat(raw);
-
-            saveBtn.disabled = true;
-            const original = saveBtn.innerHTML;
-            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-
-            apiClient.put("CentralBanks/ManualCapacity", { capacity: capacity })
-                .done(function () {
-                    notify.success(capacity == null ? "Capacidad restablecida a automática." : "Capacidad manual actualizada.");
-                    loadInventory();
-                })
-                .fail(function (xhr) { handleApiError(xhr); })
-                .always(function () {
-                    saveBtn.disabled = false;
-                    saveBtn.innerHTML = original;
-                });
-        });
-    }
 });

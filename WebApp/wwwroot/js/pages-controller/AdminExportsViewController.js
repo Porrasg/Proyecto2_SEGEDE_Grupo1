@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
     apiClient.get("Users/RetrieveAll").done(function (res) {
         (res?.data || res?.Data || []).forEach(function (u) {
             const id = u.id || u.Id;
-            userNames[id] = `${u.firstName || u.FirstName || ""} ${u.lastName || u.LastName || ""}`.trim() || `Usuario #${id}`;
+            userNames[id] = `${u.firstName || u.FirstName || ""} ${u.firstLastName || u.FirstLastName || ""}`.trim() || `Usuario #${id}`;
             userRoles[id] = u.role || u.Role || "-";
         });
     }).always(loadExports);

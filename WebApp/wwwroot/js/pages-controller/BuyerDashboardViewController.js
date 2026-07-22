@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const role = session.getRole();
     const userId = session.getUserId() || 1;
 
-    if (!token || (role !== "Buyer" && role !== "Administrator" && role !== "Admin")) {
+    if (!token || (role !== "Distributor" && role !== "Administrator" && role !== "Admin")) {
         notify.error("Acceso denegado. Requiere privilegios de Comprador.");
         setTimeout(() => {
             window.location.href = "/Login";
@@ -141,12 +141,12 @@ document.addEventListener("DOMContentLoaded", function () {
         apiClient.get("Users/" + userId)
             .done(function (res) {
                 const u = res?.data || res?.Data || {};
-                const fullName = [u.firstName || u.FirstName, u.lastName || u.LastName].filter(Boolean).join(" ");
+                const fullName = [u.firstName || u.FirstName, u.firstLastName || u.FirstLastName, u.secondLastName || u.SecondLastName].filter(Boolean).join(" ");
                 setText("profName", fullName || "Comprador SGDE");
                 setText("profEmail", u.email || u.Email || "-");
                 setText("profId", u.identification || u.Identification || "-");
 
-                const created = u.created || u.Created;
+                const created = u.createdAt || u.CreatedAt;
                 setText("profDate", created ? new Date(created).toLocaleDateString("es-CR") : "-");
 
                 const phoneInput = document.getElementById("pPhone");

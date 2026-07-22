@@ -23,17 +23,19 @@ document.addEventListener("DOMContentLoaded", function () {
         return apiClient.get("Users/RetrieveAll").done(function (res) {
             const users = res?.data || res?.Data || [];
             users.forEach(function (u) {
-                userNames[u.id || u.Id] = u.firstName || u.FirstName ? `${u.firstName || u.FirstName} ${u.lastName || u.LastName || ""}`.trim() : `Usuario #${u.id || u.Id}`;
+                userNames[u.id || u.Id] = u.firstName || u.FirstName ? `${u.firstName || u.FirstName} ${u.firstLastName || u.FirstLastName || ""}`.trim() : `Usuario #${u.id || u.Id}`;
             });
         });
     }
 
-    function scenarioBadge(scenario) {
-        const map = {
-            Sufficient: "bg-success", Shortage: "bg-warning text-dark",
-            ZeroInventory: "bg-danger", ZeroDemand: "bg-secondary"
-        };
-        return `<span class="badge ${map[scenario] || "bg-secondary"}">${scenario || "-"}</span>`;
+    // Entities-DTOs no tiene un "Scenario" (Sufficient/Shortage/...) ni un batch agregado con mes/año:
+    // Distribution es una fila por comprador (DistributionBatchId, RequestedEnergyMWh, AssignedEnergyMWh,
+    // UnassignedEnergyMWh, DistributionDate, Status). Este badge usa el Status real que ya calcula
+    // DistributionManager.Create ("Completed" si se asignó el 100%, "Partial" en caso contrario).
+    function statusBadge(status) {
+        const map = { Completed: "bg-success", Partial: "bg-warning text-dark", Cancelled: "bg-secondary" };
+        const txt = { Completed: "Cubierta", Partial: "Escasez (Prorrateo)", Cancelled: "Cancelada" };
+        return `<span class="badge ${map[status] || "bg-secondary"}">${txt[status] || status || "-"}</span>`;
     }
 
     function consultDistribution() {
@@ -45,9 +47,14 @@ document.addEventListener("DOMContentLoaded", function () {
         apiClient.get("Distributions/History")
             .done(function (res) {
                 const items = res?.data || res?.Data || [];
-                const dist = items.find(function (d) { return (d.month || d.Month) === month && (d.year || d.Year) === year; });
+                // Distributions/History devuelve filas individuales por comprador (Distribution); se filtra
+                // por el mes/año de DistributionDate y se agrupan por DistributionBatchId (el lote de ese mes).
+                const rowsInPeriod = items.filter(function (d) {
+                    const dt = new Date(d.distributionDate ?? d.DistributionDate);
+                    return (dt.getMonth() + 1) === month && dt.getFullYear() === year;
+                });
 
-                if (!dist) {
+                if (!rowsInPeriod.length) {
                     if (totalDemandEl) totalDemandEl.textContent = "- MWh";
                     if (availInvEl) availInvEl.textContent = "- MWh";
                     if (scenarioEl) scenarioEl.innerHTML = '<span class="badge bg-secondary">-</span>';
@@ -56,12 +63,21 @@ document.addEventListener("DOMContentLoaded", function () {
                     return;
                 }
 
-                if (totalDemandEl) totalDemandEl.textContent = Number(dist.totalDemand ?? dist.TotalDemand ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 }) + " MWh";
-                if (availInvEl) availInvEl.textContent = Number(dist.availableInventory ?? dist.AvailableInventory ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 }) + " MWh";
-                if (scenarioEl) scenarioEl.innerHTML = scenarioBadge(dist.scenario || dist.Scenario);
-                if (dateEl) dateEl.textContent = new Date(dist.executionDate || dist.ExecutionDate).toLocaleString("es-CR");
+                const totalDemand = rowsInPeriod.reduce((s, d) => s + Number(d.requestedEnergyMWh ?? d.RequestedEnergyMWh ?? 0), 0);
+                const totalAssigned = rowsInPeriod.reduce((s, d) => s + Number(d.assignedEnergyMWh ?? d.AssignedEnergyMWh ?? 0), 0);
+                const batchId = rowsInPeriod[0].distributionBatchId ?? rowsInPeriod[0].DistributionBatchId;
+                const executionDate = rowsInPeriod[0].distributionDate ?? rowsInPeriod[0].DistributionDate;
+                // Estado del lote: si alguna fila quedó "Partial" (prorrateo por escasez), se refleja como tal.
+                const batchStatus = rowsInPeriod.some(d => (d.status ?? d.Status) === "Partial") ? "Partial" : "Completed";
 
-                loadDetails(dist.id || dist.Id);
+                if (totalDemandEl) totalDemandEl.textContent = totalDemand.toLocaleString("es-CR", { minimumFractionDigits: 2 }) + " MWh";
+                // El inventario disponible del Banco Central al momento de la ejecución no se persiste por
+                // distribución en el backend actual — se muestra el total efectivamente asignado en su lugar.
+                if (availInvEl) availInvEl.textContent = totalAssigned.toLocaleString("es-CR", { minimumFractionDigits: 2 }) + " MWh";
+                if (scenarioEl) scenarioEl.innerHTML = statusBadge(batchStatus);
+                if (dateEl) dateEl.textContent = executionDate ? new Date(executionDate).toLocaleString("es-CR") : "-";
+
+                loadDetails(batchId);
             })
             .fail(function (xhr) {
                 if (detailsBody) detailsBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error al consultar la distribución.</td></tr>';
@@ -69,11 +85,11 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
 
-    function loadDetails(distributionId) {
+    function loadDetails(distributionBatchId) {
         if (!detailsBody) return;
         detailsBody.innerHTML = '<tr><td colspan="5" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando detalle...</td></tr>';
 
-        apiClient.get("Distributions/Detail/" + distributionId)
+        apiClient.get("Distributions/Detail/" + distributionBatchId)
             .done(function (res) {
                 const items = res?.data || res?.Data || [];
                 if (!items.length) {
@@ -81,16 +97,16 @@ document.addEventListener("DOMContentLoaded", function () {
                     return;
                 }
                 detailsBody.innerHTML = items.map(function (d) {
-                    const requested = Number(d.requestedMWh ?? d.RequestedMWh ?? 0);
-                    const assigned = Number(d.assignedMWh ?? d.AssignedMWh ?? 0);
-                    const unsupplied = Number(d.unsuppliedDemand ?? d.UnsuppliedDemand ?? 0);
+                    const requested = Number(d.requestedEnergyMWh ?? d.RequestedEnergyMWh ?? 0);
+                    const assigned = Number(d.assignedEnergyMWh ?? d.AssignedEnergyMWh ?? 0);
+                    const unassigned = Number(d.unassignedEnergyMWh ?? d.UnassignedEnergyMWh ?? 0);
                     const pct = requested > 0 ? (assigned / requested) * 100 : 100;
                     const buyerId = d.buyerId ?? d.BuyerId;
                     return `<tr>
                         <td>${escapeHtml(userNames[buyerId] || `Comprador #${buyerId}`)}</td>
                         <td>${requested.toLocaleString("es-CR", { minimumFractionDigits: 2 })}</td>
                         <td>${assigned.toLocaleString("es-CR", { minimumFractionDigits: 2 })}</td>
-                        <td>${unsupplied.toLocaleString("es-CR", { minimumFractionDigits: 2 })}</td>
+                        <td>${unassigned.toLocaleString("es-CR", { minimumFractionDigits: 2 })}</td>
                         <td>${pct.toFixed(1)}%</td>
                     </tr>`;
                 }).join("");
