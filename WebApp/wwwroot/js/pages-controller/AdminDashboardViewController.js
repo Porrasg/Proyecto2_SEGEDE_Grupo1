@@ -220,10 +220,11 @@ document.addEventListener("DOMContentLoaded", function () {
             const roleFilter = filterSelect?.value || "";
 
             const filtered = allUsers.filter(u => {
-                const matchesQuery = !query || 
-                    (u.identification || "").toLowerCase().includes(query) || 
-                    (u.firstName || "").toLowerCase().includes(query) || 
-                    (u.lastName || "").toLowerCase().includes(query) || 
+                const matchesQuery = !query ||
+                    (u.identification || "").toLowerCase().includes(query) ||
+                    (u.firstName || "").toLowerCase().includes(query) ||
+                    (u.firstLastName || "").toLowerCase().includes(query) ||
+                    (u.secondLastName || "").toLowerCase().includes(query) ||
                     (u.email || "").toLowerCase().includes(query);
                 const matchesRole = !roleFilter || (u.role || "") === roleFilter;
                 return matchesQuery && matchesRole;
@@ -239,7 +240,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             tableBody.innerHTML = users.map(u => {
-                const fullName = `${u.firstName || ""} ${u.lastName || ""}`.trim();
+                const fullName = `${u.firstName || ""} ${u.firstLastName || ""} ${u.secondLastName || ""}`.replace(/\s+/g, " ").trim();
                 const roleBadge = getRoleBadge(u.role);
                 const statusBadge = getStatusBadge(u.status);
                 const isActive = (u.status || "").toLowerCase() === "active";
@@ -279,7 +280,7 @@ document.addEventListener("DOMContentLoaded", function () {
         function getRoleBadge(role) {
             if (role === "Administrator") return '<span class="badge bg-danger">Administrador</span>';
             if (role === "Engineer") return '<span class="badge bg-info text-dark">Ingeniero</span>';
-            if (role === "Buyer") return '<span class="badge bg-success">Comprador</span>';
+            if (role === "Distributor") return '<span class="badge bg-success">Comprador</span>';
             return `<span class="badge bg-secondary">${role || "-"}</span>`;
         }
 
@@ -324,12 +325,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 first1Input.disabled = false;
                 if (first2Input) { first2Input.value = names.slice(1).join(" ") || ""; first2Input.disabled = false; }
             }
-            if (last1Input) {
-                const lasts = (u.lastName || "").split(" ");
-                last1Input.value = lasts[0] || "";
-                last1Input.disabled = false;
-                if (last2Input) { last2Input.value = lasts.slice(1).join(" ") || ""; last2Input.disabled = false; }
-            }
+            // Entities-DTOs.User.FirstLastName y SecondLastName ya vienen como campos separados.
+            if (last1Input) { last1Input.value = u.firstLastName || ""; last1Input.disabled = false; }
+            if (last2Input) { last2Input.value = u.secondLastName || ""; last2Input.disabled = false; }
 
             if (phoneInput) { phoneInput.value = u.phone || ""; phoneInput.disabled = false; }
 
@@ -376,14 +374,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 const l2 = document.getElementById("uLast2")?.value.trim() || "";
                 
                 const firstVal = f2 ? `${f1} ${f2}` : f1;
-                const lastVal = l2 ? `${l1} ${l2}` : l1;
                 const emailVal = document.getElementById("uEmail")?.value.trim();
                 const phoneVal = document.getElementById("uPhone")?.value.trim();
                 const birthDateVal = document.getElementById("uBirthDate")?.value;
                 const roleVal = document.getElementById("uRole")?.value;
                 const passVal = document.getElementById("uPass")?.value;
 
-                if (!firstVal || !lastVal) {
+                if (!firstVal || !l1) {
                     notify.warning("Por favor ingrese primer nombre y primer apellido.");
                     return;
                 }
@@ -396,7 +393,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     const dto = {
                         userId: editingUserId,
                         firstName: firstVal,
-                        lastName: lastVal,
+                        firstLastName: l1,
+                        secondLastName: l2 || null,
                         phone: phoneVal || "88888888",
                         role: roleVal,
                         status: "Active"
@@ -441,7 +439,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     const dto = {
                         identification: idVal,
                         firstName: firstVal,
-                        lastName: lastVal,
+                        firstLastName: l1,
+                        secondLastName: l2 || null,
                         email: emailVal,
                         role: roleVal,
                         phone: phoneVal,

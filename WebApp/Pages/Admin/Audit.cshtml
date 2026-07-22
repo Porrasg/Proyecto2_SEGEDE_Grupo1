@@ -26,11 +26,11 @@
         </div>
     </div>
     <table class="table table-sm table-hover">
-        <thead><tr><th>ID</th><th>Fecha/Hora</th><th>Usuario</th><th>Módulo</th><th>Acción</th><th>Entidad / ID</th><th>Almacén</th><th>Detalle</th></tr></thead>
-        <tbody id="auditBody"><tr><td colspan="8" class="text-center">Cargando registros...</td></tr></tbody>
+        <thead><tr><th>ID</th><th>Fecha/Hora</th><th>Usuario</th><th>Módulo</th><th>Acción</th><th>Entidad / ID</th><th>Detalle</th></tr></thead>
+        <tbody id="auditBody"><tr><td colspan="7" class="text-center">Cargando registros...</td></tr></tbody>
     </table>
     <!-- Modal Detalle Auditoría -->
-    <div class="modal fade" id="auditModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Detalle de Cambios de Auditoría</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar diálogo"></button></div><div class="modal-body"><div class="row"><div class="col-md-6"><h6>Valor Anterior</h6><pre class="p-2 border" id="audPrev" style="background-color: var(--sgde-surface-elevated); color: var(--sgde-body); max-height: 300px; overflow: auto;">---</pre></div><div class="col-md-6"><h6>Nuevo Valor</h6><pre class="p-2 border" id="audNew" style="background-color: var(--sgde-surface-elevated); color: var(--sgde-body); max-height: 300px; overflow: auto;">---</pre></div></div></div></div></div></div>
+    <div class="modal fade" id="auditModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Detalle del Registro de Auditoría</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar diálogo"></button></div><div class="modal-body"><h6>Descripción</h6><pre class="p-2 border" id="audDesc" style="background-color: var(--sgde-surface-elevated); color: var(--sgde-body); max-height: 300px; overflow: auto;">---</pre></div></div></div></div>
 </div>
 
 @section Scripts {

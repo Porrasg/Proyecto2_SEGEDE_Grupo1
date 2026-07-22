@@ -33,12 +33,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function loadHistory() {
         if (!historyBody) return;
-        historyBody.innerHTML = '<tr><td colspan="7" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando historial...</td></tr>';
+        historyBody.innerHTML = '<tr><td colspan="6" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando historial...</td></tr>';
         apiClient.get("Flushs/History?page=1&pageSize=50")
             .done(function (res) {
                 const items = res?.data?.items || res?.Data?.Items || [];
                 if (!items.length) {
-                    historyBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Sin operaciones de flush registradas.</td></tr>';
+                    historyBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Sin operaciones de flush registradas.</td></tr>';
                     return;
                 }
                 historyBody.innerHTML = items.map(function (f) {
@@ -47,16 +47,15 @@ document.addEventListener("DOMContentLoaded", function () {
                     return `<tr>
                         <td>${f.id || f.Id}</td>
                         <td>${f.executionType || f.ExecutionType || "-"}</td>
-                        <td>${new Date(f.startDate || f.StartDate).toLocaleString("es-CR")}</td>
-                        <td>${(f.endDate || f.EndDate) ? new Date(f.endDate || f.EndDate).toLocaleString("es-CR") : "-"}</td>
-                        <td>${Number(f.totalTransferredEnergy ?? f.TotalTransferredEnergy ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</td>
-                        <td>${Number(f.saturationLoss ?? f.SaturationLoss ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</td>
+                        <td>${new Date(f.executedAt || f.ExecutedAt).toLocaleString("es-CR")}</td>
+                        <td>${Number(f.transferredEnergyMWh ?? f.TransferredEnergyMWh ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</td>
+                        <td>${Number(f.saturationLossMWh ?? f.SaturationLossMWh ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</td>
                         <td><span class="badge ${badge}">${status}</span></td>
                     </tr>`;
                 }).join("");
             })
             .fail(function (xhr) {
-                historyBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error al cargar el historial de flush.</td></tr>';
+                historyBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al cargar el historial de flush.</td></tr>';
                 handleApiError(xhr);
             });
     }

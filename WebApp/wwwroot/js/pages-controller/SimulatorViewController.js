@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
             .done(function (res) {
                 const turbines = res?.data || res?.Data || [];
                 const options = turbines.map(function (t) {
-                    const code = t.uniqueCode || t.UniqueCode || `#${t.id}`;
+                    const code = t.code || t.Code || `#${t.id}`;
                     return `<option value="${t.id}">${escapeHtml(code)} — ${escapeHtml(t.name || "")}</option>`;
                 }).join("");
                 if (failTurbineSelect) failTurbineSelect.innerHTML = options;
@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             runTrigger(btnBattery, `¿Forzar la batería de la turbina seleccionada a ${charge} MWh?`, "Alterar Batería",
                 `Turbina #${turbineId} → ${charge} MWh`,
-                function () { return apiClient.post("Energy/SetBatteryCharge", { turbineId: turbineId, storedEnergy: charge }); });
+                function () { return apiClient.post("Energy/SetBatteryCharge", { turbineId: turbineId, currentEnergyMWh: charge }); });
         });
     }
 

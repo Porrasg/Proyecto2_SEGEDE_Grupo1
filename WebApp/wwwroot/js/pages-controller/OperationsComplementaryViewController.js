@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
     apiClient.get("Turbines/RetrieveAll").done(function (res) {
         const list = res?.data || res?.Data || [];
         list.forEach(t => {
-            allTurbinesMap[t.id || t.Id] = t.uniqueCode || t.UniqueCode || ("Turbina #" + (t.id || t.Id));
+            allTurbinesMap[t.id || t.Id] = t.code || t.Code || ("Turbina #" + (t.id || t.Id));
         });
 
         // Inicializar pantalla correspondiente una vez obtenido el catálogo
@@ -65,8 +65,8 @@ document.addEventListener("DOMContentLoaded", function () {
         // 1. Batería Local
         apiClient.get("Energy/LocalBattery/" + turbineId).done(function (res) {
             const b = res?.data || res?.Data || {};
-            if (batLevel) batLevel.textContent = formatNum(b.currentChargeMWh ?? b.CurrentChargeMWh ?? 0) + " MWh";
-            if (batCap) batCap.textContent = formatNum(b.capacityMWh ?? b.CapacityMWh ?? 0) + " MWh";
+            if (batLevel) batLevel.textContent = formatNum(b.currentEnergyMWh ?? b.CurrentEnergyMWh ?? 0) + " MWh";
+            if (batCap) batCap.textContent = formatNum(b.maximumCapacityMWh ?? b.MaximumCapacityMWh ?? 0) + " MWh";
         });
 
         // 2. Historial de Generación
@@ -176,8 +176,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 const estStart = formatDateTime(m.estimatedStartDate || m.EstimatedStartDate);
                 const estEnd = formatDateTime(m.estimatedEndDate || m.EstimatedEndDate);
-                const realStart = formatDateTime(m.realStartDate || m.RealStartDate);
-                const realEnd = formatDateTime(m.realEndDate || m.RealEndDate);
+                const realStart = formatDateTime(m.actualStartDate || m.ActualStartDate);
+                const realEnd = formatDateTime(m.actualEndDate || m.ActualEndDate);
 
                 const st = m.status || m.Status || "Scheduled";
                 let stBadge = '<span class="badge bg-secondary">' + st + '</span>';

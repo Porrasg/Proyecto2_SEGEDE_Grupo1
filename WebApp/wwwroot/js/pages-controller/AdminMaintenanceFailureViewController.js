@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         apiClient.get("Turbines/RetrieveAll").done(function (res) {
             (res?.data || res?.Data || []).forEach(function (t) {
-                turbineCodes[t.id] = t.uniqueCode || t.UniqueCode || `#${t.id}`;
+                turbineCodes[t.id] = t.code || t.Code || `#${t.id}`;
             });
         }).always(loadMaintenances);
 
@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         apiClient.get("Turbines/RetrieveAll").done(function (res) {
             (res?.data || res?.Data || []).forEach(function (t) {
-                turbineCodes[t.id] = t.uniqueCode || t.UniqueCode || `#${t.id}`;
+                turbineCodes[t.id] = t.code || t.Code || `#${t.id}`;
             });
         }).always(loadFailures);
 

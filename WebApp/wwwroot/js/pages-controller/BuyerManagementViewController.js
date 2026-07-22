@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const role = session.getRole();
     const userId = session.getUserId() || 1;
 
-    if (!token || (role !== "Buyer" && role !== "Administrator" && role !== "Admin")) {
+    if (!token || (role !== "Distributor" && role !== "Administrator" && role !== "Admin")) {
         notify.error("Acceso denegado. Requiere privilegios de Comprador.");
         setTimeout(() => {
             window.location.href = "/Login";
@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function filterAndRenderForecasts() {
             const year = parseInt(document.getElementById("buyForecastYear")?.value || 2026);
-            const filtered = allForecasts.filter(f => (f.year || f.Year) === year);
+            const filtered = allForecasts.filter(f => (f.forecastYear || f.ForecastYear) === year);
             renderForecastsTable(filtered);
         }
 
@@ -76,9 +76,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
             forecastsBody.innerHTML = list.map(f => {
                 const id = f.id || f.Id;
-                const m = f.month || f.Month;
-                const y = f.year || f.Year;
-                const amt = Number(f.amountMWh || f.AmountMWh || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
+                const m = f.forecastMonth || f.ForecastMonth;
+                const y = f.forecastYear || f.ForecastYear;
+                const amt = Number(f.requestedEnergyMWh || f.RequestedEnergyMWh || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
                 const st = f.status || f.Status || "Pending";
                 const badge = getStatusBadge(st);
 
@@ -92,7 +92,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <td>${badge}</td>
                         <td>
                             ${canEdit ? `
-                                <button class="btn btn-sm btn-outline-primary me-1 btn-edit-f" data-id="${id}" data-month="${m}" data-year="${y}" data-amt="${f.amountMWh || f.AmountMWh}" title="Modificar">
+                                <button class="btn btn-sm btn-outline-primary me-1 btn-edit-f" data-id="${id}" data-month="${m}" data-year="${y}" data-amt="${f.requestedEnergyMWh || f.RequestedEnergyMWh}" title="Modificar">
                                     <i class="bi bi-pencil"></i> Modificar
                                 </button>
                                 <button class="btn btn-sm btn-outline-danger btn-cancel-f" data-id="${id}" title="Cancelar Pronóstico">
@@ -139,7 +139,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (editingForecastId) {
                 apiClient.put("Forecasts/Modify", {
                     forecastId: parseInt(editingForecastId),
-                    newAmountMWh: amt
+                    newRequestedEnergyMWh: amt
                 }).done(function () {
                     notify.success("Pronóstico de demanda actualizado exitosamente.");
                     bootstrap.Modal.getInstance(document.getElementById("forecastModal"))?.hide();
@@ -152,9 +152,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             } else {
                 apiClient.post("Forecasts/Register", {
-                    month: m,
-                    year: y,
-                    amountMWh: amt
+                    forecastMonth: m,
+                    forecastYear: y,
+                    requestedEnergyMWh: amt
                 }).done(function () {
                     notify.success("Nuevo pronóstico registrado y sujeto a distribución.");
                     bootstrap.Modal.getInstance(document.getElementById("forecastModal"))?.hide();
@@ -209,8 +209,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function filterAndRenderStatements() {
             const year = parseInt(document.getElementById("buyStmtYear")?.value || 2026);
-            const filtered = allStatements.filter(s => (s.year || s.Year) === year);
+            const filtered = allStatements.filter(s => {
+                const issueDate = s.issueDate ?? s.IssueDate;
+                return issueDate && new Date(issueDate).getFullYear() === year;
+            });
             renderStatementsTable(filtered);
+        }
+
+        // Entities-DTOs.Invoice.PaymentStatus real: Pending/Paid/Overdue/Cancelled (no "Issued"/"Annulled").
+        function paymentStatusBadge(status) {
+            const map = { Pending: ["bg-warning text-dark", "Pendiente"], Paid: ["bg-success", "Pagado"], Overdue: ["bg-danger", "Vencido"], Cancelled: ["bg-secondary", "Anulado"] };
+            const [cls, txt] = map[status] || ["bg-secondary", status || "-"];
+            return `<span class="badge ${cls}">${txt}</span>`;
         }
 
         function renderStatementsTable(list) {
@@ -221,23 +231,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
             stmtsBody.innerHTML = list.map(s => {
                 const id = s.id || s.Id;
-                const m = s.month || s.Month;
-                const y = s.year || s.Year;
-                const assigned = Number(s.assignedMWh || s.AssignedMWh || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
+                const issueDate = new Date(s.issueDate ?? s.IssueDate);
+                const m = issueDate.getMonth() + 1;
+                const y = issueDate.getFullYear();
+                const energy = Number(s.energyMWh || s.EnergyMWh || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
                 const sub = Number(s.subtotal || s.Subtotal || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
                 const tax = Number(s.taxAmount || s.TaxAmount || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
-                const total = Number(s.total || s.Total || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
-                const st = s.status || s.Status || "Issued";
-                const badge = st === "Issued" ? '<span class="badge bg-success">Emitido</span>' : '<span class="badge bg-danger">Anulado</span>';
+                const total = Number(s.totalAmount || s.TotalAmount || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
+                const st = s.paymentStatus || s.PaymentStatus || "Pending";
 
                 return `
                     <tr>
-                        <td class="fw-bold">${monthsEs[m] || m} ${y} (Rev ${s.revisionNumber || s.RevisionNumber || 0})</td>
-                        <td>${assigned} MWh</td>
+                        <td class="fw-bold">${monthsEs[m] || m} ${y}</td>
+                        <td>${energy} MWh</td>
                         <td>₡${sub}</td>
                         <td>₡${tax}</td>
                         <td class="fw-bold text-success">₡${total}</td>
-                        <td>${badge}</td>
+                        <td>${paymentStatusBadge(st)}</td>
                         <td>
                             <div class="btn-group btn-group-sm">
                                 <button class="btn btn-outline-primary btn-view-stmt" data-idx="${list.indexOf(s)}" title="Ver Detalle"><i class="bi bi-eye"></i></button>
@@ -263,20 +273,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function showStatementDetail(s) {
             if (!s) return;
-            const m = s.month || s.Month;
-            const y = s.year || s.Year;
+            const issueDate = new Date(s.issueDate ?? s.IssueDate);
             const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-            setText("vsPeriod", `${monthsEs[m] || m} ${y} (Revisión ${s.revisionNumber || s.RevisionNumber || 0})`);
-            setText("vsAssigned", Number(s.assignedMWh || s.AssignedMWh || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 }) + " MWh");
+            setText("vsPeriod", `${monthsEs[issueDate.getMonth() + 1] || (issueDate.getMonth() + 1)} ${issueDate.getFullYear()}`);
+            setText("vsAssigned", Number(s.energyMWh || s.EnergyMWh || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 }) + " MWh");
             setText("vsUnitPrice", "₡" + Number(s.unitPrice || s.UnitPrice || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 }));
             setText("vsSubtotal", "₡" + Number(s.subtotal || s.Subtotal || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 }));
-            setText("vsTax", `₡${Number(s.taxAmount || s.TaxAmount || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })} (${(Number(s.taxPercentage || s.TaxPercentage || 0) * 100).toFixed(1)}%)`);
-            setText("vsTotal", "₡" + Number(s.total || s.Total || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 }));
-            const status = s.status || s.Status || "Issued";
+            // TaxPercentage ya se guarda como porcentaje (13 = 13%), no como fracción — InvoiceManager.Create hace Subtotal * (TaxPercentage / 100).
+            setText("vsTax", `₡${Number(s.taxAmount || s.TaxAmount || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })} (${Number(s.taxPercentage || s.TaxPercentage || 0).toFixed(1)}%)`);
+            setText("vsTotal", "₡" + Number(s.totalAmount || s.TotalAmount || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 }));
+            const status = s.paymentStatus || s.PaymentStatus || "Pending";
             const statusEl = document.getElementById("vsStatus");
-            if (statusEl) statusEl.innerHTML = status === "Issued" ? '<span class="badge bg-success">Emitido</span>' : '<span class="badge bg-danger">Anulado</span>';
-            setText("vsAnnulReason", s.annulmentReason || s.AnnulmentReason || "-");
-            setText("vsIssueDate", new Date(s.issueDate || s.IssueDate).toLocaleString("es-CR"));
+            if (statusEl) statusEl.innerHTML = paymentStatusBadge(status);
+            // Invoice no tiene un campo de motivo de anulación en el backend actual.
+            setText("vsAnnulReason", "-");
+            setText("vsIssueDate", issueDate.toLocaleString("es-CR"));
             viewModal?.show();
         }
 
@@ -347,26 +358,24 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             distBody.innerHTML = list.map(d => {
-                const req = Number(d.requestedMWh || d.RequestedMWh || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
-                const assign = Number(d.assignedMWh || d.AssignedMWh || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
-                const unsupp = Number(d.unsuppliedDemand || d.UnsuppliedDemand || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
+                const req = Number(d.requestedEnergyMWh || d.RequestedEnergyMWh || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
+                const assign = Number(d.assignedEnergyMWh || d.AssignedEnergyMWh || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
+                const unassigned = Number(d.unassignedEnergyMWh || d.UnassignedEnergyMWh || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
 
-                // Escenario derivado
+                // Estado real de la fila (lo calcula DistributionManager.Create: Completed = 100% cubierto, Partial = prorrateado).
+                const st = d.status || d.Status || "Completed";
                 let scBadge = '<span class="badge bg-success">Suficiencia 100%</span>';
-                if (Number(d.unsuppliedDemand || d.UnsuppliedDemand || 0) > 0) {
-                    scBadge = '<span class="badge bg-warning text-dark">Escasez (Prorrateo)</span>';
-                } if (Number(d.assignedMWh || d.AssignedMWh || 0) === 0 && Number(d.requestedMWh || d.RequestedMWh || 0) > 0) {
-                    scBadge = '<span class="badge bg-danger">Inventario Cero</span>';
-                }
+                if (st === "Partial") scBadge = '<span class="badge bg-warning text-dark">Escasez (Prorrateo)</span>';
+                if (st === "Cancelled") scBadge = '<span class="badge bg-secondary">Cancelada</span>';
 
-                const dateStr = d.created || d.Created ? new Date(d.created || d.Created).toLocaleDateString("es-CR", { month: 'long', year: 'numeric' }) : `Cierre #${d.distributionId || d.DistributionId}`;
+                const dateStr = d.distributionDate || d.DistributionDate ? new Date(d.distributionDate || d.DistributionDate).toLocaleDateString("es-CR", { month: 'long', year: 'numeric' }) : `Cierre #${d.distributionBatchId || d.DistributionBatchId}`;
 
                 return `
                     <tr>
                         <td class="text-capitalize fw-bold">${dateStr}</td>
                         <td>${req} MWh</td>
                         <td class="text-success fw-bold">${assign} MWh</td>
-                        <td class="${Number(d.unsuppliedDemand || d.UnsuppliedDemand) > 0 ? 'text-danger fw-bold' : ''}">${unsupp} MWh</td>
+                        <td class="${st === 'Partial' ? 'text-danger fw-bold' : ''}">${unassigned} MWh</td>
                         <td>${scBadge}</td>
                     </tr>
                 `;

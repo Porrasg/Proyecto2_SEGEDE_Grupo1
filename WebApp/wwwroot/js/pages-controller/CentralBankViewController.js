@@ -25,8 +25,8 @@ document.addEventListener("DOMContentLoaded", function () {
         // 1. Nivel de Inventario
         apiClient.get("CentralBanks/Inventory").done(function (res) {
             const cb = res?.data || res?.Data || {};
-            const inv = cb.currentInventory ?? cb.CurrentInventory ?? 0;
-            const updated = cb.lastUpdated || cb.LastUpdated;
+            const inv = cb.currentInventoryMWh ?? cb.CurrentInventoryMWh ?? 0;
+            const updated = cb.updatedAt || cb.UpdatedAt;
 
             setText("cbInv", formatNum(inv) + " MWh");
             setText("cbLast", updated ? new Date(updated).toLocaleString("es-CR") : "Reciente");
@@ -108,13 +108,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
             body.innerHTML = list.map(f => {
                 const id = f.id || f.Id;
-                const dateStr = f.timestamp || f.Timestamp ? new Date(f.timestamp || f.Timestamp).toLocaleString("es-CR") : "-";
+                const dateStr = f.executedAt || f.ExecutedAt ? new Date(f.executedAt || f.ExecutedAt).toLocaleString("es-CR") : "-";
                 const tid = f.turbineId || f.TurbineId || "-";
-                const amt = formatNum(f.energyFlushedMWh ?? f.EnergyFlushedMWh ?? 0);
-                const type = f.type || f.Type || "Automatic";
+                const amt = formatNum(f.transferredEnergyMWh ?? f.TransferredEnergyMWh ?? 0);
+                const type = f.executionType || f.ExecutionType || "Automatic";
                 const typeBadge = type.toLowerCase() === "manual" ? '<span class="badge bg-secondary">Manual</span>' : '<span class="badge bg-info text-dark">Automático</span>';
-                const st = f.status || f.Status || "Success";
-                const stBadge = st.toLowerCase() === "success" ? '<span class="badge bg-success">Exitoso</span>' : '<span class="badge bg-danger">Fallido</span>';
+                const st = f.status || f.Status || "Completed";
+                const stBadge = st.toLowerCase() === "completed" ? '<span class="badge bg-success">Exitoso</span>' : '<span class="badge bg-danger">Fallido</span>';
 
                 return `
                     <tr>
