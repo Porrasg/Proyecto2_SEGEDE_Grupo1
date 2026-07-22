@@ -126,6 +126,52 @@ namespace DataAccess.CRUD
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
+        // Obtiene una turbina mediante su código
+        public Turbine RetrieveByCode(string code)
+        {
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_CODE_TURBINE_PR";
+
+            sqlOperation.AddStringParameter("Code", code);
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Si se obtiene un resultado, convertir la primera fila en un objeto Turbine y devolverlo, de lo contrario devolver null
+            if (lsResults.Count > 0)
+            {
+                return BuildTurbine(lsResults[0]);
+            }
+
+            return null;
+        }
+
+        // Obtiene las turbinas que tengan el estado indicado
+        public List<Turbine> RetrieveByStatus(string status)
+        {
+            // Lista que va a contener a todas las turbinas que se obtengan de la consulta a la BD
+            var lsTurbines = new List<Turbine>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_STATUS_TURBINE_PR";
+
+            sqlOperation.AddStringParameter("Status", status);
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer la lista de resultados y convertir cada fila en un objeto Turbine, luego agregarlo a la lista de turbinas
+            foreach (var row in lsResults)
+            {
+                var turbine = BuildTurbine(row);
+                lsTurbines.Add(turbine);
+            }
+
+            return lsTurbines;
+        }
+
         //Metodo que construye el DTO del Turbine a partir de la data que viene en la consulta de la BD
         private Turbine BuildTurbine(Dictionary<string, object> row)
         {

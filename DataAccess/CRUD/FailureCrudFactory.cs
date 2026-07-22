@@ -123,6 +123,114 @@ namespace DataAccess.CRUD
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
+        public List<Failure> RetrieveByTurbineId(int turbineId)
+        {
+            // Lista que va a contener las fallas asociadas a la turbina
+            var lsFailures = new List<Failure>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_TURBINE_FAILURE_PR";
+
+            sqlOperation.AddIntParameter("TurbineId", turbineId);
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer los resultados y construir los objetos Failure
+            if (lsResults.Count > 0)
+            {
+                foreach (var row in lsResults)
+                {
+                    var failure = BuildFailure(row);
+                    lsFailures.Add(failure);
+                }
+            }
+
+            return lsFailures;
+        }
+
+        public List<Failure> RetrieveByEngineerId(int engineerId)
+        {
+            // Lista que va a contener las fallas asociadas al ingeniero
+            var lsFailures = new List<Failure>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_ENGINEER_FAILURE_PR";
+
+            sqlOperation.AddIntParameter("EngineerId", engineerId);
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer los resultados y construir los objetos Failure
+            if (lsResults.Count > 0)
+            {
+                foreach (var row in lsResults)
+                {
+                    var failure = BuildFailure(row);
+                    lsFailures.Add(failure);
+                }
+            }
+
+            return lsFailures;
+        }
+
+        public List<Failure> RetrieveByStatus(string status)
+        {
+            // Lista que va a contener las fallas con el estado indicado
+            var lsFailures = new List<Failure>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_STATUS_FAILURE_PR";
+
+            sqlOperation.AddStringParameter("Status", status);
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer los resultados y construir los objetos Failure
+            if (lsResults.Count > 0)
+            {
+                foreach (var row in lsResults)
+                {
+                    var failure = BuildFailure(row);
+                    lsFailures.Add(failure);
+                }
+            }
+
+            return lsFailures;
+        }
+
+        public List<Failure> RetrieveBySeverity(string severity)
+        {
+            // Lista que va a contener las fallas con la severidad indicada
+            var lsFailures = new List<Failure>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_SEVERITY_FAILURE_PR";
+
+            sqlOperation.AddStringParameter("Severity", severity);
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer los resultados y construir los objetos Failure
+            if (lsResults.Count > 0)
+            {
+                foreach (var row in lsResults)
+                {
+                    var failure = BuildFailure(row);
+                    lsFailures.Add(failure);
+                }
+            }
+
+            return lsFailures;
+        }
+
         //Metodo que construye el DTO del Failure a partir de la data que viene en la consulta de la BD
         private Failure BuildFailure(Dictionary<string, object> row)
         {
@@ -137,7 +245,7 @@ namespace DataAccess.CRUD
                 Resolution = row["Resolution"] != DBNull.Value ? (string)row["Resolution"] : null, // para manejar el caso de que Resolution pueda ser nulo
                 Status = (string)row["Status"],
                 CreatedAt = (DateTime)row["CreatedAt"],
-                UpdatedAt = (DateTime)row["UpdatedAt"]
+                UpdatedAt = row["UpdatedAt"] != DBNull.Value ? (DateTime)row["UpdatedAt"] : null // para manejar el caso de que UpdatedAt pueda ser nulo
             };
             return failure;
         }

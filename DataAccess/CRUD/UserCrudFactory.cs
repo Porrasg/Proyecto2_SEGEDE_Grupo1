@@ -190,51 +190,51 @@ namespace DataAccess.CRUD
         }
 
         // Método para actualizar los intentos fallidos de inicio de sesión
-        public void UpdateLoginAttempts(int userId, int failedLoginAttempts, DateTime? lockoutEndAt, DateTime updatedAt)
+        public void UpdateLoginAttempts(User user)
         {
             // Definir el SP por medio del sql operation
             var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "UPD_LOGIN_ATTEMPTS_USER_PR";
 
             // Mapeo exacto con los nombres del Stored Procedure en la BD
-            sqlOperation.AddIntParameter("UserId", userId);
-            sqlOperation.AddIntParameter("FailedLoginAttempts", failedLoginAttempts);
-            sqlOperation.AddNullableDateTimeParameter("LockoutEndAt", lockoutEndAt);
-            sqlOperation.AddDateTimeParameter("UpdatedAt", updatedAt);
+            sqlOperation.AddIntParameter("UserId", user.Id);
+            sqlOperation.AddIntParameter("FailedLoginAttempts", user.FailedLoginAttempts);
+            sqlOperation.AddNullableDateTimeParameter("LockoutEndAt", user.LockoutEndAt); // puede ser nulo
+            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", user.UpdatedAt); // puede ser nulo
 
             // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
         // Método para actualizar la fecha del último inicio de sesión
-        public void UpdateLastLogin(int userId, DateTime lastLoginAt, int failedLoginAttempts, DateTime? lockoutEndAt, DateTime updatedAt)
+        public void UpdateLastLogin(User user)
         {
             // Definir el SP por medio del sql operation
             var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "UPD_LAST_LOGIN_USER_PR";
 
             // Mapeo exacto con los nombres del Stored Procedure en la BD
-            sqlOperation.AddIntParameter("UserId", userId);
-            sqlOperation.AddDateTimeParameter("LastLoginAt", lastLoginAt);
-            sqlOperation.AddIntParameter("FailedLoginAttempts", failedLoginAttempts);
-            sqlOperation.AddNullableDateTimeParameter("LockoutEndAt", lockoutEndAt);
-            sqlOperation.AddDateTimeParameter("UpdatedAt", updatedAt);
+            sqlOperation.AddIntParameter("UserId", user.Id);
+            sqlOperation.AddNullableDateTimeParameter("LastLoginAt", user.LastLoginAt); // puede ser nulo
+            sqlOperation.AddIntParameter("FailedLoginAttempts", user.FailedLoginAttempts);
+            sqlOperation.AddNullableDateTimeParameter("LockoutEndAt", user.LockoutEndAt); // puede ser nulo
+            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", user.UpdatedAt); // puede ser nulo
 
             // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
         // Método para actualizar la contraseña del usuario
-        public void UpdatePassword(int userId, string password, DateTime updatedAt)
+        public void UpdatePassword(User user)
         {
             // Definir el SP por medio del sql operation
             var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "UPD_PASSWORD_USER_PR";
 
             // Mapeo exacto con los nombres del Stored Procedure en la BD
-            sqlOperation.AddIntParameter("UserId", userId);
-            sqlOperation.AddStringParameter("Password", password);
-            sqlOperation.AddDateTimeParameter("UpdatedAt", updatedAt);
+            sqlOperation.AddIntParameter("UserId", user.Id);
+            sqlOperation.AddStringParameter("Password", user.Password);
+            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", user.UpdatedAt); // puede ser nulo
 
             // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);

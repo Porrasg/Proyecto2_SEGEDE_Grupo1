@@ -123,6 +123,164 @@ namespace DataAccess.CRUD
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
+        public List<Distribution> RetrieveByBatchId( int distributionBatchId)
+        {
+            // Lista que va a contener a todas las distribuciones que se obtengan de la consulta a la BD
+            var distributions = new List<Distribution>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_BATCH_DISTRIBUTION_PR";
+
+            sqlOperation.AddIntParameter("DistributionBatchId", distributionBatchId);
+
+            // Ejecutar el SP
+            var results = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer la lista de resultados y convertir cada fila en un objeto Distribution, luego agregarlo a la lista de distribuciones
+            if (results.Count > 0)
+            {
+                foreach (var row in results)
+                {
+                    distributions.Add(BuildDistribution(row));
+                }
+            }
+
+            return distributions;
+        }
+
+        public List<Distribution> RetrieveByForecastId(int forecastId)
+        {
+            // Lista que va a contener a todas las distribuciones que se obtengan de la consulta a la BD
+            var distributions = new List<Distribution>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName ="RET_BY_FORECAST_DISTRIBUTION_PR";
+
+            sqlOperation.AddIntParameter( "ForecastId", forecastId);
+
+            // Ejecutar el SP
+            var results = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer la lista de resultados y convertir cada fila en un objeto Distribution, luego agregarlo a la lista de distribuciones
+            if (results.Count > 0)
+            {
+                foreach (var row in results)
+                {
+                    distributions.Add(BuildDistribution(row));
+                }
+            }
+
+            return distributions;
+        }
+
+        public List<Distribution> RetrieveByBuyerId(int buyerId)
+        {
+            // Lista que va a contener a todas las distribuciones que se obtengan de la consulta a la BD
+            var distributions = new List<Distribution>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName ="RET_BY_BUYER_DISTRIBUTION_PR";
+
+            sqlOperation.AddIntParameter("BuyerId", buyerId);
+
+            // Ejecutar el SP
+            var results = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer la lista de resultados y convertir cada fila en un objeto Distribution, luego agregarlo a la lista de distribuciones
+            if (results.Count > 0)
+            {
+                foreach (var row in results)
+                {
+                    distributions.Add(BuildDistribution(row));
+                }
+            }
+
+            return distributions;
+        }
+
+        public List<Distribution> RetrieveByCentralBankId(int centralBankId)
+        {
+            // Lista que va a contener a todas las distribuciones que se obtengan de la consulta a la BD
+            var distributions = new List<Distribution>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_CENTRAL_BANK_DISTRIBUTION_PR";
+
+            sqlOperation.AddIntParameter("CentralBankId",centralBankId);
+
+            // Ejecutar el SP
+            var results = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer la lista de resultados y convertir cada fila en un objeto Distribution, luego agregarlo a la lista de distribuciones
+            if (results.Count > 0)
+            {
+                foreach (var row in results)
+                {
+                    distributions.Add(BuildDistribution(row));
+                }
+            }
+
+            return distributions;
+        }
+
+
+        public List<Distribution> RetrieveByStatus(string status)
+        {
+            // Lista que va a contener a todas las distribuciones que se obtengan de la consulta a la BD
+            var distributions = new List<Distribution>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_STATUS_DISTRIBUTION_PR";
+
+            sqlOperation.AddStringParameter("Status", status);
+
+            // Ejecutar el SP
+            var results = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer la lista de resultados y convertir cada fila en un objeto Distribution, luego agregarlo a la lista de distribuciones
+            if (results.Count > 0)
+            {
+                foreach (var row in results)
+                {
+                    distributions.Add(BuildDistribution(row));
+                }
+            }
+
+            return distributions;
+        }
+
+        public List<Distribution> RetrieveByDateRange(DateTime startDate,DateTime endDate)
+        {
+            // Lista que va a contener a todas las distribuciones que se obtengan de la consulta a la BD
+            var distributions = new List<Distribution>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_DATE_RANGE_DISTRIBUTION_PR";
+
+            sqlOperation.AddDateTimeParameter( "StartDate", startDate);
+            sqlOperation.AddDateTimeParameter( "EndDate", endDate);
+
+            // Ejecutar el SP
+            var results = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer la lista de resultados y convertir cada fila en un objeto Distribution, luego agregarlo a la lista de distribuciones
+            if (results.Count > 0)
+            {
+                foreach (var row in results)
+                {
+                    distributions.Add(BuildDistribution(row));
+                }
+            }
+
+            return distributions;
+        }
+
         //Metodo que construye el DTO de Distribution a partir de la data que viene en la consulta de la BD 
         private Distribution BuildDistribution(Dictionary<string, object> row)
         {

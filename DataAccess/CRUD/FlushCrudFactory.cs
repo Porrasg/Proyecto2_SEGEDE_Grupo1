@@ -26,9 +26,6 @@ namespace DataAccess.CRUD
             sqlOperation.AddIntParameter("TurbineId", flush.TurbineId);
             sqlOperation.AddIntParameter("BatteryId", flush.BatteryId);
             sqlOperation.AddIntParameter("CentralBankId", flush.CentralBankId);
-            sqlOperation.AddDecimalParameter("SnapshotEnergyMWh", flush.SnapshotEnergyMWh);
-            sqlOperation.AddDecimalParameter("TransferredEnergyMWh", flush.TransferredEnergyMWh);
-            sqlOperation.AddDecimalParameter("SaturationLossMWh", flush.SaturationLossMWh);
             sqlOperation.AddStringParameter("ExecutionType", flush.ExecutionType);
             sqlOperation.AddStringParameter("Status", flush.Status);
             sqlOperation.AddDateTimeParameter("ExecutedAt", flush.ExecutedAt);
@@ -49,6 +46,7 @@ namespace DataAccess.CRUD
 
             sqlOperation.AddIntParameter("FlushId", flush.Id);
             sqlOperation.AddStringParameter("Status", flush.Status);
+            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", flush.UpdatedAt);
 
             // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
@@ -120,6 +118,7 @@ namespace DataAccess.CRUD
             sqlOperation.AddStringParameter("ExecutionType", flush.ExecutionType);
             sqlOperation.AddStringParameter("Status", flush.Status);
             sqlOperation.AddDateTimeParameter("ExecutedAt", flush.ExecutedAt);
+            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", flush.UpdatedAt);
 
             // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
@@ -141,7 +140,8 @@ namespace DataAccess.CRUD
                 ExecutionType = (string)row["ExecutionType"],
                 Status = (string)row["Status"],
                 ExecutedAt = (DateTime)row["ExecutedAt"],
-                CreatedAt = (DateTime)row["CreatedAt"]
+                CreatedAt = (DateTime)row["CreatedAt"],
+                UpdatedAt = row["UpdatedAt"] != DBNull.Value ? (DateTime?)row["UpdatedAt"] : null // para manejar el caso de que UpdatedAt pueda ser nulo
             };
             return flush;
         }

@@ -116,6 +116,106 @@ namespace DataAccess.CRUD
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
+        public List<Forecast> RetrieveByBuyerId(int buyerId)
+        {
+            var forecasts = new List<Forecast>();
+
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_BUYER_FORECAST_PR";
+
+            sqlOperation.AddIntParameter("BuyerId", buyerId);
+
+            var results = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            if (results.Count > 0)
+            {
+                foreach (var row in results)
+                {
+                    forecasts.Add(BuildForecast(row));
+                }
+            }
+
+            return forecasts;
+        }
+
+        // Metodo que permite obtener todos los forecasts de un periodo especifico (año y mes)
+        public List<Forecast> RetrieveByPeriod(int forecastYear,int forecastMonth)
+        {
+            // Lista que va a contener a todos los forecasts que se obtengan de la consulta a la BD
+            var forecasts = new List<Forecast>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_PERIOD_FORECAST_PR";
+
+            sqlOperation.AddIntParameter("ForecastYear", forecastYear);
+            sqlOperation.AddIntParameter("ForecastMonth", forecastMonth);
+
+            // Ejecutamos el SP
+            var results = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer la lista de resultados y convertir cada fila en un objeto Forecast, luego agregarlo a la lista de forecasts
+            if (results.Count > 0)
+            {
+                foreach (var row in results)
+                {
+                    forecasts.Add(BuildForecast(row));
+                }
+            }
+
+            return forecasts;
+        }
+
+        // Metodo que permite obtener un forecast de un comprador especifico en un periodo especifico (año y mes)
+        public Forecast RetrieveByBuyerPeriod(int buyerId, int forecastYear, int forecastMonth)
+        {
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_BUYER_PERIOD_FORECAST_PR";
+
+            sqlOperation.AddIntParameter("BuyerId", buyerId);
+            sqlOperation.AddIntParameter("ForecastYear", forecastYear);
+            sqlOperation.AddIntParameter("ForecastMonth", forecastMonth);
+
+            // Ejecutamos el SP
+            var results = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Si se obtiene un resultado, convertir la primera fila en un objeto Forecast y devolverlo, de lo contrario devolver null
+            if (results.Count > 0)
+            {
+                return BuildForecast(results[0]);
+            }
+
+            return null;
+        }
+
+        // Metodo que permite obtener todos los forecasts de un estado especifico
+        public List<Forecast> RetrieveByStatus(string status)
+        {
+            // Lista que va a contener a todos los forecasts que se obtengan de la consulta a la BD
+            var forecasts = new List<Forecast>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_STATUS_FORECAST_PR";
+
+            sqlOperation.AddStringParameter("Status", status);
+
+            // Ejecutamos el SP
+            var results = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer la lista de resultados y convertir cada fila en un objeto Forecast, luego agregarlo a la lista de forecasts
+            if (results.Count > 0)
+            {
+                foreach (var row in results)
+                {
+                    forecasts.Add(BuildForecast(row));
+                }
+            }
+
+            return forecasts;
+        }
+
         // Metodo que construye el DTO Forecast a partir de la data que viene en la consulta de la BD
         private Forecast BuildForecast(Dictionary<string, object> row)
         {

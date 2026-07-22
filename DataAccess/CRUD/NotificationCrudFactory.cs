@@ -91,7 +91,6 @@ namespace DataAccess.CRUD
             // Si se obtiene un resultado, convertir la primera fila en un objeto Notification y devolverlo, de lo contrario devolver null
             if (lsResults.Count > 0)
             {
-                var item = lsResults[0];
                 var notification = BuildNotification(lsResults[0]);
                 return (T)Convert.ChangeType(notification, typeof(T));
             }

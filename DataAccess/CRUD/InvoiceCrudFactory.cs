@@ -51,6 +51,7 @@ namespace DataAccess.CRUD
             sqlOperation.ProcedureName = "DEL_INVOICE_PR";
 
             sqlOperation.AddIntParameter("InvoiceId", invoice.Id);
+            sqlOperation.AddStringParameter("PaymentStatus", invoice.PaymentStatus);
 
             // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);

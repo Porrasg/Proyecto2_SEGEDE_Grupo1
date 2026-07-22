@@ -23,12 +23,12 @@ namespace DataAccess.CRUD
             sqlOperation.ProcedureName = "CRE_AUDIT_PR";
 
             // Mapeo exacto con los nombres del Stored Procedure en la BD
-            sqlOperation.AddIntParameter("UserId", audit.UserId ?? 0);
+            sqlOperation.AddNullableIntParameter("UserId", audit.UserId);
             sqlOperation.AddStringParameter("Action", audit.Action);
             sqlOperation.AddStringParameter("EntityName", audit.EntityName);
-            sqlOperation.AddIntParameter("EntityId", audit.EntityId ?? 0);
+            sqlOperation.AddNullableIntParameter("EntityId", audit.EntityId);
             sqlOperation.AddStringParameter("Description", audit.Description);
-            sqlOperation.AddStringParameter("IpAddress", audit.IpAddress);
+            sqlOperation.AddNullableStringParameter("IpAddress", audit.IpAddress);
             sqlOperation.AddDateTimeParameter("CreatedAt", audit.CreatedAt);
 
             // Ejecutamos el SP
@@ -91,7 +91,6 @@ namespace DataAccess.CRUD
             // Si se obtiene un resultado, convertir la primera fila en un objeto Audit y devolverlo, de lo contrario devolver null
             if (lsResults.Count > 0)
             {
-                var item = lsResults[0];
                 var audit = BuildAudit(lsResults[0]);
                 return (T)Convert.ChangeType(audit, typeof(T)); 
             }
