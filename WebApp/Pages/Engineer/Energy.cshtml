@@ -1,0 +1,44 @@
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.Engineer.EnergyModel
+@{
+    ViewData["Title"] = "Generación de Energía y Mermas";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+    </div>
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Seleccione Turbina para Consultar Batería Local</label>
+            <select class="form-select" id="engEnergyTurbine"><option value="">Seleccione...</option></select>
+        </div>
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body d-flex justify-content-around align-items-center text-center">
+                    <div><h6 class="text-muted">Carga Actual en Batería</h6><h3 id="engBatLevel">- MWh</h3></div>
+                    <div><h6 class="text-muted">Capacidad Máxima</h6><h3 id="engBatCap">- MWh</h3></div>
+                    <div><h6 class="text-muted">Estado Batería</h6><span class="badge bg-info fs-6" id="batState">Normal</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">Historial de Generación (Ciclos 30s)</div>
+                <div class="card-body p-0"><table class="table table-sm table-striped mb-0"><thead><tr><th>ID</th><th>Fecha/Hora</th><th>Energía Generada (MWh)</th><th>Velocidad Viento</th></tr></thead><tbody id="engGenBody"><tr><td colspan="4" class="text-center">Seleccione una turbina...</td></tr></tbody></table></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">Historial de Pérdidas de Energía</div>
+                <div class="card-body p-0"><table class="table table-sm table-hover mb-0"><thead><tr><th>ID</th><th>Fecha/Hora</th><th>Pérdida (MWh)</th><th>Causa / Motivo</th></tr></thead><tbody id="engLossBody"><tr><td colspan="4" class="text-center">Seleccione una turbina...</td></tr></tbody></table></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages-controller/OperationsComplementaryViewController.js" asp-append-version="true"></script>
+}

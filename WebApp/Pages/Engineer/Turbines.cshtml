@@ -1,0 +1,52 @@
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.Engineer.TurbinesModel
+@{
+    ViewData["Title"] = "Operación de Turbinas";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+    </div>
+    <div class="filter-toolbar">
+        <div class="d-flex align-items-center gap-2 flex-grow-1" style="max-width: 350px;">
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" class="form-control border-start-0 ps-0" id="opSearchTurbine" placeholder="Buscar por código, nombre o ubicación...">
+            </div>
+        </div>
+        <div class="filter-chips-container my-2 my-md-0">
+            <button type="button" class="filter-chip active" data-status="" data-target="#filterStatus"><i class="bi bi-grid"></i> Todas</button>
+            <button type="button" class="filter-chip" data-status="Active" data-target="#filterStatus"><i class="bi bi-check-circle-fill text-success"></i> Activas</button>
+            <button type="button" class="filter-chip" data-status="UnderMaintenance" data-target="#filterStatus"><i class="bi bi-tools text-warning"></i> En Mantenimiento</button>
+            <button type="button" class="filter-chip" data-status="Damaged" data-target="#filterStatus"><i class="bi bi-exclamation-triangle-fill text-danger"></i> Dañadas</button>
+            <button type="button" class="filter-chip" data-status="SuspendedForNonCompliance" data-target="#filterStatus"><i class="bi bi-pause-circle text-secondary"></i> Suspendidas</button>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <select class="form-select form-select-sm d-none" id="filterStatus">
+                <option value="">Todos los Estados</option>
+                <option value="Active">Active</option>
+                <option value="UnderMaintenance">UnderMaintenance</option>
+                <option value="Damaged">Damaged</option>
+                <option value="SuspendedForNonCompliance">SuspendedForNonCompliance</option>
+            </select>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnClearFilters" title="Limpiar todos los filtros"><i class="bi bi-x-circle me-1"></i> Limpiar</button>
+        </div>
+    </div>
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-interactive mb-0 align-middle">
+                    <thead class="table-light"><tr><th>Código</th><th>Nombre</th><th>Ubicación</th><th>Capacidad (MWh/sem)</th><th>Estado</th><th class="text-end">Acciones Operativas</th></tr></thead>
+                    <tbody id="opTurbinesBody"><tr><td colspan="6" class="text-center py-4 text-muted">Cargando turbinas...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- Modal Cambio Estado -->
+    <div class="modal fade" id="opStateModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Cambiar Estado Operativo</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar diálogo"></button></div><div class="modal-body"><form id="opStateForm"><div class="mb-3"><label class="form-label">Nuevo Estado</label><select class="form-select" id="opNewState"></select></div><div class="mb-3"><label class="form-label">Razón Técnica</label><textarea class="form-control" id="opStateReason" required></textarea></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" id="opConfirmStateBtn">Confirmar</button></div></div></div></div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages-controller/TurbineManagementViewController.js" asp-append-version="true"></script>
+}

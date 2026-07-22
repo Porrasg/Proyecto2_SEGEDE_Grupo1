@@ -1,0 +1,114 @@
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.Admin.SimulatorModel
+@{
+    ViewData["Title"] = "Simulator Panel";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>@ViewData["Title"]</h2>
+        <a href="/Admin/Dashboard" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Volver al Dashboard</a>
+    </div>
+
+    <div class="alert alert-warning d-flex align-items-start gap-2 mb-4">
+        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+        <div>
+            <strong>Cada detonador ejecuta el proceso de negocio real</strong> (mismos managers, mismas reglas) — no existe un "modo simulación" aislado.
+            Úsalo con cuidado en entornos con datos reales. Toda acción queda registrada en Auditoría con tu usuario como actor.
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- 1. Forzar falla crítica -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header"><i class="bi bi-exclamation-octagon me-1"></i> Forzar Falla en Turbina</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Turbina</label>
+                        <select class="form-select" id="simFailTurbine"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Severidad</label>
+                        <select class="form-select" id="simFailSeverity">
+                            <option value="Critical">Critical (cambia la turbina a Damaged)</option>
+                            <option value="Normal">Normal (solo registra el evento)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-control" id="simFailDescription" rows="2" placeholder="Detalle de la falla simulada..."></textarea>
+                    </div>
+                    <button class="btn btn-danger w-100" id="btnSimFail"><i class="bi bi-lightning-charge"></i> Forzar Falla</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Alterar batería local -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header"><i class="bi bi-battery-half me-1"></i> Alterar Carga de Batería Local</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Turbina</label>
+                        <select class="form-select" id="simBattTurbine"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nueva carga (MWh)</label>
+                        <input type="number" step="0.01" min="0" class="form-control" id="simBattCharge" placeholder="ej. 0.00 para vaciar, o un valor alto para forzar saturación">
+                    </div>
+                    <button class="btn btn-primary w-100" id="btnSimBattery"><i class="bi bi-sliders"></i> Aplicar Carga</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Ciclo de generación -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header"><i class="bi bi-lightning me-1"></i> Ciclo de Generación de Energía</div>
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <p class="text-muted small">Ejecuta de inmediato un ciclo de simulación energética para todas las turbinas activas, equivalente al ciclo automático de 30s.</p>
+                    <button class="btn btn-outline-primary w-100" id="btnSimEnergyCycle"><i class="bi bi-arrow-repeat"></i> Ejecutar Ciclo Ahora</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Jobs en segundo plano -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header"><i class="bi bi-gear-wide-connected me-1"></i> Forzar Jobs en Segundo Plano</div>
+                <div class="card-body">
+                    <div class="d-grid gap-2 mb-3">
+                        <button class="btn btn-outline-secondary" id="btnSimMaintCheck"><i class="bi bi-tools"></i> Verificar Mantenimientos Vencidos</button>
+                        <button class="btn btn-outline-secondary" id="btnSimFlush"><i class="bi bi-water"></i> Ejecutar Flush Manual</button>
+                        <button class="btn btn-outline-secondary" id="btnSimNotifications"><i class="bi bi-envelope"></i> Procesar Cola de Notificaciones</button>
+                    </div>
+                    <hr>
+                    <label class="form-label small">Distribución Mensual</label>
+                    <div class="d-flex gap-2">
+                        <select class="form-select" id="simDistMonth"><option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option></select>
+                        <input type="number" class="form-control" id="simDistYear" style="max-width: 110px;">
+                        <button class="btn btn-outline-secondary text-nowrap" id="btnSimDistribution"><i class="bi bi-diagram-3"></i> Ejecutar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Historial de esta sesión -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">Últimas Simulaciones Ejecutadas en Esta Sesión</div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Hora</th><th>Detonador</th><th>Parámetros</th><th>Resultado</th></tr></thead>
+                        <tbody id="simHistoryBody"><tr><td colspan="4" class="text-center text-muted">Sin acciones registradas todavía.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages-controller/SimulatorViewController.js" asp-append-version="true"></script>
+}

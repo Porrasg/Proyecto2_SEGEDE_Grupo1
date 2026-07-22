@@ -1,0 +1,39 @@
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.Admin.DistributionModel
+@{
+    ViewData["Title"] = "Distribución Comercial Mensual";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+        <a href="/Admin/Statements" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-text"></i> Ver Estados de Cuenta</a>
+    </div>
+        <div class="d-flex justify-content-between mb-3">
+        <div class="d-flex gap-2">
+            <select class="form-select" id="distMonth"><option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option></select>
+            <input type="number" class="form-control" id="distYear" value="2026" style="width: 120px;">
+            <button class="btn btn-secondary" id="btnConsultDist">Ver Distribución</button>
+        </div>
+        <button class="btn btn-success" id="btnExecuteDist">Ejecutar Distribución del Mes</button>
+    </div>
+    <div class="card mb-4">
+        <div class="card-header">Resumen del Ciclo Comercial</div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col"><h6 class="text-muted">Demanda Total</h6><h4 id="distTotalDemand">- MWh</h4></div>
+                <div class="col"><h6 class="text-muted">Inventario Disponible</h6><h4 id="distAvailInv">- MWh</h4></div>
+                <div class="col"><h6 class="text-muted">Escenario Aplicado</h6><h4 id="distScenario"><span class="badge bg-secondary">-</span></h4></div>
+                <div class="col"><h6 class="text-muted">Fecha Ejecución</h6><h4 id="distDate">-</h4></div>
+            </div>
+        </div>
+    </div>
+    <table class="table table-striped">
+        <thead><tr><th>Comprador</th><th>Solicitado (MWh)</th><th>Asignado (MWh)</th><th>Déficit (MWh)</th><th>% Satisfacción</th></tr></thead>
+        <tbody id="distDetailsBody"><tr><td colspan="5" class="text-center">Sin datos de distribución para este mes...</td></tr></tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages-controller/DistributionViewController.js" asp-append-version="true"></script>
+}

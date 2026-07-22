@@ -1,0 +1,104 @@
+@* _Navbar.cshtml — SGDE CoreForge v2.1.0 Navbar (Role-Based, Token-Driven) *@
+<nav class="navbar navbar-expand-lg sticky-top" role="navigation" aria-label="Navegación principal">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/">
+            <span class="badge rounded-pill px-3 py-2" style="background-color: var(--sgde-primary); color: #fff; font-size: var(--sgde-fs-sm);">SGDE</span>
+            <span class="fw-normal" style="color: var(--sgde-body-secondary); font-size: var(--sgde-fs-sm);">Energía</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Abrir menú de navegación">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <!-- Menú Administrator (Oculto por defecto) -->
+                <li class="nav-item dropdown d-none" id="navLiAdmin">
+                    <a class="nav-link dropdown-toggle fw-semibold" href="#" id="navAdmin" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-shield-check me-1"></i> Administración
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navAdmin">
+                        <li><a class="dropdown-item" href="/Admin/Dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                        <li><a class="dropdown-item" href="/Admin/Users"><i class="bi bi-people me-2"></i>Usuarios Internos</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/Admin/Turbines"><i class="bi bi-gear me-2"></i>Turbinas</a></li>
+                        <li><a class="dropdown-item" href="/Admin/Maintenances"><i class="bi bi-tools me-2"></i>Mantenimientos</a></li>
+                        <li><a class="dropdown-item" href="/Admin/Failures"><i class="bi bi-exclamation-triangle me-2"></i>Fallas del Sistema</a></li>
+                        <li><a class="dropdown-item" href="/Admin/Flush"><i class="bi bi-water me-2"></i>Control de Caudal</a></li>
+                        <li><a class="dropdown-item" href="/Admin/CentralBank"><i class="bi bi-bank me-2"></i>Banco Central</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/Admin/Forecasts"><i class="bi bi-graph-up me-2"></i>Pronósticos de Demanda</a></li>
+                        <li><a class="dropdown-item" href="/Admin/Distribution"><i class="bi bi-diagram-3 me-2"></i>Distribución Energética</a></li>
+                        <li><a class="dropdown-item" href="/Admin/Prices"><i class="bi bi-tag me-2"></i>Precios y Tarifas</a></li>
+                        <li><a class="dropdown-item" href="/Admin/Taxes"><i class="bi bi-receipt me-2"></i>Impuestos</a></li>
+                        <li><a class="dropdown-item" href="/Admin/Statements"><i class="bi bi-file-earmark-text me-2"></i>Estado de Cuentas</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/Admin/Reports"><i class="bi bi-file-bar-graph me-2"></i>Reportes</a></li>
+                        <li><a class="dropdown-item" href="/Admin/Audit"><i class="bi bi-journal-check me-2"></i>Bitácora de Auditoría</a></li>
+                        <li><a class="dropdown-item" href="/Admin/Exports"><i class="bi bi-download me-2"></i>Exportación de Datos</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/Admin/Simulator"><i class="bi bi-cpu me-2"></i>Simulator Panel</a></li>
+                    </ul>
+                </li>
+                <!-- Menú Engineer (Oculto por defecto) -->
+                <li class="nav-item dropdown d-none" id="navLiEngineer">
+                    <a class="nav-link dropdown-toggle fw-semibold" href="#" id="navEngineer" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-lightning-charge me-1"></i> Operaciones
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navEngineer">
+                        <li><a class="dropdown-item" href="/Engineer/Dashboard"><i class="bi bi-speedometer2 me-2"></i>Panel Operativo</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/Engineer/Turbines"><i class="bi bi-gear me-2"></i>Turbinas</a></li>
+                        <li><a class="dropdown-item" href="/Engineer/Maintenances"><i class="bi bi-tools me-2"></i>Mantenimientos</a></li>
+                        <li><a class="dropdown-item" href="/Engineer/Failures"><i class="bi bi-exclamation-triangle me-2"></i>Fallas del Sistema</a></li>
+                        <li><a class="dropdown-item" href="/Engineer/Energy"><i class="bi bi-battery-charging me-2"></i>Energía y Pérdidas</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/Engineer/CentralBank"><i class="bi bi-bank me-2"></i>Banco Central</a></li>
+                        <li><a class="dropdown-item" href="/Engineer/FlushHistory"><i class="bi bi-clock-history me-2"></i>Historial de Flush</a></li>
+                        <li><a class="dropdown-item" href="/Engineer/Reports"><i class="bi bi-file-bar-graph me-2"></i>Reportes Operativos</a></li>
+                        <li><a class="dropdown-item" href="/Engineer/Audit"><i class="bi bi-journal-check me-2"></i>Auditoría Técnica</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/Engineer/Simulator"><i class="bi bi-cpu me-2"></i>Simulator Panel</a></li>
+                    </ul>
+                </li>
+                <!-- Menú Buyer (Oculto por defecto) -->
+                <li class="nav-item dropdown d-none" id="navLiBuyer">
+                    <a class="nav-link dropdown-toggle fw-semibold" href="#" id="navBuyer" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-building me-1"></i> Mi Cuenta
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navBuyer">
+                        <li><a class="dropdown-item" href="/Buyer/Dashboard"><i class="bi bi-speedometer2 me-2"></i>Mi Panel</a></li>
+                        <li><a class="dropdown-item" href="/Buyer/Forecasts"><i class="bi bi-graph-up me-2"></i>Mis Pronósticos</a></li>
+                        <li><a class="dropdown-item" href="/Buyer/Statements"><i class="bi bi-file-earmark-text me-2"></i>Estado de Cuentas</a></li>
+                        <li><a class="dropdown-item" href="/Buyer/Distributions"><i class="bi bi-diagram-3 me-2"></i>Mis Distribuciones</a></li>
+                        <li><a class="dropdown-item" href="/Buyer/Reports"><i class="bi bi-file-bar-graph me-2"></i>Reporte de Asignación</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/Buyer/Profile"><i class="bi bi-person-circle me-2"></i>Mi Perfil</a></li>
+                    </ul>
+                </li>
+                <!-- Acceso Público (visible solo cuando NO logueado) -->
+                <li class="nav-item" id="navLiPublicLogin">
+                    <a class="nav-link fw-semibold" href="/Login" style="color: var(--sgde-primary) !important;">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar Sesión
+                    </a>
+                </li>
+                <li class="nav-item" id="navLiPublicRegister">
+                    <a class="nav-link fw-semibold" href="/Register" style="color: var(--sgde-state-active) !important;">
+                        <i class="bi bi-person-plus me-1"></i> Registrarse
+                    </a>
+                </li>
+            </ul>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge px-3 py-2 fw-semibold" id="navUserName"
+                      style="background-color: var(--sgde-surface-elevated); color: var(--sgde-body-secondary); border: 1px solid var(--sgde-border); font-size: var(--sgde-fs-xs);">
+                    <i class="bi bi-lock me-1"></i> No Autenticado
+                </span>
+                <button class="btn btn-sm btn-outline-secondary" id="btnToggleTheme" title="Alternar Tema" aria-label="Alternar entre tema claro y oscuro">
+                    <span id="themeIcon">◑</span> <span class="d-none d-md-inline">Modo Oscuro</span>
+                </button>
+                <button class="btn btn-sm d-none" id="btnSignOut"
+                        style="background-color: var(--sgde-state-damaged); color: #fff; border-color: var(--sgde-state-damaged);">
+                    <i class="bi bi-box-arrow-right me-1"></i> Salir
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>

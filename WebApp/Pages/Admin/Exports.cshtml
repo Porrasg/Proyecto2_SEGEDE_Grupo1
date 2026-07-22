@@ -1,0 +1,22 @@
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.Admin.ExportsModel
+@{
+    ViewData["Title"] = "Bitácora de Exportaciones";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+    </div>
+        <div class="d-flex justify-content-between mb-3">
+        <input type="text" class="form-control" id="exportSearch" placeholder="Buscar por usuario o formato..." style="max-width: 300px;">
+    </div>
+    <table class="table table-striped">
+        <thead><tr><th>ID</th><th>Fecha/Hora</th><th>Usuario</th><th>Rol</th><th>Tipo Exportación</th><th>Formato</th></tr></thead>
+        <tbody id="exportsBody"><tr><td colspan="6" class="text-center">Cargando bitácora de exportaciones...</td></tr></tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages-controller/AdminExportsViewController.js" asp-append-version="true"></script>
+}

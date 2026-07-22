@@ -1,0 +1,22 @@
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.AccessDeniedModel
+@{
+    ViewData["Title"] = "Acceso Denegado (403)";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+    </div>
+        <div class="row justify-content-center text-center mt-5">
+        <div class="col-md-6">
+            <div class="alert alert-danger p-5 shadow-sm">
+                <h1 class="display-4">403</h1>
+                <h4 class="mb-3">No tienes permisos para acceder a este recurso</h4>
+                <p class="text-muted">Tu rol actual no cuenta con los privilegios requeridos para visualizar esta página o ejecutar esta acción.</p>
+                <hr>
+                <a href="/" class="btn btn-outline-danger mt-2">Volver al Inicio</a>
+            </div>
+        </div>
+    </div>
+</div>

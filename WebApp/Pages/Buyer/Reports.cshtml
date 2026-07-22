@@ -1,0 +1,72 @@
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.Buyer.ReportsModel
+@{
+    ViewData["Title"] = "Reporte de Asignación Mensual";
+}
+
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/Buyer/Dashboard">Mi Panel</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Reportes</li>
+        </ol>
+    </nav>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"] <span class="badge bg-success ms-2" style="font-size: 0.5em; vertical-align: middle;">Comprador</span></h2>
+    </div>
+
+    <!-- Reporte: Asignación mensual de energía del comprador autenticado -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>Asignación Mensual de Energía</span>
+            <button class="btn btn-sm btn-outline-primary" id="btnExportAlloc" disabled>
+                <i class="bi bi-download me-1" aria-hidden="true"></i>Exportar CSV
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row g-4 mb-4" id="allocSummaryCards">
+                <div class="col-md-4">
+                    <div class="card kpi-card h-100 text-center">
+                        <div class="card-body">
+                            <div class="text-muted" style="font-size: var(--sgde-fs-sm);">Total Solicitado (MWh)</div>
+                            <div class="fs-3 fw-bold" id="allocTotalRequested">—</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card kpi-card h-100 text-center">
+                        <div class="card-body">
+                            <div class="text-muted" style="font-size: var(--sgde-fs-sm);">Total Asignado (MWh)</div>
+                            <div class="fs-3 fw-bold" id="allocTotalAssigned">—</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card kpi-card h-100 text-center">
+                        <div class="card-body">
+                            <div class="text-muted" style="font-size: var(--sgde-fs-sm);">Demanda No Suplida (MWh)</div>
+                            <div class="fs-3 fw-bold" id="allocTotalUnsupplied">—</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+                        <table class="table table-striped table-sm mb-0">
+                            <thead><tr><th scope="col">Distribución</th><th scope="col">Solicitado (MWh)</th><th scope="col">Asignado (MWh)</th><th scope="col">No Suplido (MWh)</th><th scope="col">% Cumplimiento</th></tr></thead>
+                            <tbody id="allocReportBody"><tr><td colspan="5" class="text-center text-muted py-4">Cargando asignaciones...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <canvas id="allocReportChart" role="img" aria-label="Gráfico de energía solicitada versus asignada por período"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages-controller/ReportsViewController.js" asp-append-version="true"></script>
+}

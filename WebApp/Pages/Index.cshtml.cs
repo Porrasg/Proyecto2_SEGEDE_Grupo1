@@ -1,13 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+﻿using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace WebApp.Pages
+namespace SEGEDE_Grupo1.WebApp.Pages;
+
+// Nota arquitectónica: PageModel para Home consumiendo la Web API REST.
+public class IndexModel : PageModel
 {
-    public class IndexModel : PageModel
-    {
-        public void OnGet()
-        {
-
-        }
-    }
+    // Método manejador que se ejecuta al recibir una petición HTTP GET para inicializar la vista y presentar los datos en pantalla.
+    public void OnGet() { }
 }

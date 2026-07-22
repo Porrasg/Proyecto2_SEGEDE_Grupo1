@@ -1,0 +1,98 @@
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.Buyer.DashboardModel
+@{
+    ViewData["Title"] = "Mi Panel de Comprador";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card kpi-card h-100 p-3 shadow-sm" data-navigate="/Buyer/Forecasts" title="Ver pronósticos">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted fw-semibold" style="font-size: var(--sgde-fs-sm);">Pronósticos Activos</span>
+                    <span class="badge bg-primary bg-opacity-10 text-primary p-2 rounded-circle"><i class="bi bi-graph-up fs-5"></i></span>
+                </div>
+                <h2 id="buyActiveForecasts" class="fw-bold mb-0">-</h2>
+                <small class="text-muted mt-1 d-block"><i class="bi bi-arrow-right-short"></i> Clic para gestionar pronósticos</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card kpi-card h-100 p-3 shadow-sm" data-navigate="/Buyer/Forecasts" title="Ver demanda">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted fw-semibold" style="font-size: var(--sgde-fs-sm);">Demanda Solicitada (Mes Actual)</span>
+                    <span class="badge bg-info bg-opacity-10 text-info p-2 rounded-circle"><i class="bi bi-activity fs-5"></i></span>
+                </div>
+                <h2 id="buyMonthReq" class="fw-bold mb-0">- <small class="fs-6 text-muted">MWh</small></h2>
+                <small class="text-muted mt-1 d-block"><i class="bi bi-arrow-right-short"></i> Clic para ver historial</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card kpi-card h-100 p-3 shadow-sm" data-navigate="/Buyer/Distributions" title="Ver distribuciones">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted fw-semibold" style="font-size: var(--sgde-fs-sm);">Última Asignación Recibida</span>
+                    <span class="badge bg-success bg-opacity-10 text-success p-2 rounded-circle"><i class="bi bi-diagram-3-fill fs-5"></i></span>
+                </div>
+                <h2 id="buyLastAssign" class="fw-bold text-success mb-0">- <small class="fs-6 text-muted">MWh</small></h2>
+                <small class="text-muted mt-1 d-block"><i class="bi bi-arrow-right-short"></i> Clic para mis distribuciones</small>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card kpi-card h-100 p-3 shadow-sm" data-navigate="/Buyer/Statements" title="Ver estados de cuenta">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted fw-semibold" style="font-size: var(--sgde-fs-sm);">Total Facturado Acumulado</span>
+                    <span class="badge bg-warning bg-opacity-10 text-warning p-2 rounded-circle"><i class="bi bi-cash-stack fs-5"></i></span>
+                </div>
+                <h2 id="buyTotalBilled" class="fw-bold mb-0">- <small class="fs-6 text-muted">CRC</small></h2>
+                <small class="text-muted mt-1 d-block"><i class="bi bi-arrow-right-short"></i> Clic para ver facturación</small>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card kpi-card h-100 p-3 shadow-sm" data-navigate="/Buyer/Statements" title="Ver estados de cuenta">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted fw-semibold" style="font-size: var(--sgde-fs-sm);">Fecha Último Estado de Cuenta</span>
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary p-2 rounded-circle"><i class="bi bi-calendar-check fs-5"></i></span>
+                </div>
+                <h2 id="buyLastStmtDate" class="fw-bold mb-0">-</h2>
+                <small class="text-muted mt-1 d-block"><i class="bi bi-arrow-right-short"></i> Clic para descargar recibos</small>
+            </div>
+        </div>
+    </div>
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-transparent border-bottom-0 pt-3 pb-0 fw-bold">Demanda Solicitada vs Asignada (Mes Actual)</div>
+                <div class="card-body">
+                    <div style="position: relative; height: 280px; width: 100%;">
+                        <canvas id="buyDemandChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-transparent border-bottom-0 pt-3 pb-0 fw-bold">Proporción de Facturación Acumulada</div>
+                <div class="card-body">
+                    <div style="position: relative; height: 280px; width: 100%;">
+                        <canvas id="buyBillingChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-transparent fw-bold">Acceso Rápido</div>
+        <div class="card-body d-flex gap-2">
+            <a href="/Buyer/Forecasts" class="btn btn-outline-primary">Gestionar mis Pronósticos</a>
+            <a href="/Buyer/Statements" class="btn btn-outline-secondary">Ver mis Estados de Cuenta</a>
+            <a href="/Buyer/Distributions" class="btn btn-outline-info">Consultar Distribuciones</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages-controller/BuyerDashboardViewController.js" asp-append-version="true"></script>
+}

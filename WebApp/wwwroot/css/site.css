@@ -1,31 +1,1148 @@
-html {
-  font-size: 14px;
+/* ==========================================================================
+   SGDE CoreForge v2.1.0 — Design System Implementation
+   Architecture: Primitivos → Semánticos → Componentes
+   Bootstrap 5.3+ Integration via CSS Custom Properties
+   ========================================================================== */
+
+
+/* ==========================================================================
+   LAYER 0 — GLOBAL TOKENS (Primitivos)
+   Invariantes de tema: tipografía, espaciado, radios, transiciones.
+   ========================================================================== */
+
+:root {
+  /* ── Typography ─────────────────────────────────────────────────────── */
+  --sgde-font-heading: 'Outfit', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --sgde-font-body:    'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  --sgde-fs-xs:   0.75rem;
+  --sgde-fs-sm:   0.875rem;
+  --sgde-fs-base: 1rem;
+  --sgde-fs-lg:   1.125rem;
+  --sgde-fs-xl:   1.25rem;
+  --sgde-fs-2xl:  1.5rem;
+
+  --sgde-fw-regular:  400;
+  --sgde-fw-medium:   500;
+  --sgde-fw-semibold: 600;
+  --sgde-fw-bold:     700;
+
+  --sgde-lh-tight:   1.25;
+  --sgde-lh-base:    1.5;
+  --sgde-lh-relaxed: 1.75;
+
+  /* ── Spacing ────────────────────────────────────────────────────────── */
+  --sgde-space-1: 0.25rem;
+  --sgde-space-2: 0.5rem;
+  --sgde-space-3: 0.75rem;
+  --sgde-space-4: 1rem;
+  --sgde-space-5: 1.5rem;
+  --sgde-space-6: 2rem;
+
+  /* ── Radii ──────────────────────────────────────────────────────────── */
+  --sgde-radius-sm:   0.25rem;
+  --sgde-radius-md:   0.375rem;
+  --sgde-radius-lg:   0.5rem;
+  --sgde-radius-pill:  9999px;
+
+  /* ── Transitions ────────────────────────────────────────────────────── */
+  --sgde-transition-fast:    150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --sgde-transition-default: 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
+
+/* ==========================================================================
+   LAYER 1 — SEMANTIC TOKENS  (Light Theme: "Enterprise Billing")
+   Mapeo semántico sobre :root y [data-bs-theme="light"].
+   ========================================================================== */
+
+:root,
+[data-bs-theme="light"] {
+  /* ── Hierarchy / Surfaces ───────────────────────────────────────────── */
+  --sgde-bg:               #F4F3F7;
+  --sgde-surface-card:     #FFFFFF;
+  --sgde-surface-elevated: #EBE9F0;
+  --sgde-surface-hover:    #F8F8FA;
+  --sgde-border:           #DDDCE4;
+  --sgde-border-hover:     #C5C3CF;
+  --sgde-shadow-sm:        0 1px 2px rgba(0,0,0,0.05);
+  --sgde-shadow-md:        0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+
+  /* ── Typography ─────────────────────────────────────────────────────── */
+  --sgde-heading:     #1C1A22;
+  --sgde-body:        #1C1A22;
+  --sgde-body-secondary: #5C5A66;
+  --sgde-text-muted:  #82808F;
+
+  /* ── Branding / Primary Action ──────────────────────────────────────── */
+  --sgde-primary:        #5A2CA0;
+  --sgde-primary-hover:  #461E82;
+  --sgde-primary-active: #351566;
+  --sgde-focus-ring:     rgba(90, 44, 160, 0.35);
+
+  /* ── Domain States ──────────────────────────────────────────────────── */
+  --sgde-state-active:          #107C62;
+  --sgde-state-active-bg:       #E7F2EF;
+  --sgde-state-damaged:         #B91C1C;
+  --sgde-state-damaged-bg:      #F8E8E8;
+  --sgde-state-maintenance:     #D97706;
+  --sgde-state-maintenance-bg:  #FBF1E6;
+  --sgde-state-suspended:       #4B5563;
+  --sgde-state-suspended-bg:    #EDEEF0;
+}
+
+
+/* ==========================================================================
+   LAYER 2 — COMPONENT TOKENS
+   Bootstrap 5.3 variable bridge + component-specific aliases.
+   ========================================================================== */
+
+:root,
+[data-bs-theme="light"] {
+  /* ── Bootstrap Bridge ───────────────────────────────────────────────── */
+  --bs-body-bg:      var(--sgde-bg);
+  --bs-body-color:   var(--sgde-body);
+  --bs-primary:      var(--sgde-primary);
+  --bs-primary-rgb:  90, 44, 160;
+  --bs-border-color: var(--sgde-border);
+  --bs-card-bg:      var(--sgde-surface-card);
+
+  /* ── Btn Component Tokens ───────────────────────────────────────────── */
+  --sgde-btn-primary-bg:      var(--sgde-primary);
+  --sgde-btn-primary-border:  var(--sgde-primary);
+  --sgde-btn-primary-color:   #FFFFFF;
+  --sgde-btn-primary-hover-bg:    var(--sgde-primary-hover);
+  --sgde-btn-primary-hover-border: var(--sgde-primary-hover);
+  --sgde-btn-primary-active-bg:   var(--sgde-primary-active);
+
+  /* ── Card Component Tokens ──────────────────────────────────────────── */
+  --sgde-card-bg:          var(--sgde-surface-card);
+  --sgde-card-border:      var(--sgde-border);
+  --sgde-card-header-bg:   var(--sgde-surface-elevated);
+  --sgde-card-shadow:      var(--sgde-shadow-sm);
+
+  /* ── Table Component Tokens ─────────────────────────────────────────── */
+  --sgde-table-bg:         var(--sgde-surface-card);
+  --sgde-table-border:     var(--sgde-border);
+  --sgde-table-th-bg:      var(--sgde-surface-elevated);
+  --sgde-table-th-color:   var(--sgde-heading);
+  --sgde-table-hover-bg:   var(--sgde-surface-hover);
+  --sgde-table-stripe-bg:  #F8F8FA;
+
+  /* ── Navbar Component Tokens ────────────────────────────────────────── */
+  --sgde-navbar-bg:        var(--sgde-surface-card);
+  --sgde-navbar-border:    var(--sgde-border);
+  --sgde-navbar-link:      var(--sgde-body-secondary);
+  --sgde-navbar-link-hover: var(--sgde-heading);
+
+  /* ── Form Component Tokens ──────────────────────────────────────────── */
+  --sgde-input-bg:         var(--sgde-surface-card);
+  --sgde-input-border:     var(--sgde-border);
+  --sgde-input-focus-border: var(--sgde-primary);
+  --sgde-input-focus-ring:   var(--sgde-focus-ring);
+
+  /* ── Modal Component Tokens ─────────────────────────────────────────── */
+  --sgde-modal-bg:         var(--sgde-surface-card);
+  --sgde-modal-header-bg:  var(--sgde-surface-elevated);
+  --sgde-modal-border:     var(--sgde-border);
+}
+
+
+/* ==========================================================================
+   LAYER 3 — BASE ELEMENT STYLES
+   ========================================================================== */
+
+body {
+  background-color: var(--sgde-bg);
+  color: var(--sgde-body);
+  font-family: var(--sgde-font-body);
+  font-size: var(--sgde-fs-base);
+  line-height: var(--sgde-lh-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Sticky footer: flex column pushes footer to bottom */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
+}
+
+/* Flex-grow wrapper: absorbs remaining vertical space */
+.site-content-wrapper {
+  flex: 1 0 auto;
+}
+
+/* ── Site Footer (sticky via flexbox) ─────────────────────────────────── */
+.site-footer {
+  flex-shrink: 0;
+  background-color: var(--sgde-surface-card);
+  border-top: 1px solid var(--sgde-border);
+  color: var(--sgde-text-muted);
+  margin-top: auto;
+  position: relative;
+}
+
+.site-footer__accent {
+  height: 3px;
+  background: linear-gradient(90deg, var(--sgde-primary), #00b4d8, var(--sgde-state-active));
+}
+
+/* ── Page Header (title + subtitle) ──────────────────────────────────── */
+.page-header {
+  margin-bottom: var(--sgde-space-5);
+}
+
+.page-header h2 {
+  margin-bottom: var(--sgde-space-1);
+}
+
+.page-header .page-subtitle {
+  color: var(--sgde-text-muted);
+  font-size: var(--sgde-fs-sm);
+  font-weight: var(--sgde-fw-regular);
+  margin: 0;
+}
+
+/* ── Entrada suave de contenido por página ── */
+@keyframes sgde-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+main > .container,
+main > .container-fluid {
+  animation: sgde-fade-in var(--sgde-transition-default) ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main > .container,
+  main > .container-fluid {
+    animation: none;
   }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
-html {
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--sgde-font-heading);
+  color: var(--sgde-heading);
+  font-weight: var(--sgde-fw-bold);
+  line-height: var(--sgde-lh-tight);
+  letter-spacing: -0.025em;
+  margin-bottom: var(--sgde-space-3);
+}
+
+h1 { font-size: var(--sgde-fs-2xl); }
+h2 { font-size: var(--sgde-fs-xl); }
+h3 { font-size: var(--sgde-fs-lg); }
+
+.text-muted {
+  color: var(--sgde-text-muted) !important;
+}
+
+
+/* ==========================================================================
+   COMPONENT: Cards
+   ========================================================================== */
+
+.card {
+  background-color: var(--sgde-card-bg);
+  border: 1px solid var(--sgde-card-border);
+  border-radius: var(--sgde-radius-lg);
+  box-shadow: var(--sgde-card-shadow);
+  margin-bottom: var(--sgde-space-5);
+  transition: box-shadow var(--sgde-transition-default);
+}
+
+.card:hover {
+  box-shadow: var(--sgde-shadow-md);
+}
+
+.card-header {
+  background-color: var(--sgde-card-header-bg);
+  border-bottom: 1px solid var(--sgde-card-border);
+  font-weight: var(--sgde-fw-semibold);
+  font-size: var(--sgde-fs-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sgde-heading);
+  padding: var(--sgde-space-3) var(--sgde-space-4);
+}
+
+.card-body {
+  padding: var(--sgde-space-5);
+}
+
+
+/* ==========================================================================
+   COMPONENT: Tables (Base + DataTables Enterprise)
+   ========================================================================== */
+
+.table {
+  width: 100%;
+  margin-bottom: var(--sgde-space-5);
+  border: 1px solid var(--sgde-table-border);
+  background-color: var(--sgde-table-bg);
+  border-collapse: collapse;
+  font-size: var(--sgde-fs-sm);
+}
+
+.table thead th {
+  background-color: var(--sgde-table-th-bg);
+  color: var(--sgde-table-th-color);
+  font-weight: var(--sgde-fw-semibold);
+  font-size: var(--sgde-fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid var(--sgde-table-border);
+  padding: var(--sgde-space-3) var(--sgde-space-2);
+  vertical-align: middle;
+}
+
+.table tbody td {
+  padding: var(--sgde-space-3) var(--sgde-space-2);
+  vertical-align: middle;
+  border: 1px solid var(--sgde-table-border);
+  color: var(--sgde-body);
+  transition: background-color var(--sgde-transition-fast);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: var(--sgde-table-stripe-bg);
+}
+
+.table-hover tbody tr:hover {
+  background-color: var(--sgde-table-hover-bg);
+}
+
+
+/* ==========================================================================
+   COMPONENT: DataTables Enterprise Overrides
+   ========================================================================== */
+
+table.dataTable {
+  border-collapse: collapse !important;
+  box-shadow: var(--sgde-shadow-sm);
+  border-radius: var(--sgde-radius-lg);
+  overflow: hidden;
+}
+
+/* Controls: search input + length select */
+.dataTables_wrapper .dataTables_filter input,
+.dataTables_wrapper .dataTables_length select {
+  background-color: var(--sgde-input-bg);
+  border: 1px solid var(--sgde-input-border);
+  color: var(--sgde-body);
+  border-radius: var(--sgde-radius-md);
+  padding: var(--sgde-space-2) var(--sgde-space-3);
+  font-size: var(--sgde-fs-sm);
+  transition: border-color var(--sgde-transition-fast), box-shadow var(--sgde-transition-fast);
+}
+
+.dataTables_wrapper .dataTables_filter input:focus,
+.dataTables_wrapper .dataTables_length select:focus {
+  border-color: var(--sgde-input-focus-border);
+  box-shadow: 0 0 0 3px var(--sgde-input-focus-ring);
+  outline: none;
+}
+
+/* Info + length text */
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_length label {
+  color: var(--sgde-body-secondary);
+  font-size: var(--sgde-fs-sm);
+}
+
+/* Pagination */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  border: 1px solid var(--sgde-border) !important;
+  border-radius: var(--sgde-radius-md) !important;
+  color: var(--sgde-body) !important;
+  background: var(--sgde-surface-card) !important;
+  margin: 0 var(--sgde-space-1);
+  padding: var(--sgde-space-2) var(--sgde-space-3) !important;
+  font-size: var(--sgde-fs-sm);
+  font-weight: var(--sgde-fw-medium);
+  transition: all var(--sgde-transition-fast);
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background: var(--sgde-surface-hover) !important;
+  border-color: var(--sgde-border-hover) !important;
+  color: var(--sgde-heading) !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+  background: var(--sgde-primary) !important;
+  color: #FFFFFF !important;
+  border-color: var(--sgde-primary) !important;
+  font-weight: var(--sgde-fw-bold);
+  box-shadow: var(--sgde-shadow-sm);
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+  color: var(--sgde-text-muted) !important;
+  background: var(--sgde-surface-elevated) !important;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* DataTable row hover */
+table.dataTable tbody tr:hover {
+  background-color: var(--sgde-table-hover-bg) !important;
+}
+
+/* DataTable head */
+table.dataTable thead th {
+  background-color: var(--sgde-table-th-bg);
+  color: var(--sgde-table-th-color);
+  font-weight: var(--sgde-fw-semibold);
+  border-bottom: 2px solid var(--sgde-border-hover) !important;
+}
+
+
+/* ==========================================================================
+   COMPONENT: Buttons
+   ========================================================================== */
+
+.btn {
+  font-weight: var(--sgde-fw-semibold);
+  font-size: var(--sgde-fs-sm);
+  padding: var(--sgde-space-2) var(--sgde-space-4);
+  border-radius: var(--sgde-radius-md);
+  border: 1px solid var(--sgde-border);
+  transition: all var(--sgde-transition-fast);
+  letter-spacing: 0.02em;
+}
+
+/* ── Primary ───────────────────────────────────────────────────────────── */
+.btn-primary {
+  background-color: var(--sgde-btn-primary-bg);
+  border-color: var(--sgde-btn-primary-border);
+  color: var(--sgde-btn-primary-color);
+}
+
+.btn-primary:hover {
+  background-color: var(--sgde-btn-primary-hover-bg);
+  border-color: var(--sgde-btn-primary-hover-border);
+  color: #FFFFFF;
+}
+
+.btn-primary:active {
+  background-color: var(--sgde-btn-primary-active-bg);
+}
+
+/* ── Outline Primary ───────────────────────────────────────────────────── */
+.btn-outline-primary {
+  background-color: transparent;
+  border-color: var(--sgde-primary);
+  color: var(--sgde-primary);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--sgde-primary);
+  border-color: var(--sgde-primary);
+  color: #FFFFFF;
+}
+
+/* ── Success (Domain: Active) ──────────────────────────────────────────── */
+.btn-success {
+  background-color: var(--sgde-state-active);
+  border-color: var(--sgde-state-active);
+  color: #FFFFFF;
+}
+
+.btn-success:hover {
+  filter: brightness(0.9);
+}
+
+/* ── Danger (Domain: Damaged) ──────────────────────────────────────────── */
+.btn-danger {
+  background-color: var(--sgde-state-damaged);
+  border-color: var(--sgde-state-damaged);
+  color: #FFFFFF;
+}
+
+.btn-danger:hover {
+  filter: brightness(0.85);
+}
+
+/* ── Warning (Domain: Maintenance) ─────────────────────────────────────── */
+.btn-warning {
+  background-color: var(--sgde-state-maintenance);
+  border-color: var(--sgde-state-maintenance);
+  color: #000000;
+}
+
+/* ── Secondary / Outline variants ──────────────────────────────────────── */
+.btn-secondary,
+.btn-outline-secondary {
+  background-color: var(--sgde-surface-card);
+  border-color: var(--sgde-border);
+  color: var(--sgde-body);
+}
+
+.btn-secondary:hover,
+.btn-outline-secondary:hover {
+  background-color: var(--sgde-surface-hover);
+  border-color: var(--sgde-border-hover);
+  color: var(--sgde-heading);
+}
+
+/* ── Info (neutral/informational) ──────────────────────────────────────── */
+.btn-info {
+  background-color: var(--sgde-surface-elevated);
+  border-color: var(--sgde-border);
+  color: var(--sgde-body);
+}
+
+.btn-info:hover {
+  background-color: var(--sgde-surface-hover);
+  border-color: var(--sgde-border-hover);
+}
+
+
+/* ==========================================================================
+   COMPONENT: Forms
+   ========================================================================== */
+
+.form-control,
+.form-select {
+  background-color: var(--sgde-input-bg);
+  border: 1px solid var(--sgde-input-border);
+  border-radius: var(--sgde-radius-md);
+  padding: var(--sgde-space-2) var(--sgde-space-3);
+  font-size: var(--sgde-fs-base);
+  color: var(--sgde-body);
+  transition: border-color var(--sgde-transition-fast), box-shadow var(--sgde-transition-fast);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--sgde-input-focus-border);
+  box-shadow: 0 0 0 3px var(--sgde-input-focus-ring);
+  outline: 0;
+}
+
+.form-label {
+  font-weight: var(--sgde-fw-semibold);
+  font-size: var(--sgde-fs-sm);
+  color: var(--sgde-body);
+  margin-bottom: var(--sgde-space-1);
+}
+
+.form-text {
+  color: var(--sgde-text-muted);
+  font-size: var(--sgde-fs-xs);
+}
+
+
+/* ==========================================================================
+   COMPONENT: Badges — Generic + Domain State Utilities
+   ========================================================================== */
+
+.badge {
+  font-weight: var(--sgde-fw-bold);
+  font-size: var(--sgde-fs-xs);
+  padding: 0.35em 0.65em;
+  border-radius: var(--sgde-radius-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+/* Domain State badges — WCAG AA 4.5:1 contrast guaranteed */
+.badge-domain-active {
+  background-color: var(--sgde-state-active-bg);
+  color: var(--sgde-state-active);
+  border-color: var(--sgde-state-active);
+}
+
+.badge-domain-active::before {
+  content: "✓ ";
+  font-weight: 900;
+}
+
+.badge-domain-damaged {
+  background-color: var(--sgde-state-damaged-bg);
+  color: var(--sgde-state-damaged);
+  border-color: var(--sgde-state-damaged);
+}
+
+.badge-domain-damaged::before {
+  content: "⚠ ";
+  font-weight: 900;
+}
+
+.badge-domain-maintenance {
+  background-color: var(--sgde-state-maintenance-bg);
+  color: var(--sgde-state-maintenance);
+  border-color: var(--sgde-state-maintenance);
+}
+
+.badge-domain-maintenance::before {
+  content: "★ ";
+  font-weight: 900;
+}
+
+.badge-domain-suspended {
+  background-color: var(--sgde-state-suspended-bg);
+  color: var(--sgde-state-suspended);
+  border-color: var(--sgde-state-suspended);
+}
+
+.badge-domain-suspended::before {
+  content: "⏸ ";
+  font-weight: 900;
+}
+
+/* Bootstrap badge color overrides for compatibility */
+.badge.bg-success {
+  background-color: var(--sgde-state-active) !important;
+  color: #FFFFFF !important;
+}
+
+.badge.bg-danger {
+  background-color: var(--sgde-state-damaged) !important;
+  color: #FFFFFF !important;
+}
+
+.badge.bg-warning {
+  background-color: var(--sgde-state-maintenance) !important;
+  color: #000000 !important;
+}
+
+.badge.bg-secondary {
+  background-color: var(--sgde-state-suspended) !important;
+  color: #FFFFFF !important;
+}
+
+.badge.bg-primary {
+  background-color: var(--sgde-primary) !important;
+  color: #FFFFFF !important;
+}
+
+/* Accessibility: icon prefixes for non-color-dependent readability */
+.badge.bg-success::before { content: "✓ "; font-weight: 900; }
+.badge.bg-danger::before  { content: "⚠ "; font-weight: 900; }
+.badge.bg-warning::before { content: "★ "; font-weight: 900; }
+.badge.bg-info::before    { content: "ℹ "; font-weight: 900; }
+
+
+/* ==========================================================================
+   COMPONENT: Tabs
+   ========================================================================== */
+
+.nav-tabs {
+  border-bottom: 2px solid var(--sgde-border);
+}
+
+.nav-tabs .nav-link {
+  color: var(--sgde-text-muted);
+  font-weight: var(--sgde-fw-semibold);
+  font-size: var(--sgde-fs-sm);
+  border: 1px solid transparent;
+  border-radius: var(--sgde-radius-sm) var(--sgde-radius-sm) 0 0;
+  padding: var(--sgde-space-2) var(--sgde-space-4);
+  margin-bottom: -2px;
+  transition: color var(--sgde-transition-fast), border-color var(--sgde-transition-fast);
+}
+
+.nav-tabs .nav-link:hover {
+  border-color: var(--sgde-border) var(--sgde-border) transparent;
+  color: var(--sgde-body);
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--sgde-primary);
+  background-color: var(--sgde-surface-card);
+  border: 2px solid var(--sgde-border);
+  border-bottom-color: var(--sgde-surface-card);
+  font-weight: var(--sgde-fw-bold);
+}
+
+
+/* ==========================================================================
+   COMPONENT: Modals
+   ========================================================================== */
+
+.modal {
+  z-index: 1060 !important;
+}
+
+.modal-backdrop {
+  z-index: 1050 !important;
+}
+
+.modal-content {
+
+  background-color: var(--sgde-modal-bg);
+  border: 1px solid var(--sgde-modal-border);
+  border-radius: var(--sgde-radius-lg);
+  box-shadow: var(--sgde-shadow-md);
+}
+
+.modal-header {
+  background-color: var(--sgde-modal-header-bg);
+  border-bottom: 1px solid var(--sgde-modal-border);
+  padding: var(--sgde-space-3) var(--sgde-space-4);
+}
+
+.modal-title {
+  font-weight: var(--sgde-fw-bold);
+  font-size: var(--sgde-fs-base);
+  color: var(--sgde-heading);
+}
+
+.modal-body {
+  padding: var(--sgde-space-5);
+}
+
+.modal-footer {
+  border-top: 1px solid var(--sgde-border);
+  background-color: var(--sgde-surface-elevated);
+  padding: var(--sgde-space-3) var(--sgde-space-4);
+}
+
+
+/* ==========================================================================
+   COMPONENT: Alerts
+   ========================================================================== */
+
+.alert {
+  border: 1px solid var(--sgde-border);
+  border-radius: var(--sgde-radius-md);
+  background-color: var(--sgde-surface-card);
+  color: var(--sgde-body);
+  padding: var(--sgde-space-4);
+  font-size: var(--sgde-fs-sm);
+}
+
+.alert-success {
+  border-left: 4px solid var(--sgde-state-active);
+  background-color: var(--sgde-state-active-bg);
+}
+
+.alert-danger {
+  border-left: 4px solid var(--sgde-state-damaged);
+  background-color: var(--sgde-state-damaged-bg);
+}
+
+.alert-warning {
+  border-left: 4px solid var(--sgde-state-maintenance);
+  background-color: var(--sgde-state-maintenance-bg);
+}
+
+.alert-info {
+  border-left: 4px solid var(--sgde-primary);
+  background-color: var(--sgde-surface-elevated);
+}
+
+
+/* ==========================================================================
+   COMPONENT: Navbar
+   ========================================================================== */
+
+.navbar {
+  background-color: var(--sgde-navbar-bg) !important;
+  border-bottom: 1px solid var(--sgde-navbar-border) !important;
+  box-shadow: var(--sgde-shadow-sm);
+  padding: var(--sgde-space-2) 0;
+}
+
+.navbar-brand {
+  font-weight: var(--sgde-fw-bold);
+  letter-spacing: -0.025em;
+  color: var(--sgde-heading) !important;
+}
+
+.nav-link {
+  font-weight: var(--sgde-fw-medium);
+  color: var(--sgde-navbar-link) !important;
+  font-size: var(--sgde-fs-sm);
+  transition: color var(--sgde-transition-fast);
+}
+
+.nav-link:hover {
+  color: var(--sgde-navbar-link-hover) !important;
+}
+
+.dropdown-menu {
+  background-color: var(--sgde-surface-card);
+  border: 1px solid var(--sgde-border);
+  box-shadow: var(--sgde-shadow-md);
+  border-radius: var(--sgde-radius-md);
+  padding: var(--sgde-space-1) 0;
+}
+
+.dropdown-item {
+  color: var(--sgde-body);
+  font-size: var(--sgde-fs-sm);
+  padding: var(--sgde-space-2) var(--sgde-space-4);
+  transition: background-color var(--sgde-transition-fast);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background-color: var(--sgde-surface-hover);
+  color: var(--sgde-heading);
+}
+
+
+/* ==========================================================================
+   ACCESSIBILITY: Focus-Visible & Micro-Interactions (WCAG AA)
+   ========================================================================== */
+
+/* Universal :focus-visible ring using branding focusRing */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.btn:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible,
+.nav-link:focus-visible,
+.dropdown-item:focus-visible,
+.paginate_button:focus-visible {
+  outline: 3px solid var(--sgde-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--sgde-focus-ring);
+}
+
+/* Remove default browser outline for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Skip-to-content link (a11y best practice) */
+.sr-only-focusable:focus {
+  position: fixed;
+  top: var(--sgde-space-2);
+  left: var(--sgde-space-2);
+  z-index: 9999;
+  padding: var(--sgde-space-2) var(--sgde-space-4);
+  background: var(--sgde-primary);
+  color: #FFFFFF;
+  border-radius: var(--sgde-radius-md);
+  font-weight: var(--sgde-fw-bold);
+}
+
+
+/* ==========================================================================
+   AESTHETIC & INTERACTIVE ENHANCEMENTS (Glassmorphism, Hover Lifts, Filter Pills)
+   ========================================================================== */
+
+/* ── Interactive KPI Cards & Glassmorphism ───────────────────────────── */
+.card {
+  transition: transform var(--sgde-transition-default), box-shadow var(--sgde-transition-default), border-color var(--sgde-transition-default);
+  border-radius: var(--sgde-radius-lg);
+  overflow: hidden;
+}
+
+.card-interactive,
+.kpi-card {
+  cursor: pointer;
   position: relative;
-  min-height: 100%;
 }
 
-body {
-  margin-bottom: 60px;
+.card-interactive:hover,
+.kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -6px rgba(122, 82, 196, 0.25), 0 4px 12px -2px rgba(0, 0, 0, 0.1);
+  border-color: var(--sgde-primary) !important;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+.kpi-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--sgde-primary), #00f2fe);
+  opacity: 0;
+  transition: opacity var(--sgde-transition-fast);
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+.kpi-card:hover::after {
+  opacity: 1;
 }
+
+/* ── Table Interactive Rows ──────────────────────────────────────────── */
+.table-hover tbody tr {
+  transition: background-color var(--sgde-transition-fast), transform 100ms ease;
+  cursor: pointer;
+}
+
+.table-hover tbody tr:hover {
+  background-color: var(--sgde-surface-hover) !important;
+}
+
+/* ── Sleek Filter Toolbar & Pills ────────────────────────────────────── */
+.filter-toolbar {
+  background: var(--sgde-surface-card);
+  border: 1px solid var(--sgde-border);
+  border-radius: var(--sgde-radius-lg);
+  padding: var(--sgde-space-3) var(--sgde-space-4);
+  margin-bottom: var(--sgde-space-4);
+  box-shadow: var(--sgde-shadow-sm);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sgde-space-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filter-chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sgde-space-2);
+  align-items: center;
+}
+
+.filter-chip {
+  background: var(--sgde-surface-elevated);
+  color: var(--sgde-body-secondary);
+  border: 1px solid var(--sgde-border);
+  border-radius: var(--sgde-radius-pill);
+  padding: 0.35rem 0.85rem;
+  font-size: var(--sgde-fs-sm);
+  font-weight: var(--sgde-fw-medium);
+  cursor: pointer;
+  transition: all var(--sgde-transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.filter-chip:hover {
+  background: var(--sgde-surface-hover);
+  border-color: var(--sgde-border-hover);
+  color: var(--sgde-body);
+  transform: translateY(-1px);
+}
+
+.filter-chip.active {
+  background: var(--sgde-primary);
+  color: #FFFFFF;
+  border-color: var(--sgde-primary);
+  box-shadow: 0 2px 8px rgba(122, 82, 196, 0.4);
+}
+
+/* ── Glowing & Pulsing Status Badges ─────────────────────────────────── */
+@keyframes badgePulse {
+  0% { box-shadow: 0 0 0 0 rgba(78, 201, 176, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(78, 201, 176, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(78, 201, 176, 0); }
+}
+
+.badge-pulse-success {
+  animation: badgePulse 2s infinite;
+}
+
+/* ── Page Load Entry Animation ───────────────────────────────────────── */
+@keyframes fadeInSlideUp {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+main[role="main"] {
+  animation: fadeInSlideUp 350ms ease-out;
+}
+
+
+/* ==========================================================================
+   RESPONSIVE: Mobile-First Adjustments
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .card {
+    margin-bottom: var(--sgde-space-4);
+  }
+
+  .card-body {
+    padding: var(--sgde-space-4);
+  }
+
+  .table-responsive {
+    border: 1px solid var(--sgde-border);
+    border-radius: var(--sgde-radius-md);
+  }
+
+  /* Only expand buttons that are NOT inside tables or btn-groups */
+  .btn:not(td .btn):not(.btn-group .btn):not(.filter-toolbar .btn) {
+    width: 100%;
+    margin-bottom: var(--sgde-space-2);
+  }
+
+  .dataTables_wrapper .dataTables_filter,
+  .dataTables_wrapper .dataTables_length {
+    text-align: left !important;
+    margin-bottom: var(--sgde-space-3);
+  }
+
+  .filter-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-chips-container {
+    justify-content: center;
+  }
+}
+
+
+/* ==========================================================================
+   COMPONENT: SweetAlert2 (alertas y confirmaciones — Enmienda 3/4 v3)
+   SweetAlert2 renderiza fuera del árbol de Bootstrap, así que se estiliza
+   explícitamente con los mismos tokens semánticos del resto del sistema.
+   ========================================================================== */
+
+.swal2-popup.sgde-swal-light,
+.swal2-popup.sgde-swal-dark {
+  font-family: var(--sgde-font-body);
+  border-radius: var(--sgde-radius-lg);
+  box-shadow: var(--sgde-shadow-md);
+}
+
+.swal2-popup.sgde-swal-light {
+  background-color: var(--sgde-surface-card);
+  color: var(--sgde-body);
+}
+
+.swal2-popup.sgde-swal-light .swal2-title,
+.swal2-popup.sgde-swal-light .swal2-html-container {
+  color: var(--sgde-body);
+}
+
+.swal2-popup.sgde-swal-light.swal2-toast {
+  border: 1px solid var(--sgde-border);
+}
+
+.swal2-timer-progress-bar {
+  background: var(--sgde-primary) !important;
+}
+
+/* ==========================================================================
+   SGDE LAYOUT & SMART CARD MODULES CSS
+   ========================================================================== */
+
+/* ── 1. Contenedor del Sidebar Fijo ───────────────────────────────────────── */
+.sgde-sidebar {
+    width: 265px;
+    background-color: var(--sgde-surface-card);
+    border-color: var(--sgde-border) !important;
+    transition: width var(--sgde-transition-default, 0.25s ease);
+    z-index: 1020;
+}
+
+.sgde-brand-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--sgde-radius-md, 0.375rem);
+    background: rgba(122, 82, 196, 0.15);
+    color: var(--sgde-primary);
+}
+
+.sgde-sidebar .nav-link {
+    color: var(--sgde-body-secondary, #5C5A66);
+    border-radius: var(--sgde-radius-md, 0.375rem);
+    font-weight: 500;
+    transition: all var(--sgde-transition-fast, 0.15s ease);
+}
+
+.sgde-sidebar .nav-link:hover {
+    color: var(--sgde-heading);
+    background-color: var(--sgde-surface-hover);
+}
+
+.sgde-sidebar .nav-link.active {
+    color: #FFFFFF !important;
+    background-color: var(--sgde-primary);
+    box-shadow: var(--sgde-shadow-sm);
+}
+
+.sgde-avatar {
+    width: 38px;
+    height: 38px;
+    background-color: var(--sgde-surface-elevated);
+    color: var(--sgde-primary);
+    border: 1px solid var(--sgde-border);
+}
+
+/* ── 2. Topbar y Superficie Principal ─────────────────────────────────────── */
+.sgde-topbar {
+    background-color: var(--sgde-surface-card);
+    border-color: var(--sgde-border) !important;
+}
+
+.bg-app-surface {
+    background-color: var(--sgde-bg);
+}
+
+/* ── 3. Tarjetas Modulares del Dashboard (Smartphone App-Style) ───────────── */
+.card-module {
+    background-color: var(--sgde-surface-card);
+    border: 1px solid var(--sgde-border);
+    border-radius: var(--sgde-radius-lg, 0.75rem);
+    box-shadow: var(--sgde-shadow-sm);
+    transition: transform var(--sgde-transition-default, 0.25s ease),
+                box-shadow var(--sgde-transition-default, 0.25s ease),
+                border-color var(--sgde-transition-default, 0.25s ease);
+    overflow: hidden;
+}
+
+.card-module:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--sgde-shadow-md);
+    border-color: var(--sgde-primary);
+}
+
+.card-module:focus-visible {
+    outline: 2px solid var(--sgde-primary);
+    outline-offset: 2px;
+}
+
+.module-icon-wrapper {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(122, 82, 196, 0.12);
+    color: var(--sgde-primary);
+    font-size: 1.65rem;
+    transition: transform var(--sgde-transition-fast, 0.15s ease);
+}
+
+.module-icon-customer {
+    background: rgba(16, 124, 98, 0.12);
+    color: var(--sgde-state-active, #107C62);
+}
+
+.module-icon-audit {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--sgde-state-maintenance, #D97706);
+}
+
+.module-icon-reports {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3B82F6;
+}
+
+.card-module:hover .module-icon-wrapper {
+    transform: scale(1.08);
+}
+
+.module-action-indicator {
+    color: var(--sgde-primary);
+    transition: gap var(--sgde-transition-fast, 0.15s ease);
+}
+
+.card-module:hover .module-action-indicator {
+    gap: 0.5rem !important;
+}

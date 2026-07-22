@@ -1,10 +1,238 @@
-﻿@page
-@model IndexModel
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Portal Principal";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<!-- SECCIÓN 1: HERO & LOGIN INTEGRADO -->
+<div class="row g-4 mb-5 align-items-center">
+    <div class="col-lg-7">
+        <div class="p-4 p-md-5 card border-2 shadow-sm h-100 justify-content-center">
+            <span class="badge bg-dark text-white border border-dark mb-3 align-self-start px-3 py-2 fs-6">Plataforma SGDE</span>
+            <h1 class="display-5 fw-bold text-dark letter-spacing mb-3">SISTEMA DE GESTIÓN Y DISTRIBUCIÓN DE ENERGÍA</h1>
+            <p class="fs-5 text-muted mb-4">
+                Plataforma que centraliza la operación del parque de generación eólica: monitoreo de turbinas en tiempo real, consolidación de energía en el Banco Central, pronósticos de demanda de los compradores y distribución comercial mensual con facturación y auditoría trazable de principio a fin.
+            </p>
+            <div class="d-flex flex-wrap gap-2 pt-2 border-top">
+                <a href="#modulos" class="btn btn-outline-secondary">Módulos</a>
+                <a href="#arquitectura" class="btn btn-outline-secondary">Especificaciones</a>
+                <a href="#contacto" class="btn btn-outline-secondary">Contáctenos</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- LOGIN INTEGRADO EN LANDING PAGE -->
+    <div class="col-lg-5">
+        <div class="card border-2 shadow h-100">
+            <div class="card-header bg-dark text-white py-3">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-shield-lock me-2"></i>ACCESO AL SISTEMA / LOGIN</h5>
+            </div>
+            <div class="card-body p-4 d-flex flex-column justify-content-center">
+                <p class="text-muted small mb-3">Ingresa tus credenciales para acceder al panel de Administración, Operaciones o tu cuenta de Comprador.</p>
+                
+                <form id="landingLoginForm">
+                    <div class="mb-3">
+                        <label for="loginIdent" class="form-label fw-bold">Identificación o Correo Electrónico</label>
+                        <input type="text" class="form-control" id="loginIdent" required placeholder="ej. usuario@sgde.cr o 101110111">
+                    </div>
+                    <div class="mb-3">
+                        <label for="loginPass" class="form-label fw-bold">Contraseña</label>
+                        <input type="password" class="form-control" id="loginPass" required placeholder="••••••••">
+                    </div>
+                    <div class="d-grid mb-3 mt-4">
+                        <button type="submit" class="btn btn-primary py-2 fw-bold">
+                            Continuar <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                    <div class="d-flex justify-content-between pt-2 border-top small">
+                        <a href="/Register" class="text-dark fw-bold text-decoration-none">¿Nuevo usuario? Regístrate</a>
+                        <a href="/RecoverPassword" class="text-muted text-decoration-none">¿Olvidaste tu contraseña?</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- SECCIÓN 2: MÓDULOS DEL SISTEMA -->
+<div id="modulos" class="mb-5 pt-3">
+    <div class="border-bottom border-2 pb-2 mb-4 d-flex justify-content-between align-items-end">
+        <h3 class="mb-0 fw-bold text-uppercase">Módulos del Sistema</h3>
+        <span class="text-muted small">Vista General</span>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-header">Banco Central</div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">
+                        Inventario consolidado de energía proveniente de las baterías locales de cada turbina, trasladado mediante ciclos de Flush automáticos o manuales bajo control transaccional.
+                    </p>
+                    <ul class="list-unstyled small mb-0 text-muted">
+                        <li class="mb-1"><i class="bi bi-dash me-1"></i> Capacidad efectiva y manual</li>
+                        <li class="mb-1"><i class="bi bi-dash me-1"></i> Control de saturación</li>
+                        <li><i class="bi bi-dash me-1"></i> Bitácora de movimientos</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-header">Control de Turbinas</div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">
+                        Monitoreo del estado operativo de cada turbina, historial de cambios, mantenimientos preventivos/correctivos y registro de fallas con métricas de disponibilidad.
+                    </p>
+                    <ul class="list-unstyled small mb-0 text-muted">
+                        <li class="mb-1"><i class="bi bi-dash me-1"></i> Cambios de estado auditados</li>
+                        <li class="mb-1"><i class="bi bi-dash me-1"></i> Mantenimientos y fallas</li>
+                        <li><i class="bi bi-dash me-1"></i> Métricas DO / IO / MTBF / MTTR</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-header">Demanda y Pronósticos</div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">
+                        Los compradores registran su pronóstico mensual de consumo con hasta 6 meses de anticipación; el sistema calcula el escenario de distribución (suficiente, escasez o inventario cero).
+                    </p>
+                    <ul class="list-unstyled small mb-0 text-muted">
+                        <li class="mb-1"><i class="bi bi-dash me-1"></i> Pronóstico por comprador</li>
+                        <li class="mb-1"><i class="bi bi-dash me-1"></i> Distribución proporcional</li>
+                        <li><i class="bi bi-dash me-1"></i> Historial de asignaciones</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-header">Facturación y Auditoría</div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">
+                        Generación automática de estados de cuenta por distribución mensual, con anulación/regeneración controlada y exportación en varios formatos. Toda acción crítica queda en bitácora inmutable.
+                    </p>
+                    <ul class="list-unstyled small mb-0 text-muted">
+                        <li class="mb-1"><i class="bi bi-dash me-1"></i> Precios e impuestos vigentes</li>
+                        <li class="mb-1"><i class="bi bi-dash me-1"></i> Exportación de estados de cuenta</li>
+                        <li><i class="bi bi-dash me-1"></i> Auditoría WORM</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECCIÓN 3: ESPECIFICACIONES -->
+<div id="arquitectura" class="mb-5 pt-3">
+    <div class="card border-2">
+        <div class="card-header">Información General</div>
+        <div class="card-body p-4">
+            <div class="row g-4 text-center">
+                <div class="col-md-4 border-end">
+                    <h5 class="fw-bold mb-2">Arquitectura N-Tier</h5>
+                    <p class="text-muted small mb-0">
+                        Backend en ASP.NET Core Web API sobre Azure SQL Database, con capas separadas de datos, negocio y presentación. Frontend en Razor Pages con autenticación JWT.
+                    </p>
+                </div>
+                <div class="col-md-4 border-end">
+                    <h5 class="fw-bold mb-2">Procesos ACID</h5>
+                    <p class="text-muted small mb-0">
+                        El vaciado de baterías (Flush) y la distribución comercial mensual se ejecutan en transacciones atómicas: si algo falla, se revierte todo el lote sin dejar datos inconsistentes.
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="fw-bold mb-2">Trazabilidad WORM</h5>
+                    <p class="text-muted small mb-0">
+                        Registros críticos (auditoría, snapshots de Flush, estados de cuenta emitidos) son de solo escritura: una vez creados, no se modifican ni se eliminan.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECCIÓN 4: INFORMACIÓN Y CONTÁCTENOS -->
+<div id="contacto" class="mb-4 pt-3">
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header">Contacto</div>
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Oficina Principal SGDE</h5>
+                    <p class="text-muted small mb-3">
+                        Para consultas sobre acceso al sistema, soporte técnico o incorporación de nuevas turbinas al parque de generación, contáctenos por cualquiera de los siguientes medios.
+                    </p>
+                    <hr>
+                    <ul class="list-unstyled small mb-0">
+                        <li class="mb-2"><strong class="d-inline-block" style="width: 80px;">Ubicación:</strong> San José, Costa Rica</li>
+                        <li class="mb-2"><strong class="d-inline-block" style="width: 80px;">Teléfono:</strong> +506 2200-0000</li>
+                        <li class="mb-2"><strong class="d-inline-block" style="width: 80px;">Soporte:</strong> info@sgde.cr</li>
+                        <li class="mb-0"><strong class="d-inline-block" style="width: 80px;">Horario:</strong> Lunes a Viernes, 8:00 AM - 5:00 PM</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header">Formulario de Contacto</div>
+                <div class="card-body">
+                    <form id="contactForm">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre Completo</label>
+                                <input type="text" class="form-control" id="cName" required placeholder="Nombre">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Correo Electrónico</label>
+                                <input type="email" class="form-control" id="cEmail" required placeholder="correo@ejemplo.cr">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Asunto</label>
+                            <select class="form-select" id="cSubject">
+                                <option value="Consulta">Consulta General</option>
+                                <option value="Soporte">Soporte</option>
+                                <option value="Otros">Otros</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mensaje</label>
+                            <textarea class="form-control" id="cMessage" rows="3" required placeholder="Escriba aquí su mensaje..."></textarea>
+                        </div>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-dark px-4">Enviar Mensaje</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // El login del formulario #landingLoginForm lo maneja site.js:initLandingLogin()
+            // (llama a la API real Users/LoginStep1+LoginStep2) — no duplicar el manejador aquí.
+
+            // Manejo de Formulario de Contacto
+            const contactForm = document.getElementById("contactForm");
+            if (contactForm) {
+                contactForm.addEventListener("submit", function(e) {
+                    e.preventDefault();
+                    if (typeof Notifications !== "undefined") {
+                        Notifications.showToast("¡Mensaje enviado con éxito!", "success");
+                    }
+                    contactForm.reset();
+                });
+            }
+        });
+    </script>
+}

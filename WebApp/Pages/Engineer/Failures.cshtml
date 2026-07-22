@@ -1,0 +1,25 @@
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.Engineer.FailuresModel
+@{
+    ViewData["Title"] = "Registro y Análisis de Fallas";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+    </div>
+        <div class="d-flex justify-content-between mb-3">
+        <select class="form-select" id="engFailTurbine" style="max-width: 300px;"><option value="">Todas las Turbinas</option></select>
+        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#regFailModal">+ Reportar Falla</button>
+    </div>
+    <table class="table table-striped">
+        <thead><tr><th>ID</th><th>Turbina</th><th>Severidad</th><th>Descripción</th><th>Fecha Reporte</th></tr></thead>
+        <tbody id="engFailsBody"><tr><td colspan="5" class="text-center">Cargando fallas...</td></tr></tbody>
+    </table>
+    <!-- Modal Falla -->
+    <div class="modal fade" id="regFailModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Reportar Falla de Turbina</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar diálogo"></button></div><div class="modal-body"><form id="regFailForm"><div class="mb-2"><label class="form-label">Turbina</label><select class="form-select" id="fTurbine" required></select></div><div class="mb-2"><label class="form-label">Severidad</label><select class="form-select" id="fSeverity"><option value="Normal">Normal</option><option value="Critical">Critical</option></select><small class="text-danger d-block mt-1">¡Atención! Una falla Crítica cambiará el estado de la turbina a Dañada inmediatamente.</small></div><div class="mb-2"><label class="form-label">Descripción</label><textarea class="form-control" id="fDesc" required></textarea></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-danger" id="saveFailBtn">Reportar</button></div></div></div></div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages-controller/OperationsComplementaryViewController.js" asp-append-version="true"></script>
+}

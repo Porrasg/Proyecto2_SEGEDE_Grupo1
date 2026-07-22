@@ -1,0 +1,31 @@
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.Engineer.CentralBankModel
+@{
+    ViewData["Title"] = "Monitoreo del Banco Central";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+        <a href="/Engineer/FlushHistory" class="btn btn-outline-secondary btn-sm"><i class="bi bi-clock-history"></i> Ver Historial de Flush</a>
+    </div>
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card text-center p-3 h-100"><h6 class="text-muted">Inventario Actual en Banco Central</h6><h2 class="display-5 text-success fw-bold" id="cbInv">- MWh</h2></div>
+        </div>
+        <div class="col-md-6">
+            <div class="card text-center p-3 h-100"><h6 class="text-muted">Último Traslado / Sincronización</h6><h2 class="display-5 text-primary fs-3 mt-2" id="cbLast">-</h2></div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Bitácora Inmutable de Movimientos y Saturaciones (ACID / RN-024)</span>
+            <span class="badge bg-secondary">WORM</span>
+        </div>
+        <div class="card-body p-0"><table class="table table-striped mb-0"><thead><tr><th>ID</th><th>Tipo Movimiento</th><th>Monto Trasladado</th><th>Inventario Resultante</th><th>Fecha y Hora</th></tr></thead><tbody id="cbLogsBody"><tr><td colspan="5" class="text-center">Cargando movimientos...</td></tr></tbody></table></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages-controller/CentralBankViewController.js" asp-append-version="true"></script>
+}

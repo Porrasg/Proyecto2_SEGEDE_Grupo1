@@ -1,0 +1,26 @@
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.Engineer.FlushHistoryModel
+@{
+    ViewData["Title"] = "Historial Operativo de Flush";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#configModal"><i class="bi bi-gear-fill"></i> Configurar Flushes</button>
+    </div>
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Bitácora de Traslados y Sincronizaciones desde Baterías Locales</span>
+            <span class="badge bg-info text-dark">ACID</span>
+        </div>
+        <div class="card-body p-0"><table class="table table-hover mb-0"><thead><tr><th>ID</th><th>Fecha/Hora</th><th>Turbina Origen</th><th>Energía Trasladada</th><th>Tipo Ejecución</th><th>Estado Transacción</th></tr></thead><tbody id="flushesBody"><tr><td colspan="6" class="text-center">Cargando historial de flush...</td></tr></tbody></table></div>
+    </div>
+
+    <!-- Modal Configuración Flush -->
+    <div class="modal fade" id="configModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Configuración de Disparos Automáticos</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar diálogo"></button></div><div class="modal-body"><form id="confForm"><div class="mb-3"><label class="form-label">Frecuencia de Ejecución (Horas)</label><input type="number" class="form-control" id="flFreq" min="1" max="72" required></div><div class="mb-3"><label class="form-label">Umbral de Carga en Batería (%)</label><input type="number" class="form-control" id="flThresh" min="10" max="100" required><small class="text-muted">Si una batería local supera este umbral, se disparará un flush automático al Banco Central.</small></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" id="btnSaveConfig">Guardar Cambios</button></div></div></div></div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages-controller/CentralBankViewController.js" asp-append-version="true"></script>
+}
