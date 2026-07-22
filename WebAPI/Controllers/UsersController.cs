@@ -215,5 +215,30 @@ namespace WebAPI.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        // Variante de ActivateAccount con binding por JSON body (rama Harry) — se conserva junto a
+        // ActivateAccount (query string) porque son dos formas de invocar el mismo UserManager.ActivateAccount.
+        [HttpPost]
+        [Route("Activate")]
+        public ActionResult Activate(UserActivationRequest request)
+        {
+            try
+            {
+                var um = new UserManager();
+                um.ActivateAccount(request.Email, request.TokenCode);
+                return Ok(new { message = "Cuenta activada con éxito." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        // Mini-clase estructural para el mapeo limpio del JSON entrante de JavaScript
+        public class UserActivationRequest
+        {
+            public string Email { get; set; } = string.Empty;
+            public string TokenCode { get; set; } = string.Empty;
+        }
     }
 }
