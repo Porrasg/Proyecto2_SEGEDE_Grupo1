@@ -14,8 +14,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const auditBody = document.getElementById("engAuditBody");
+    // Entities-DTOs.Audit solo guarda UserId (nullable), no un UserName resuelto.
+    let userNames = {};
     if (auditBody) {
-        loadAuditLogs();
+        apiClient.get("Users/RetrieveAll").done(function (res) {
+            (res?.data || res?.Data || []).forEach(function (u) {
+                userNames[u.id ?? u.Id] = `${u.firstName || u.FirstName || ""} ${u.firstLastName || u.FirstLastName || ""}`.trim() || `Usuario #${u.id ?? u.Id}`;
+            });
+        }).always(loadAuditLogs);
 
         const btnFilter = document.getElementById("btnEngFilterAudit");
         if (btnFilter) {
@@ -46,7 +52,7 @@ document.addEventListener("DOMContentLoaded", function () {
             
             // Si el usuario escribió texto (ej: nombre de usuario) en el filtro rápido y no era un ID numérico, filtramos en memoria
             if (userStr && isNaN(userStr)) {
-                list = list.filter(item => (item.userName || item.UserName || "").toLowerCase().includes(userStr.toLowerCase()));
+                list = list.filter(item => (userNames[item.userId ?? item.UserId] || "").toLowerCase().includes(userStr.toLowerCase()));
             }
 
             renderAuditTable(list);
@@ -64,11 +70,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
         auditBody.innerHTML = list.map(a => {
             const id = a.id || a.Id;
-            const dateStr = a.eventDate || a.EventDate ? new Date(a.eventDate || a.EventDate).toLocaleString("es-CR") : "-";
-            const user = a.userName || a.UserName || "System";
-            const mod = a.module || a.Module || "-";
+            const dateStr = a.createdAt || a.CreatedAt ? new Date(a.createdAt || a.CreatedAt).toLocaleString("es-CR") : "-";
+            const userId = a.userId ?? a.UserId;
+            const user = userId != null ? (userNames[userId] || `Usuario #${userId}`) : "System";
+            // Entities-DTOs.Audit no distingue "módulo" de "entidad afectada" — es el mismo campo EntityName.
+            const mod = a.entityName || a.EntityName || "-";
             const act = a.action || a.Action || "-";
-            const ent = (a.affectedEntity || a.AffectedEntity || "-") + " #" + (a.entityId || a.EntityId || 0);
+            const ent = mod + " #" + (a.entityId || a.EntityId || 0);
 
             let actBadge = '<span class="badge bg-secondary">' + act + '</span>';
             if (act.toLowerCase() === "create") actBadge = '<span class="badge bg-success">Creación</span>';
@@ -84,18 +92,14 @@ document.addEventListener("DOMContentLoaded", function () {
             if (mod === "Forecasts") modBadge = '<span class="badge bg-success">Pronósticos</span>';
             if (mod === "Billing") modBadge = '<span class="badge bg-success">Facturación</span>';
 
-            const prev = formatJsonVal(a.previousValue || a.PreviousValue);
-            const next = formatJsonVal(a.newValue || a.NewValue);
-            let detail = "-";
-            if (prev !== "-" || next !== "-") {
-                detail = `<span class="text-muted">${prev}</span> <i class="bi bi-arrow-right small text-primary"></i> <span class="fw-bold">${next}</span>`;
-            }
+            // Entities-DTOs.Audit no tiene PreviousValue/NewValue — se muestra la Description tal cual.
+            const detail = escapeHtml(a.description || a.Description || "-");
 
             return `
                 <tr>
                     <td>#${id}</td>
                     <td class="small">${dateStr}</td>
-                    <td class="fw-bold">${user}</td>
+                    <td class="fw-bold">${escapeHtml(user)}</td>
                     <td>${modBadge}</td>
                     <td>${actBadge}</td>
                     <td class="small font-monospace">${ent}</td>
@@ -103,15 +107,5 @@ document.addEventListener("DOMContentLoaded", function () {
                 </tr>
             `;
         }).join("");
-    }
-
-    function formatJsonVal(val) {
-        if (!val || val === "null" || val === "None") return "-";
-        try {
-            const obj = JSON.parse(val);
-            return typeof obj === "object" ? JSON.stringify(obj) : obj;
-        } catch (e) {
-            return val;
-        }
     }
 });

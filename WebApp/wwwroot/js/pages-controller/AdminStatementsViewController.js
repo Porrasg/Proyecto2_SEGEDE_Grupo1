@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     apiClient.get("Users/RetrieveAll").done(function (res) {
         (res?.data || res?.Data || []).forEach(function (u) {
-            userNames[u.id || u.Id] = `${u.firstName || u.FirstName || ""} ${u.lastName || u.LastName || ""}`.trim() || `Usuario #${u.id || u.Id}`;
+            userNames[u.id || u.Id] = `${u.firstName || u.FirstName || ""} ${u.firstLastName || u.FirstLastName || ""}`.trim() || `Usuario #${u.id || u.Id}`;
         });
     }).always(loadStatements);
 
@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (statusFilter) statusFilter.addEventListener("change", renderFiltered);
 
     function loadStatements() {
-        statementsBody.innerHTML = '<tr><td colspan="10" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando estados de cuenta...</td></tr>';
+        statementsBody.innerHTML = '<tr><td colspan="9" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando estados de cuenta...</td></tr>';
         apiClient.get("Billing/Statements")
             .done(function (res) {
                 allStatements = res?.data || res?.Data || [];
@@ -38,13 +38,21 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
 
+    // Entities-DTOs.Invoice usa PaymentStatus con los valores Pending/Paid/Overdue/Cancelled
+    // (InvoiceManager.IsValidPaymentStatus) — no existen los estados "Issued"/"Annulled".
+    function paymentStatusBadge(status) {
+        const map = { Pending: "bg-warning text-dark", Paid: "bg-success", Overdue: "bg-danger", Cancelled: "bg-secondary" };
+        const txt = { Pending: "Pendiente", Paid: "Pagado", Overdue: "Vencido", Cancelled: "Anulado" };
+        return `<span class="badge ${map[status] || "bg-secondary"}">${txt[status] || status || "-"}</span>`;
+    }
+
     function renderFiltered() {
         const q = (searchInput?.value || "").toLowerCase().trim();
         const status = statusFilter?.value || "";
         const filtered = allStatements.filter(function (s) {
             const buyerName = (userNames[s.buyerId ?? s.BuyerId] || "").toLowerCase();
             const matchesQ = !q || buyerName.includes(q);
-            const matchesStatus = !status || (s.status || s.Status) === status;
+            const matchesStatus = !status || (s.paymentStatus || s.PaymentStatus) === status;
             return matchesQ && matchesStatus;
         });
         render(filtered);
@@ -52,26 +60,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function render(items) {
         if (!items.length) {
-            statementsBody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No se encontraron estados de cuenta.</td></tr>';
+            statementsBody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No se encontraron estados de cuenta.</td></tr>';
             return;
         }
         statementsBody.innerHTML = items.map(function (s) {
             const id = s.id ?? s.Id;
             const buyerId = s.buyerId ?? s.BuyerId;
-            const status = s.status || s.Status || "-";
-            const badge = status === "Issued" ? "bg-success" : status === "Annulled" ? "bg-danger" : "bg-secondary";
-            const canAnnul = status === "Issued";
-            const canRegen = status === "Annulled";
+            const status = s.paymentStatus || s.PaymentStatus || "Pending";
+            const issueDate = s.issueDate ?? s.IssueDate;
+            const period = issueDate ? new Date(issueDate) : null;
+            const canAnnul = status === "Pending" || status === "Overdue";
+            const canRegen = status === "Cancelled";
             return `<tr>
                 <td>${id}</td>
                 <td>${escapeHtml(userNames[buyerId] || `Comprador #${buyerId}`)}</td>
-                <td>${s.month ?? s.Month}/${s.year ?? s.Year}</td>
-                <td>${Number(s.assignedMWh ?? s.AssignedMWh ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</td>
+                <td>${period ? (period.getMonth() + 1) + "/" + period.getFullYear() : "-"}</td>
+                <td>${Number(s.energyMWh ?? s.EnergyMWh ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</td>
                 <td>${Number(s.subtotal ?? s.Subtotal ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</td>
                 <td>${Number(s.taxAmount ?? s.TaxAmount ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</td>
-                <td class="fw-bold">${Number(s.total ?? s.Total ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</td>
-                <td><span class="badge ${badge}">${status}</span></td>
-                <td>${s.revisionNumber ?? s.RevisionNumber ?? 0}</td>
+                <td class="fw-bold">${Number(s.totalAmount ?? s.TotalAmount ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</td>
+                <td>${paymentStatusBadge(status)}</td>
                 <td class="text-nowrap">
                     ${canAnnul ? `<button class="btn btn-sm btn-outline-danger btn-annul" data-id="${id}" title="Anular"><i class="bi bi-x-circle"></i></button>` : ""}
                     ${canRegen ? `<button class="btn btn-sm btn-outline-warning btn-regen" data-id="${id}" title="Regenerar"><i class="bi bi-arrow-repeat"></i></button>` : ""}

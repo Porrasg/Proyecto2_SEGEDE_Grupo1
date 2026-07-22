@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
     apiClient.get("Users/RetrieveAll").done(function (res) {
         (res?.data || res?.Data || []).forEach(function (u) {
             const id = u.id || u.Id;
-            userNames[id] = `${u.firstName || u.FirstName || ""} ${u.lastName || u.LastName || ""}`.trim() || `Usuario #${id}`;
+            userNames[id] = `${u.firstName || u.FirstName || ""} ${u.firstLastName || u.FirstLastName || ""}`.trim() || `Usuario #${id}`;
         });
     }).always(consultForecasts);
 
@@ -43,10 +43,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     const buyerId = f.buyerId ?? f.BuyerId;
                     return `<tr>
                         <td>${escapeHtml(userNames[buyerId] || `Comprador #${buyerId}`)}</td>
-                        <td>${f.month ?? f.Month}/${f.year ?? f.Year}</td>
-                        <td>${Number(f.amountMWh ?? f.AmountMWh ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</td>
+                        <td>${f.forecastMonth ?? f.ForecastMonth}/${f.forecastYear ?? f.ForecastYear}</td>
+                        <td>${Number(f.requestedEnergyMWh ?? f.RequestedEnergyMWh ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</td>
                         <td>${statusBadge(f.status || f.Status)}</td>
-                        <td>${new Date(f.created || f.Created).toLocaleDateString("es-CR")}</td>
+                        <td>${new Date(f.createdAt || f.CreatedAt).toLocaleDateString("es-CR")}</td>
                     </tr>`;
                 }).join("");
             })
