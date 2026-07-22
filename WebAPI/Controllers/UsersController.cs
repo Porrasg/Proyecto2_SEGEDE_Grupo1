@@ -103,5 +103,117 @@ namespace WebAPI.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        [HttpPost]
+        [Route("Login")]
+        public ActionResult Login(string email, string password)
+        {
+            try
+            {
+                var um = new UserManager();
+                var user = um.Login(email, password);
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost]
+        [Route("ValidateLoginOtp")]
+        public ActionResult ValidateLoginOtp(string email, string tokenCode)
+        {
+            try
+            {
+                var um = new UserManager();
+                var user = um.ValidateLoginOtp(email, tokenCode);
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost]
+        [Route("ChangePassword")]
+        public ActionResult ChangePassword(int userId, string currentPassword, string newPassword, string confirmPassword)
+        {
+            try
+            {
+                var um = new UserManager();
+                um.ChangePassword(userId, currentPassword, newPassword, confirmPassword);
+                return Ok("Solicitud de cambio de contraseña enviada.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost]
+        [Route("ConfirmChangePassword")]
+        public ActionResult ConfirmChangePassword(int userId, string tokenCode, string newPassword, string confirmPassword)
+        {
+            try
+            {
+                var um = new UserManager();
+                um.ConfirmChangePassword(userId, tokenCode, newPassword, confirmPassword);
+                return Ok("Contraseña actualizada correctamente.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost]
+        [Route("ResetPassword")]
+        public ActionResult ResetPassword(string email)
+        {
+            try
+            {
+                var um = new UserManager();
+                um.ResetPassword(email);
+                return Ok("Solicitud de restablecimiento enviada.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost]
+        [Route("ConfirmResetPassword")]
+        public ActionResult ConfirmResetPassword(string email, string tokenCode, string newPassword, string confirmPassword)
+        {
+            try
+            {
+                var um = new UserManager();
+                um.ConfirmResetPassword(email, tokenCode, newPassword, confirmPassword);
+                return Ok("Contraseña restablecida correctamente.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost]
+        [Route("ActivateAccount")]
+        public ActionResult ActivateAccount(string email, string tokenCode)
+        {
+            try
+            {
+                var um = new UserManager();
+                um.ActivateAccount(email, tokenCode);
+                return Ok("Cuenta activada correctamente.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
     }
 }
