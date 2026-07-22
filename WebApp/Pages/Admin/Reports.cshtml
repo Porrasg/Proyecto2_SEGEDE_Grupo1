@@ -1,0 +1,117 @@
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.Admin.ReportsModel
+@{
+    ViewData["Title"] = "Módulo de Reportes";
+}
+
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/Admin/Dashboard">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Reportes</li>
+        </ol>
+    </nav>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"] <span class="badge bg-danger ms-2" style="font-size: 0.5em; vertical-align: middle;">Administrador</span></h2>
+    </div>
+
+    <!-- Reporte 1: Energía generada por turbina (día/mes/año) -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-lightning-charge me-2" aria-hidden="true"></i>Energía Generada por Turbina</span>
+            <button class="btn btn-sm btn-outline-primary" id="btnExportGeneration" disabled>
+                <i class="bi bi-download me-1" aria-hidden="true"></i>Exportar CSV
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 mb-3">
+                <div class="col-md-5">
+                    <label class="form-label" for="repTurbineSelect">Turbina</label>
+                    <select class="form-select" id="repTurbineSelect"><option value="">Cargando turbinas...</option></select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="repGroupBy">Agrupar por</label>
+                    <select class="form-select" id="repGroupBy">
+                        <option value="day">Día</option>
+                        <option value="month" selected>Mes</option>
+                        <option value="year">Año</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-primary w-100" id="btnRunGeneration">
+                        <i class="bi bi-play-fill me-1" aria-hidden="true"></i>Generar Reporte
+                    </button>
+                </div>
+            </div>
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                        <table class="table table-striped table-sm mb-0">
+                            <thead><tr><th scope="col">Período</th><th scope="col">Registros</th><th scope="col">Energía Generada (MWh)</th></tr></thead>
+                            <tbody id="generationReportBody"><tr><td colspan="3" class="text-center text-muted py-4">Seleccione una turbina y presione "Generar Reporte".</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <canvas id="generationReportChart" role="img" aria-label="Gráfico de barras de energía generada por período"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reporte 2: Energía suplida por proveedor (planta generadora) -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-buildings me-2" aria-hidden="true"></i>Energía Suplida por Proveedor (Planta Generadora)</span>
+            <div>
+                <button class="btn btn-sm btn-primary me-2" id="btnRunSuppliers">
+                    <i class="bi bi-play-fill me-1" aria-hidden="true"></i>Generar
+                </button>
+                <button class="btn btn-sm btn-outline-primary" id="btnExportSuppliers" disabled>
+                    <i class="bi bi-download me-1" aria-hidden="true"></i>Exportar CSV
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped mb-0">
+                    <thead><tr><th scope="col">Código</th><th scope="col">Proveedor / Planta</th><th scope="col">Estado</th><th scope="col">Capacidad Nominal (MWh)</th><th scope="col">Total Suplido (MWh)</th><th scope="col">% del Total</th></tr></thead>
+                    <tbody id="suppliersReportBody"><tr><td colspan="6" class="text-center text-muted py-4">Presione "Generar" para consolidar la energía suplida por cada planta.</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reporte 3: Historial de mantenimientos por turbina -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-tools me-2" aria-hidden="true"></i>Historial de Mantenimientos por Turbina</span>
+            <button class="btn btn-sm btn-outline-primary" id="btnExportMaint" disabled>
+                <i class="bi bi-download me-1" aria-hidden="true"></i>Exportar CSV
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 mb-3">
+                <div class="col-md-5">
+                    <label class="form-label" for="repMaintTurbineSelect">Turbina</label>
+                    <select class="form-select" id="repMaintTurbineSelect"><option value="">Todas las turbinas</option></select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-primary w-100" id="btnRunMaint">
+                        <i class="bi bi-play-fill me-1" aria-hidden="true"></i>Generar Reporte
+                    </button>
+                </div>
+            </div>
+            <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+                <table class="table table-striped table-sm mb-0">
+                    <thead><tr><th scope="col">ID</th><th scope="col">Turbina</th><th scope="col">Tipo</th><th scope="col">Inicio Estimado</th><th scope="col">Fin Estimado</th><th scope="col">Fin Real</th><th scope="col">Estado</th><th scope="col">Resultado</th></tr></thead>
+                    <tbody id="maintReportBody"><tr><td colspan="8" class="text-center text-muted py-4">Presione "Generar Reporte".</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages-controller/ReportsViewController.js" asp-append-version="true"></script>
+}

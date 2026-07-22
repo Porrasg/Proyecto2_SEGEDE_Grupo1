@@ -1,0 +1,43 @@
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.Admin.TurbineDetailModel
+@{
+    ViewData["Title"] = "Detalle Técnico de Turbina";
+}
+
+<div class="container mt-4">
+    <nav aria-label="breadcrumb" class="mb-2">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/Admin/Turbines">Turbinas</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Detalle</li>
+        </ol>
+    </nav>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+        <a href="/Admin/Turbines" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+        <div class="card mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+                <h4 id="detName">Turbina #---</h4>
+                <p class="text-muted mb-0" id="detMeta">Código: --- | Ubicación: --- | Capacidad: --- MWh/sem</p>
+            </div>
+            <div><span class="badge bg-secondary fs-6" id="detStatus">Unknown</span></div>
+        </div>
+    </div>
+    <ul class="nav nav-tabs mb-3" id="turbineTabs" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabHistory">Historial de Estados</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabMaint">Mantenimientos</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabFail">Fallas Registradas</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabMetrics">Métricas (DO / IO / MTBF / MTTR)</button></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="tabHistory"><table class="table table-sm"><thead><tr><th>Fecha</th><th>Estado Anterior</th><th>Nuevo Estado</th><th>Razón</th><th>Usuario</th></tr></thead><tbody id="historyBody"></tbody></table></div>
+        <div class="tab-pane fade" id="tabMaint"><table class="table table-sm"><thead><tr><th>Tipo</th><th>Inicio Est.</th><th>Fin Est.</th><th>Estado</th><th>Resultado</th></tr></thead><tbody id="maintBody"></tbody></table></div>
+        <div class="tab-pane fade" id="tabFail"><table class="table table-sm"><thead><tr><th>Fecha</th><th>Severidad</th><th>Descripción</th></tr></thead><tbody id="failBody"></tbody></table></div>
+        <div class="tab-pane fade" id="tabMetrics"><div class="row g-3"><div class="col-md-3"><div class="card text-center p-3"><h5>Disponibilidad (DO)</h5><h3 id="valDo">-%</h3></div></div><div class="col-md-3"><div class="card text-center p-3"><h5>Indisponibilidad (IO)</h5><h3 id="valIo">-%</h3></div></div><div class="col-md-3"><div class="card text-center p-3"><h5>MTBF</h5><h3 id="valMtbf">- hrs</h3></div></div><div class="col-md-3"><div class="card text-center p-3"><h5>MTTR</h5><h3 id="valMttr">- hrs</h3></div></div></div></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages-controller/TurbineManagementViewController.js" asp-append-version="true"></script>
+}

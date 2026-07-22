@@ -1,0 +1,43 @@
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.Admin.CentralBankModel
+@{
+    ViewData["Title"] = "Inventario del Banco Central";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+        <a href="/Admin/Flush" class="btn btn-outline-secondary btn-sm"><i class="bi bi-water"></i> Ir a Control de Flush</a>
+    </div>
+        <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card text-center p-3 h-100"><h6 class="text-muted">Inventario Actual</h6><h2 class="display-6" id="cbCurrent">- MWh</h2></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center p-3 h-100"><h6 class="text-muted">Capacidad Nominal (Automática)</h6><h2 class="display-6" id="cbAutoCap">- MWh</h2></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-3 h-100">
+                <h6 class="text-muted text-center">Capacidad Máxima Manual</h6>
+                <div class="input-group mt-2">
+                    <input type="number" step="0.01" class="form-control" id="cbManualCap" placeholder="0.00">
+                    <button class="btn btn-primary" id="btnSaveCap">Ajustar</button>
+                </div>
+                <small class="text-muted mt-1 text-center">Capacidad Efectiva: <strong id="cbEffective">- MWh</strong></small>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">Auditoría de Movimientos de Inventario (WORM)</div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>ID</th><th>Tipo Movimiento</th><th>Monto (MWh)</th><th>Fecha y Hora</th><th>Descripción / Origen</th></tr></thead>
+                <tbody id="cbLogsBody"><tr><td colspan="5" class="text-center">Cargando movimientos...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages-controller/AdminCentralBankViewController.js" asp-append-version="true"></script>
+}

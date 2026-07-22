@@ -1,0 +1,38 @@
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.Admin.AuditModel
+@{
+    ViewData["Title"] = "Registros de Auditoría (WORM)";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+    </div>
+        <div class="row g-2 mb-3">
+        <div class="col-md-3">
+            <select class="form-select" id="auditModule"><option value="">Todos los Módulos</option><option value="Users">Users</option><option value="Turbines">Turbines</option><option value="Billing">Billing</option><option value="CentralBank">CentralBank</option></select>
+        </div>
+        <div class="col-md-3">
+            <input type="text" class="form-control" id="auditUser" placeholder="ID o Nombre Usuario...">
+        </div>
+        <div class="col-md-2">
+            <input type="date" class="form-control" id="auditFrom">
+        </div>
+        <div class="col-md-2">
+            <input type="date" class="form-control" id="auditTo">
+        </div>
+        <div class="col-md-2 d-grid">
+            <button class="btn btn-secondary" id="btnFilterAudit">Filtrar</button>
+        </div>
+    </div>
+    <table class="table table-sm table-hover">
+        <thead><tr><th>ID</th><th>Fecha/Hora</th><th>Usuario</th><th>Módulo</th><th>Acción</th><th>Entidad / ID</th><th>Almacén</th><th>Detalle</th></tr></thead>
+        <tbody id="auditBody"><tr><td colspan="8" class="text-center">Cargando registros...</td></tr></tbody>
+    </table>
+    <!-- Modal Detalle Auditoría -->
+    <div class="modal fade" id="auditModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Detalle de Cambios de Auditoría</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar diálogo"></button></div><div class="modal-body"><div class="row"><div class="col-md-6"><h6>Valor Anterior</h6><pre class="p-2 border" id="audPrev" style="background-color: var(--sgde-surface-elevated); color: var(--sgde-body); max-height: 300px; overflow: auto;">---</pre></div><div class="col-md-6"><h6>Nuevo Valor</h6><pre class="p-2 border" id="audNew" style="background-color: var(--sgde-surface-elevated); color: var(--sgde-body); max-height: 300px; overflow: auto;">---</pre></div></div></div></div></div></div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages-controller/AdminAuditViewController.js" asp-append-version="true"></script>
+}

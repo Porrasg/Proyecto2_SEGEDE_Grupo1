@@ -1,0 +1,28 @@
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.Engineer.AuditModel
+@{
+    ViewData["Title"] = "Auditoría Técnica del Sistema";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+    </div>
+        <div class="alert alert-secondary py-2 mb-3 small">
+        <strong>Filtro Backend Aplicado (RN-030):</strong> Los registros del módulo de facturación (Billing) se excluyen automáticamente para usuarios con rol Ingeniero.
+    </div>
+    <div class="row g-2 mb-3">
+        <div class="col-md-3"><select class="form-select" id="engAuditModule"><option value="">Módulos Técnicos</option><option value="Turbines">Turbines</option><option value="Maintenances">Maintenances</option><option value="Failures">Failures</option></select></div>
+        <div class="col-md-3"><input type="text" class="form-control" id="engAuditUser" placeholder="Usuario..."></div>
+        <div class="col-md-4 d-flex gap-1"><input type="date" class="form-control" id="engAuditFrom"><input type="date" class="form-control" id="engAuditTo"></div>
+        <div class="col-md-2 d-grid"><button class="btn btn-secondary" id="btnEngFilterAudit">Filtrar</button></div>
+    </div>
+    <table class="table table-sm table-striped">
+        <thead><tr><th>ID</th><th>Fecha/Hora</th><th>Usuario</th><th>Módulo</th><th>Acción</th><th>Entidad / ID</th><th>Detalle</th></tr></thead>
+        <tbody id="engAuditBody"><tr><td colspan="7" class="text-center">Cargando registros...</td></tr></tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages-controller/SystemAuditViewController.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,528 @@
+/* ==========================================================================
+   SGDE CoreForge v2.1.0 — Dark Theme: "Cyber Operations"
+   [data-bs-theme="dark"] semantic token overrides.
+   All component tokens inherit from semantic tokens, so only
+   semantic-level overrides are needed here.
+   ========================================================================== */
+
+[data-bs-theme="dark"] {
+
+  /* ── LAYER 1: Semantic Token Overrides ───────────────────────────────── */
+
+  /* Hierarchy / Surfaces */
+  --sgde-bg:               #131218;
+  --sgde-surface-card:     #1D1C24;
+  --sgde-surface-elevated: #23212C;
+  --sgde-surface-hover:    #2A2835;
+  --sgde-border:           #383546;
+  --sgde-border-hover:     #4D495E;
+  --sgde-shadow-sm:        0 4px 6px rgba(0,0,0,0.4);
+  --sgde-shadow-md:        0 10px 15px -3px rgba(0,0,0,0.6);
+
+  /* Typography */
+  --sgde-heading:          #FFFFFF;
+  --sgde-body:             #FFFFFF;
+  --sgde-body-secondary:   #A3A1AC;
+  --sgde-text-muted:       #73707D;
+
+  /* Branding / Primary Action */
+  --sgde-primary:          #7A52C4;
+  --sgde-primary-hover:    #966EE0;
+  --sgde-primary-active:   #A98BE6;
+  --sgde-focus-ring:       rgba(122, 82, 196, 0.4);
+
+  /* Domain States */
+  --sgde-state-active:             #4EC9B0;
+  --sgde-state-active-bg:          rgba(78, 201, 176, 0.15);
+  --sgde-state-damaged:            #E05024;
+  --sgde-state-damaged-bg:         rgba(224, 80, 36, 0.15);
+  --sgde-state-maintenance:        #F59E0B;
+  --sgde-state-maintenance-bg:     rgba(245, 158, 11, 0.15);
+  --sgde-state-suspended:          #6B7280;
+  --sgde-state-suspended-bg:       rgba(107, 114, 128, 0.15);
+
+
+  /* ── LAYER 2: Bootstrap Bridge Overrides ─────────────────────────────── */
+
+  --bs-body-bg:      var(--sgde-bg);
+  --bs-body-color:   var(--sgde-body);
+  --bs-primary:      var(--sgde-primary);
+  --bs-primary-rgb:  122, 82, 196;
+  --bs-border-color: var(--sgde-border);
+  --bs-card-bg:      var(--sgde-surface-card);
+
+
+  /* ── LAYER 2: Component Token Overrides ──────────────────────────────── */
+
+  /* Buttons */
+  --sgde-btn-primary-bg:           var(--sgde-primary);
+  --sgde-btn-primary-border:       var(--sgde-primary);
+  --sgde-btn-primary-color:        #FFFFFF;
+  --sgde-btn-primary-hover-bg:     var(--sgde-primary-hover);
+  --sgde-btn-primary-hover-border: var(--sgde-primary-hover);
+  --sgde-btn-primary-active-bg:    var(--sgde-primary-active);
+
+  /* Cards */
+  --sgde-card-bg:          var(--sgde-surface-card);
+  --sgde-card-border:      var(--sgde-border);
+  --sgde-card-header-bg:   var(--sgde-surface-elevated);
+  --sgde-card-shadow:      var(--sgde-shadow-sm);
+
+  /* Tables */
+  --sgde-table-bg:         var(--sgde-surface-card);
+  --sgde-table-border:     var(--sgde-border);
+  --sgde-table-th-bg:      var(--sgde-surface-elevated);
+  --sgde-table-th-color:   #FFFFFF;
+  --sgde-table-hover-bg:   var(--sgde-surface-hover);
+  --sgde-table-stripe-bg:  var(--sgde-surface-elevated);
+
+  /* Navbar */
+  --sgde-navbar-bg:         var(--sgde-surface-card);
+  --sgde-navbar-border:     var(--sgde-border);
+  --sgde-navbar-link:       var(--sgde-body-secondary);
+  --sgde-navbar-link-hover: #FFFFFF;
+
+  /* Forms */
+  --sgde-input-bg:           var(--sgde-surface-elevated);
+  --sgde-input-border:       var(--sgde-border);
+  --sgde-input-focus-border: var(--sgde-primary);
+  --sgde-input-focus-ring:   var(--sgde-focus-ring);
+
+  /* Modals */
+  --sgde-modal-bg:         var(--sgde-surface-card);
+  --sgde-modal-header-bg:  var(--sgde-surface-elevated);
+  --sgde-modal-border:     var(--sgde-border);
+}
+
+
+/* ==========================================================================
+   DARK THEME: Component-Specific Overrides
+   Only rules that cannot be expressed purely via token re-mapping.
+   ========================================================================== */
+
+/* ── Body ──────────────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] body {
+  background-color: var(--sgde-bg);
+  color: var(--sgde-body);
+}
+
+/* ── Navbar ────────────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .navbar {
+  background-color: var(--sgde-navbar-bg) !important;
+  border-bottom-color: var(--sgde-navbar-border) !important;
+}
+
+[data-bs-theme="dark"] .navbar-brand {
+  color: #FFFFFF !important;
+}
+
+[data-bs-theme="dark"] .navbar-brand .bg-dark {
+  background-color: var(--sgde-primary) !important;
+}
+
+[data-bs-theme="dark"] .nav-link {
+  color: var(--sgde-body-secondary) !important;
+}
+
+[data-bs-theme="dark"] .nav-link:hover {
+  color: #FFFFFF !important;
+}
+
+/* ── Cards ─────────────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .card {
+  background-color: var(--sgde-card-bg);
+  border-color: var(--sgde-card-border);
+}
+
+[data-bs-theme="dark"] .card-header {
+  background-color: var(--sgde-card-header-bg);
+  border-bottom-color: var(--sgde-card-border);
+}
+
+/* ── Tables ────────────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .table {
+  background-color: var(--sgde-table-bg);
+  border-color: var(--sgde-table-border);
+  color: var(--sgde-body);
+}
+
+[data-bs-theme="dark"] .table thead th {
+  background-color: var(--sgde-table-th-bg);
+  color: var(--sgde-table-th-color);
+  border-color: var(--sgde-table-border);
+}
+
+[data-bs-theme="dark"] .table tbody td {
+  border-color: var(--sgde-table-border);
+  color: var(--sgde-body);
+}
+
+[data-bs-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+  background-color: var(--sgde-table-stripe-bg);
+}
+
+/* ── Buttons ───────────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .btn-primary {
+  background-color: var(--sgde-btn-primary-bg);
+  border-color: var(--sgde-btn-primary-border);
+  color: var(--sgde-btn-primary-color);
+}
+
+[data-bs-theme="dark"] .btn-primary:hover {
+  background-color: var(--sgde-btn-primary-hover-bg);
+  border-color: var(--sgde-btn-primary-hover-border);
+}
+
+[data-bs-theme="dark"] .btn-success {
+  background-color: var(--sgde-state-active);
+  border-color: var(--sgde-state-active);
+  color: #000000;
+}
+
+[data-bs-theme="dark"] .btn-danger {
+  background-color: var(--sgde-state-damaged);
+  border-color: var(--sgde-state-damaged);
+  color: #FFFFFF;
+}
+
+[data-bs-theme="dark"] .btn-secondary,
+[data-bs-theme="dark"] .btn-outline-secondary {
+  background-color: var(--sgde-surface-card);
+  border-color: var(--sgde-border);
+  color: var(--sgde-body);
+}
+
+[data-bs-theme="dark"] .btn-secondary:hover,
+[data-bs-theme="dark"] .btn-outline-secondary:hover {
+  background-color: var(--sgde-surface-hover);
+  border-color: var(--sgde-border-hover);
+}
+
+[data-bs-theme="dark"] .btn-info {
+  background-color: var(--sgde-surface-elevated);
+  border-color: var(--sgde-border);
+  color: var(--sgde-body);
+}
+
+[data-bs-theme="dark"] .btn-outline-primary {
+  background-color: transparent;
+  border-color: var(--sgde-primary);
+  color: var(--sgde-primary);
+}
+
+[data-bs-theme="dark"] .btn-outline-primary:hover {
+  background-color: var(--sgde-primary);
+  color: #FFFFFF;
+}
+
+/* ── Forms ─────────────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+  background-color: var(--sgde-input-bg);
+  border-color: var(--sgde-input-border);
+  color: var(--sgde-body);
+}
+
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus {
+  border-color: var(--sgde-input-focus-border);
+  box-shadow: 0 0 0 3px var(--sgde-input-focus-ring);
+}
+
+[data-bs-theme="dark"] .form-label {
+  color: var(--sgde-body);
+}
+
+/* ── Modals ────────────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .modal-content {
+  background-color: var(--sgde-modal-bg);
+  border-color: var(--sgde-modal-border);
+}
+
+[data-bs-theme="dark"] .modal-header {
+  background-color: var(--sgde-modal-header-bg);
+  border-bottom-color: var(--sgde-modal-border);
+}
+
+[data-bs-theme="dark"] .modal-title {
+  color: #FFFFFF;
+}
+
+[data-bs-theme="dark"] .modal-footer {
+  background-color: var(--sgde-surface-elevated);
+  border-top-color: var(--sgde-border);
+}
+
+/* ── Alerts ────────────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .alert {
+  background-color: var(--sgde-surface-card);
+  border-color: var(--sgde-border);
+  color: var(--sgde-body);
+}
+
+[data-bs-theme="dark"] .alert-success {
+  background-color: var(--sgde-state-active-bg);
+  border-left-color: var(--sgde-state-active);
+}
+
+[data-bs-theme="dark"] .alert-danger {
+  background-color: var(--sgde-state-damaged-bg);
+  border-left-color: var(--sgde-state-damaged);
+}
+
+[data-bs-theme="dark"] .alert-warning {
+  background-color: var(--sgde-state-maintenance-bg);
+  border-left-color: var(--sgde-state-maintenance);
+}
+
+[data-bs-theme="dark"] .alert-info {
+  background-color: rgba(122, 82, 196, 0.1);
+  border-left-color: var(--sgde-primary);
+}
+
+/* ── Badges ────────────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .badge {
+  background-color: var(--sgde-surface-elevated);
+  color: var(--sgde-body);
+  border-color: var(--sgde-border);
+}
+
+[data-bs-theme="dark"] .badge.bg-success {
+  background-color: var(--sgde-state-active) !important;
+  color: #000000 !important;
+}
+
+[data-bs-theme="dark"] .badge.bg-danger {
+  background-color: var(--sgde-state-damaged) !important;
+  color: #FFFFFF !important;
+}
+
+[data-bs-theme="dark"] .badge.bg-warning {
+  background-color: var(--sgde-state-maintenance) !important;
+  color: #000000 !important;
+}
+
+[data-bs-theme="dark"] .badge.bg-secondary {
+  background-color: var(--sgde-state-suspended) !important;
+  color: #FFFFFF !important;
+}
+
+[data-bs-theme="dark"] .badge.bg-primary {
+  background-color: var(--sgde-primary) !important;
+  color: #FFFFFF !important;
+}
+
+/* Bootstrap no remapea bg-info/bg-light por tema; sin esto, .text-dark (que SÍ se
+   vuelve blanco en modo oscuro, ver regla de .text-dark más abajo) queda como texto
+   casi invisible sobre estos fondos claros fijos. */
+[data-bs-theme="dark"] .badge.bg-info {
+  background-color: var(--sgde-primary) !important;
+  color: #FFFFFF !important;
+}
+
+[data-bs-theme="dark"] .badge.bg-light {
+  background-color: var(--sgde-surface-elevated) !important;
+  color: var(--sgde-body) !important;
+  border-color: var(--sgde-border) !important;
+}
+
+/* Domain badges in dark mode */
+[data-bs-theme="dark"] .badge-domain-active {
+  background-color: var(--sgde-state-active-bg);
+  color: var(--sgde-state-active);
+  border-color: var(--sgde-state-active);
+}
+
+[data-bs-theme="dark"] .badge-domain-damaged {
+  background-color: var(--sgde-state-damaged-bg);
+  color: var(--sgde-state-damaged);
+  border-color: var(--sgde-state-damaged);
+}
+
+[data-bs-theme="dark"] .badge-domain-maintenance {
+  background-color: var(--sgde-state-maintenance-bg);
+  color: var(--sgde-state-maintenance);
+  border-color: var(--sgde-state-maintenance);
+}
+
+[data-bs-theme="dark"] .badge-domain-suspended {
+  background-color: var(--sgde-state-suspended-bg);
+  color: var(--sgde-state-suspended);
+  border-color: var(--sgde-state-suspended);
+}
+
+/* ── Tabs ──────────────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .nav-tabs {
+  border-bottom-color: var(--sgde-border);
+}
+
+[data-bs-theme="dark"] .nav-tabs .nav-link {
+  color: var(--sgde-text-muted);
+}
+
+[data-bs-theme="dark"] .nav-tabs .nav-link:hover {
+  color: var(--sgde-body);
+  border-color: var(--sgde-border) var(--sgde-border) transparent;
+}
+
+[data-bs-theme="dark"] .nav-tabs .nav-link.active {
+  color: var(--sgde-primary);
+  background-color: var(--sgde-surface-card);
+  border-color: var(--sgde-border);
+  border-bottom-color: var(--sgde-surface-card);
+}
+
+/* ── DataTables ────────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .dataTables_wrapper .dataTables_filter input,
+[data-bs-theme="dark"] .dataTables_wrapper .dataTables_length select {
+  background-color: var(--sgde-input-bg);
+  border-color: var(--sgde-input-border);
+  color: var(--sgde-body);
+}
+
+[data-bs-theme="dark"] .dataTables_wrapper .dataTables_filter input:focus,
+[data-bs-theme="dark"] .dataTables_wrapper .dataTables_length select:focus {
+  border-color: var(--sgde-primary);
+  box-shadow: 0 0 0 3px var(--sgde-focus-ring);
+}
+
+[data-bs-theme="dark"] .dataTables_wrapper .dataTables_info,
+[data-bs-theme="dark"] .dataTables_wrapper .dataTables_length label {
+  color: var(--sgde-body-secondary);
+}
+
+[data-bs-theme="dark"] .dataTables_wrapper .dataTables_paginate .paginate_button {
+  background: var(--sgde-surface-card) !important;
+  border-color: var(--sgde-border) !important;
+  color: var(--sgde-body) !important;
+}
+
+[data-bs-theme="dark"] .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background: var(--sgde-surface-hover) !important;
+  border-color: var(--sgde-border-hover) !important;
+  color: #FFFFFF !important;
+}
+
+[data-bs-theme="dark"] .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+[data-bs-theme="dark"] .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+  background: var(--sgde-primary) !important;
+  border-color: var(--sgde-primary) !important;
+  color: #FFFFFF !important;
+}
+
+[data-bs-theme="dark"] .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+  color: var(--sgde-text-muted) !important;
+  background: var(--sgde-surface-elevated) !important;
+}
+
+[data-bs-theme="dark"] table.dataTable tbody tr:hover {
+  background-color: var(--sgde-table-hover-bg) !important;
+}
+
+/* ── Dropdown Menus ────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .dropdown-menu {
+  background-color: var(--sgde-surface-card);
+  border-color: var(--sgde-border);
+}
+
+[data-bs-theme="dark"] .dropdown-item {
+  color: var(--sgde-body);
+}
+
+[data-bs-theme="dark"] .dropdown-item:hover,
+[data-bs-theme="dark"] .dropdown-item:focus {
+  background-color: var(--sgde-surface-hover);
+  color: #FFFFFF;
+}
+
+/* ── Footer ────────────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] footer {
+  background-color: var(--sgde-surface-card) !important;
+  border-top-color: var(--sgde-border) !important;
+  color: var(--sgde-body-secondary);
+}
+
+/* ── Text Utilities ────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .text-muted {
+  color: var(--sgde-text-muted) !important;
+}
+
+[data-bs-theme="dark"] .text-dark {
+  color: var(--sgde-body) !important;
+}
+
+/* ── Scrollbar (Webkit) ────────────────────────────────────────────────── */
+[data-bs-theme="dark"] ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+[data-bs-theme="dark"] ::-webkit-scrollbar-track {
+  background: var(--sgde-bg);
+}
+
+[data-bs-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: var(--sgde-border);
+  border-radius: var(--sgde-radius-pill);
+}
+
+[data-bs-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--sgde-border-hover);
+}
+
+/* ── Dark Theme Glassmorphism & Glowing Accents ──────────────────────── */
+[data-bs-theme="dark"] .card {
+  background-color: rgba(29, 28, 36, 0.88) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+}
+
+[data-bs-theme="dark"] .kpi-card:hover,
+[data-bs-theme="dark"] .card-interactive:hover {
+  border-color: #00f2fe !important;
+  box-shadow: 0 12px 28px -4px rgba(0, 242, 254, 0.25), 0 4px 12px -2px rgba(0, 0, 0, 0.5);
+}
+
+[data-bs-theme="dark"] .filter-toolbar {
+  background-color: rgba(35, 33, 44, 0.9) !important;
+  backdrop-filter: blur(12px);
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-bs-theme="dark"] .filter-chip.active {
+  background: linear-gradient(135deg, #7A52C4, #4facfe);
+  box-shadow: 0 4px 15px rgba(0, 242, 254, 0.35);
+  border: none;
+}
+
+/* ── SweetAlert2 (modo oscuro) ─────────────────────────────────────────── */
+.swal2-popup.sgde-swal-dark {
+  background-color: var(--sgde-surface-card);
+  color: var(--sgde-body);
+  border: 1px solid var(--sgde-border);
+}
+
+.swal2-popup.sgde-swal-dark .swal2-title,
+.swal2-popup.sgde-swal-dark .swal2-html-container {
+  color: var(--sgde-body);
+}
+
+.swal2-popup.sgde-swal-dark .swal2-icon.swal2-warning {
+  border-color: var(--sgde-state-maintenance);
+  color: var(--sgde-state-maintenance);
+}
+
+.swal2-popup.sgde-swal-dark .swal2-icon.swal2-error {
+  border-color: var(--sgde-state-damaged);
+  color: var(--sgde-state-damaged);
+}
+
+.swal2-popup.sgde-swal-dark .swal2-icon.swal2-success .swal2-success-ring {
+  border-color: var(--sgde-state-active);
+}
+
+[data-bs-theme="dark"] .swal2-backdrop-show {
+  background: rgba(0, 0, 0, 0.6);
+}

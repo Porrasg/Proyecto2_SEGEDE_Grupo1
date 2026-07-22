@@ -1,0 +1,31 @@
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.Admin.StatementsModel
+@{
+    ViewData["Title"] = "Estados de Cuenta";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+    </div>
+        <div class="d-flex justify-content-between mb-3">
+        <div class="d-flex gap-2">
+            <input type="text" class="form-control" id="stmtSearch" placeholder="Filtrar por comprador...">
+            <select class="form-select" id="stmtStatus"><option value="">Todos los Estados</option><option value="Issued">Issued</option><option value="Annulled">Annulled</option></select>
+        </div>
+    </div>
+    <table class="table table-bordered table-striped">
+        <thead><tr><th>ID</th><th>Comprador</th><th>Período</th><th>MWh</th><th>Subtotal (CRC)</th><th>Impuesto (CRC)</th><th>Total (CRC)</th><th>Estado</th><th>Rev.</th><th>Acciones</th></tr></thead>
+        <tbody id="statementsBody"><tr><td colspan="10" class="text-center">Cargando estados de cuenta...</td></tr></tbody>
+    </table>
+    <!-- Modal Anular -->
+    <div class="modal fade" id="annulModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Anular Estado de Cuenta</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar diálogo"></button></div><div class="modal-body"><form id="annulForm"><div class="mb-3"><label class="form-label">Motivo de Anulación</label><textarea class="form-control" id="annulReason" required></textarea></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-danger" id="confirmAnnulBtn">Confirmar Anulación</button></div></div></div></div>
+    <!-- Modal Regenerar -->
+    <div class="modal fade" id="regenModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Regenerar Estado de Cuenta</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar diálogo"></button></div><div class="modal-body"><p>Se creará una nueva revisión con los mismos valores financieros congelados del estado de cuenta anulado. ¿Confirma la regeneración?</p></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-warning" id="confirmRegenBtn">Confirmar Regeneración</button></div></div></div></div>
+    <!-- Modal Exportar -->
+    <div class="modal fade" id="exportModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Exportar Estado de Cuenta</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar diálogo"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label">Formato</label><select class="form-select" id="exportFormat"><option value="CSV">CSV</option><option value="EXCEL">Excel</option><option value="HTML">HTML / PDF imprimible</option></select></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" id="confirmExportBtn">Descargar</button></div></div></div></div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages-controller/AdminStatementsViewController.js" asp-append-version="true"></script>
+}
