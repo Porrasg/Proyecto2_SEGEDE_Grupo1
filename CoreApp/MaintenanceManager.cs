@@ -14,6 +14,20 @@ namespace CoreApp
             return crud.RetrieveAll<Maintenance>();
         }
 
+        // Obtiene los mantenimientos de una turbina específica
+        public List<Maintenance> RetrieveByTurbineId(int turbineId)
+        {
+            // Validar el identificador de la turbina
+            if (turbineId <= 0)
+            {
+                throw new Exception("El identificador de la turbina no es válido");
+            }
+
+            var crud = new MaintenanceCrudFactory();
+
+            return crud.RetrieveByTurbineId(turbineId);
+        }
+
 
         public Maintenance RetrieveById(int id)
         {
