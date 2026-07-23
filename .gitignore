@@ -363,4 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # IA Memory / Progress Tracking
-memoriadelaIA/
+memoriadelaIA/temp-*.json
