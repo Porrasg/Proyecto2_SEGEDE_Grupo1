@@ -8,6 +8,21 @@ namespace WebAPI.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
+        // Nunca exponer el hash de la contraseña en las respuestas de la API:
+        // se limpia el campo justo antes de serializar (defensa en profundidad
+        // mientras no exista un DTO de respuesta dedicado sin ese campo).
+        private static User Sanitize(User user)
+        {
+            if (user != null) user.Password = string.Empty;
+            return user;
+        }
+
+        private static List<User> Sanitize(List<User> users)
+        {
+            users?.ForEach(u => u.Password = string.Empty);
+            return users;
+        }
+
         public class UserRegisterRequest
         {
             public string Identification { get; set; } = string.Empty;
@@ -70,7 +85,7 @@ namespace WebAPI.Controllers
             {
                 var um = new UserManager();
                 var lstResults = um.RetrieveAllUsers();
-                return Ok(lstResults);
+                return Ok(Sanitize(lstResults));
             }
             catch (Exception ex)
             {
@@ -152,7 +167,7 @@ namespace WebAPI.Controllers
             {
                 var um = new UserManager();
                 var user = um.RetrieveUserById(id);
-                return Ok(user);
+                return Ok(Sanitize(user));
             }
             catch (Exception ex)
             {
@@ -168,7 +183,7 @@ namespace WebAPI.Controllers
             {
                 var um = new UserManager();
                 var user = um.RetrieveUserByEmail(email);
-                return Ok(user);
+                return Ok(Sanitize(user));
             }
             catch (Exception ex)
             {
@@ -184,7 +199,7 @@ namespace WebAPI.Controllers
             {
                 var um = new UserManager();
                 um.Create(user);
-                return Ok(user);
+                return Ok(Sanitize(user));
             }
             catch (Exception ex)
             {
@@ -200,7 +215,7 @@ namespace WebAPI.Controllers
             {
                 var um = new UserManager();
                 um.Update(user);
-                return Ok(user);
+                return Ok(Sanitize(user));
             }
             catch (Exception ex)
             {
@@ -216,7 +231,7 @@ namespace WebAPI.Controllers
             {
                 var um = new UserManager();
                 um.Delete(user);
-                return Ok(user);
+                return Ok(Sanitize(user));
             }
             catch (Exception ex)
             {
@@ -232,7 +247,7 @@ namespace WebAPI.Controllers
             {
                 var um = new UserManager();
                 var user = um.Login(request.Email, request.Password);
-                return Ok(user);
+                return Ok(Sanitize(user));
             }
             catch (Exception ex)
             {
@@ -248,7 +263,7 @@ namespace WebAPI.Controllers
             {
                 var um = new UserManager();
                 var user = um.ValidateLoginOtp(request.Email, request.OtpCode);
-                return Ok(user);
+                return Ok(Sanitize(user));
             }
             catch (Exception ex)
             {
