@@ -14,6 +14,56 @@ namespace CoreApp
             return tCrud.RetrieveAll<Turbine>();
         }
 
+        public Turbine RetrieveTurbineById(int id)
+        {
+            // Validar el identificador de la turbina
+            if (id <= 0)
+            {
+                throw new Exception("El identificador de la turbina no es válido");
+            }
+
+            var tCrud = new TurbineCrudFactory();
+
+            var turbine = tCrud.RetrieveById<Turbine>(id);
+
+            if (turbine == null)
+            {
+                throw new Exception("La turbina solicitada no existe");
+            }
+
+            return turbine;
+        }
+
+        // Cambia únicamente el estado operativo de una turbina existente
+        public void ChangeState(int turbineId, string newState)
+        {
+            if (turbineId <= 0)
+            {
+                throw new Exception("El identificador de la turbina no es válido");
+            }
+
+            var tCrud = new TurbineCrudFactory();
+
+            var currentTurbine = tCrud.RetrieveById<Turbine>(turbineId);
+
+            if (currentTurbine == null)
+            {
+                throw new Exception("La turbina que desea actualizar no existe");
+            }
+
+            // Se reutiliza la misma validación de estados del resto del manager
+            currentTurbine.Status = newState;
+
+            if (!IsValidStatus(currentTurbine))
+            {
+                throw new Exception("El estado debe ser Activa, Inactiva, En Mantenimiento, Dañada o Dada de Baja");
+            }
+
+            currentTurbine.UpdatedAt = DateTime.Now;
+
+            tCrud.Update(currentTurbine);
+        }
+
         public void Create(Turbine turbine)
         {
             if (turbine == null)
