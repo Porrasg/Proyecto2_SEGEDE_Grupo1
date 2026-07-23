@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Entities-DTOs.CentralBank solo tiene CurrentInventoryMWh y MaximumCapacityMWh — no existe una
     // capacidad "automática" separada de una "manual" en el backend, así que se eliminó ese control editable.
     function loadInventory() {
-        apiClient.get("CentralBanks/Inventory")
+        apiClient.get("CentralBanks/RetrieveAll")
             .done(function (res) {
                 const cb = res?.data || res?.Data || {};
                 const current = Number(cb.currentInventoryMWh ?? cb.CurrentInventoryMWh ?? 0);
@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function loadLogs() {
         if (!logsBody) return;
         logsBody.innerHTML = '<tr><td colspan="5" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando movimientos...</td></tr>';
-        apiClient.get("CentralBanks/MovementLogs?page=1&pageSize=50")
+        apiClient.get("Flushs/RetrieveAll")
             .done(function (res) {
                 const items = res?.data?.items || res?.Data?.Items || [];
                 if (!items.length) {

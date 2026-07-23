@@ -22,8 +22,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function loadCentralBankStatus() {
         // 1. Nivel de Inventario
-        apiClient.get("CentralBanks/Inventory").done(function (res) {
-            const cb = res?.data || res?.Data || {};
+        apiClient.get("CentralBanks/RetrieveAll").done(function (res) {
+            const list = res?.data || res?.Data || [];
+            const cb = list[0] || {};
             const inv = cb.currentInventoryMWh ?? cb.CurrentInventoryMWh ?? 0;
             const updated = cb.updatedAt || cb.UpdatedAt;
 
@@ -38,9 +39,18 @@ document.addEventListener("DOMContentLoaded", function () {
         const logsBody = document.getElementById("cbLogsBody");
         if (logsBody) {
             logsBody.innerHTML = '<tr><td colspan="5" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando bitácora inmutable...</td></tr>';
-            apiClient.get("CentralBanks/MovementLogs?page=1&pageSize=30").done(function (res) {
-                const list = (res?.data?.items || res?.Data?.Items || res?.data || res?.Data || []);
-                renderMovementLogs(list);
+            apiClient.get("Flushs/RetrieveAll").done(function (res) {
+                const list = (res?.data || res?.Data || []);
+                renderMovementLogs(list.map(function (f) {
+                    return {
+                        id: f.id || f.Id,
+                        movementType: "Inflow",
+                        amount: f.transferredEnergyMWh || f.TransferredEnergyMWh || 0,
+                        resultingInventory: 0,
+                        eventDate: f.executedAt || f.ExecutedAt,
+                        status: f.status || f.Status
+                    };
+                }));
             }).fail(function () {
                 logsBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error al consultar bitácora del Banco Central.</td></tr>';
             });
@@ -98,8 +108,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!body) return;
         body.innerHTML = '<tr><td colspan="6" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando historial de flushes...</td></tr>';
 
-        apiClient.get("Flushs/History?page=1&pageSize=50").done(function (res) {
-            const list = (res?.data?.items || res?.Data?.Items || res?.data || res?.Data || []);
+        apiClient.get("Flushs/RetrieveAll").done(function (res) {
+            const list = (res?.data || res?.Data || []);
             if (!list.length) {
                 body.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Aún no se han ejecutado traslados o flushes en la red.</td></tr>';
                 return;
@@ -133,13 +143,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function loadFlushConfig() {
-        apiClient.get("Flushs/Config").done(function (res) {
-            const c = res?.data || res?.Data || {};
-            const freq = document.getElementById("flFreq");
-            const thresh = document.getElementById("flThresh");
-            if (freq) freq.value = c.flushFrequencyHours ?? c.FlushFrequencyHours ?? 6;
-            if (thresh) thresh.value = c.batteryThresholdPercentage ?? c.BatteryThresholdPercentage ?? 80;
-        });
+        const freq = document.getElementById("flFreq");
+        const thresh = document.getElementById("flThresh");
+        if (freq) freq.value = 6;
+        if (thresh) thresh.value = 80;
     }
 
     function updateFlushConfig(btn) {
@@ -155,18 +162,9 @@ document.addEventListener("DOMContentLoaded", function () {
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
 
-        apiClient.put("Flushs/Config?callerUserId=" + userId, {
-            flushFrequencyHours: freq,
-            batteryThresholdPercentage: thresh
-        }).done(function () {
-            notify.success("Configuración de disparos automáticos actualizada.");
-            bootstrap.Modal.getInstance(document.getElementById("configModal"))?.hide();
-        }).fail(function (xhr) {
-            handleApiError(xhr);
-        }).always(function () {
-            btn.disabled = false;
-            btn.innerHTML = origText;
-        });
+        notify.warning("La configuración automática no está disponible con el backend actual.");
+        btn.disabled = false;
+        btn.innerHTML = origText;
     }
 
     function setText(id, val) {
