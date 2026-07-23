@@ -9,7 +9,7 @@
     <div class="page-header d-flex justify-content-between align-items-start mb-4">
         <div>
             <h2><i class="bi bi-people-fill me-2" style="color: var(--sgde-primary);"></i>@ViewData["Title"]</h2>
-            <p class="page-subtitle">Administre los usuarios internos del sistema: ingenieros y administradores.</p>
+            <p class="page-subtitle">Administre usuarios de la plataforma: administradores, ingenieros y compradores.</p>
         </div>
     </div>
 
@@ -43,20 +43,21 @@
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover table-interactive mb-0 align-middle">
+                <table class="table table-hover table-interactive mb-0 align-middle text-center">
                     <thead class="table-light">
                         <tr>
                             <th>Identificación</th>
                             <th>Nombre</th>
+                            <th>Edad</th>
                             <th>Correo</th>
                             <th>Teléfono</th>
                             <th>Rol</th>
                             <th>Estado</th>
-                            <th class="text-end">Acciones</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">
-                        <tr><td colspan="7" class="text-center py-4 text-muted">Cargando usuarios...</td></tr>
+                        <tr><td colspan="8" class="text-center py-4 text-muted">Cargando usuarios...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -91,33 +92,23 @@
                             </div>
                         </div>
 
-                        <!-- Row 2: Nombres -->
+                        <!-- Row 2: Nombres + Apellidos -->
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label" for="uFirst1">Primer Nombre</label>
-                                <input type="text" class="form-control" id="uFirst1" required placeholder="Ej. Juan">
+                                <label class="form-label" for="uFullName">Nombres</label>
+                                <input type="text" class="form-control" id="uFullName" required placeholder="Ej. Juan Carlos">
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label" for="uFirst2">
-                                    Segundo Nombre <span class="text-muted small">(Opcional)</span>
-                                </label>
-                                <input type="text" class="form-control" id="uFirst2" placeholder="Ej. Carlos">
-                            </div>
-                        </div>
-
-                        <!-- Row 3: Apellidos -->
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label" for="uLast1">Primer Apellido</label>
+                            <div class="col-md-3">
+                                <label class="form-label" for="uLast1">Apellido 1</label>
                                 <input type="text" class="form-control" id="uLast1" required placeholder="Ej. Pérez">
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label" for="uLast2">Segundo Apellido</label>
-                                <input type="text" class="form-control" id="uLast2" required placeholder="Ej. Rodríguez">
+                            <div class="col-md-3">
+                                <label class="form-label" for="uLast2">Apellido 2</label>
+                                <input type="text" class="form-control" id="uLast2" placeholder="Ej. Rodríguez">
                             </div>
                         </div>
 
-                        <!-- Row 4: Teléfono + Fecha Nacimiento -->
+                        <!-- Row 3: Teléfono + Fecha de Nacimiento -->
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label" for="uPhone">
@@ -133,6 +124,25 @@
                             </div>
                         </div>
 
+                        <!-- Row 4: Edad + Fotografía -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="uAge">
+                                    <i class="bi bi-hourglass-split me-1"></i>Edad calculada automáticamente
+                                </label>
+                                <input type="text" class="form-control" id="uAge" readonly placeholder="Se calcula al ingresar la fecha de nacimiento">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="uPhoto">
+                                    <i class="bi bi-image me-1"></i>Fotografía de perfil
+                                </label>
+                                <input type="file" class="form-control" id="uPhoto" accept="image/jpeg,image/png,image/webp">
+                                <div class="mt-2 text-center">
+                                    <img id="uPhotoPreview" class="img-thumbnail d-none" style="max-height: 120px; object-fit: cover;" alt="Vista previa de la fotografía">
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Row 5: Rol + Contraseña -->
                         <div class="row mb-3">
                             <div class="col-md-6">
@@ -142,6 +152,7 @@
                                 <select class="form-select" id="uRole">
                                     <option value="Administrator">Administrador</option>
                                     <option value="Engineer">Ingeniero</option>
+                                    <option value="Distributor">Comprador</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -161,6 +172,73 @@
                     <button type="button" class="btn btn-primary" id="saveUserBtn">
                         <i class="bi bi-check-lg me-1"></i>Guardar
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editUserModalLabel">
+                        <i class="bi bi-pencil-square me-2"></i>Editar Usuario
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm" novalidate>
+                        <input type="hidden" id="editUserId">
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="editEmail">Correo Electrónico</label>
+                                <input type="email" class="form-control" id="editEmail" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="editPhone">Teléfono</label>
+                                <input type="tel" class="form-control" id="editPhone" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="editFullName">Nombres</label>
+                                <input type="text" class="form-control" id="editFullName" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label" for="editLast1">Apellido 1</label>
+                                <input type="text" class="form-control" id="editLast1" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label" for="editLast2">Apellido 2</label>
+                                <input type="text" class="form-control" id="editLast2">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="editPhoto">Fotografía de perfil</label>
+                                <input type="file" class="form-control" id="editPhoto" accept="image/jpeg,image/png,image/webp">
+                                <div class="mt-2 text-center">
+                                    <img id="editPhotoPreview" class="img-thumbnail d-none" style="max-height: 120px; object-fit: cover;" alt="Vista previa de la fotografía">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="editRole">Rol</label>
+                                <select class="form-select" id="editRole">
+                                    <option value="Administrator">Administrador</option>
+                                    <option value="Engineer">Ingeniero</option>
+                                    <option value="Distributor">Comprador</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveEditUserBtn">Guardar cambios</button>
                 </div>
             </div>
         </div>

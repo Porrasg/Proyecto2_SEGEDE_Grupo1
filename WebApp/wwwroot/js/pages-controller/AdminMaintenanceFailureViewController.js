@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function loadMaintenances() {
             maintBody.innerHTML = '<tr><td colspan="7" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando mantenimientos...</td></tr>';
-            apiClient.get("Maintenances/All")
+            apiClient.get("Maintenances/RetrieveAll")
                 .done(function (res) {
                     allMaintenances = res?.data || res?.Data || [];
                     renderMaintFiltered();
@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function loadFailures() {
             failBody.innerHTML = '<tr><td colspan="5" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando reportes de fallas...</td></tr>';
-            apiClient.get("Failures/All")
+            apiClient.get("Failures/RetrieveAll")
                 .done(function (res) {
                     allFailures = res?.data || res?.Data || [];
                     renderFailFiltered();

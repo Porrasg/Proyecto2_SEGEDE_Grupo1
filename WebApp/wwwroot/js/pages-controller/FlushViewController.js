@@ -14,29 +14,20 @@ document.addEventListener("DOMContentLoaded", function () {
     checkActiveStatus();
 
     function loadConfig() {
-        apiClient.get("Flushs/Config")
-            .done(function (res) {
-                const c = res?.data || res?.Data || {};
-                if (timeInput && c.executionTime) timeInput.value = String(c.executionTime).substring(0, 5);
-                if (autoCheck) autoCheck.checked = !!(c.isAutomatic ?? c.IsAutomatic);
-            })
-            .fail(function (xhr) { handleApiError(xhr); });
+        if (timeInput) timeInput.value = "00:00";
+        if (autoCheck) autoCheck.checked = false;
     }
 
     function checkActiveStatus() {
-        apiClient.get("Flushs/History?page=1&pageSize=1")
-            .done(function () {
-                // El estado activo real se refleja en el badge tras cada acción; consulta ligera de disponibilidad.
-                if (statusBadge) { statusBadge.textContent = "Inactivo"; statusBadge.className = "badge bg-success"; }
-            });
+        if (statusBadge) { statusBadge.textContent = "Inactivo"; statusBadge.className = "badge bg-success"; }
     }
 
     function loadHistory() {
         if (!historyBody) return;
         historyBody.innerHTML = '<tr><td colspan="6" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando historial...</td></tr>';
-        apiClient.get("Flushs/History?page=1&pageSize=50")
+        apiClient.get("Flushs/RetrieveAll")
             .done(function (res) {
-                const items = res?.data?.items || res?.Data?.Items || [];
+                const items = res?.data || res?.Data || [];
                 if (!items.length) {
                     historyBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Sin operaciones de flush registradas.</td></tr>';
                     return;
@@ -66,16 +57,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const original = btn ? btn.innerHTML : "";
         if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...'; }
 
-        apiClient.put("Flushs/Config", {
-            executionTime: (timeInput?.value || "00:00") + ":00",
-            isAutomatic: !!autoCheck?.checked
-        }).done(function () {
-            notify.success("Configuración de flush actualizada.");
-        }).fail(function (xhr) {
-            handleApiError(xhr);
-        }).always(function () {
-            if (btn) { btn.disabled = false; btn.innerHTML = original; }
-        });
+        notify.warning("La configuración automática no está disponible con el backend actual.");
+        if (btn) { btn.disabled = false; btn.innerHTML = original; }
     });
 
     if (manualBtn) {
@@ -87,17 +70,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 manualBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Ejecutando...';
                 if (statusBadge) { statusBadge.textContent = "En ejecución"; statusBadge.className = "badge bg-warning text-dark"; }
 
-                apiClient.post("Flushs/ExecuteManual", {})
-                    .done(function () {
-                        notify.success("Flush ejecutado con éxito hacia el Banco Central.");
-                        loadHistory();
-                    })
-                    .fail(function (xhr) { handleApiError(xhr); })
-                    .always(function () {
-                        manualBtn.disabled = false;
-                        manualBtn.innerHTML = original;
-                        if (statusBadge) { statusBadge.textContent = "Inactivo"; statusBadge.className = "badge bg-success"; }
-                    });
+                notify.warning("La ejecución manual de flush no está disponible con el backend actual.");
+                manualBtn.disabled = false;
+                manualBtn.innerHTML = original;
+                if (statusBadge) { statusBadge.textContent = "Inactivo"; statusBadge.className = "badge bg-success"; }
             });
         });
     }

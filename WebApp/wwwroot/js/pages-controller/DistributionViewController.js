@@ -44,10 +44,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (detailsBody) detailsBody.innerHTML = '<tr><td colspan="5" class="text-center"><span class="spinner-border spinner-border-sm"></span> Consultando...</td></tr>';
 
-        apiClient.get("Distributions/History")
+        apiClient.get("Distributions/RetrieveAll")
             .done(function (res) {
                 const items = res?.data || res?.Data || [];
-                // Distributions/History devuelve filas individuales por comprador (Distribution); se filtra
+                // Distributions/RetrieveAll devuelve filas individuales por comprador (Distribution); se filtra
                 // por el mes/año de DistributionDate y se agrupan por DistributionBatchId (el lote de ese mes).
                 const rowsInPeriod = items.filter(function (d) {
                     const dt = new Date(d.distributionDate ?? d.DistributionDate);
@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!detailsBody) return;
         detailsBody.innerHTML = '<tr><td colspan="5" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando detalle...</td></tr>';
 
-        apiClient.get("Distributions/Detail/" + distributionBatchId)
+        apiClient.get("Distributions/RetrieveByBatchId/" + distributionBatchId)
             .done(function (res) {
                 const items = res?.data || res?.Data || [];
                 if (!items.length) {
@@ -130,16 +130,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 const original = executeBtn.innerHTML;
                 executeBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Ejecutando...';
 
-                apiClient.post(`Distributions/ExecuteMonthly?month=${month}&year=${year}`, {})
-                    .done(function () {
-                        notify.success("Distribución comercial ejecutada con éxito.");
-                        consultDistribution();
-                    })
-                    .fail(function (xhr) { handleApiError(xhr); })
-                    .always(function () {
-                        executeBtn.disabled = false;
-                        executeBtn.innerHTML = original;
-                    });
+                notify.warning("La ejecución mensual no está disponible con el backend actual.");
+                executeBtn.disabled = false;
+                executeBtn.innerHTML = original;
             });
         });
     }

@@ -24,28 +24,37 @@ document.addEventListener("DOMContentLoaded", function () {
         setInterval(loadBuyerDashboard, 15000);
 
         function loadBuyerDashboard() {
-            apiClient.get("Dashboard/Buyer?buyerUserId=" + userId)
-                .done(function (res) {
-                    const d = res?.data || res?.Data || {};
+            Promise.all([
+                apiClient.get("Forecasts/RetrieveByBuyerId/" + userId),
+                apiClient.get("Distributions/RetrieveByBuyerId/" + userId),
+                apiClient.get("Invoices/RetrieveAll")
+            ]).then(function (responses) {
+                const forecasts = responses[0]?.[0]?.data || responses[0]?.data || responses[0]?.Data || [];
+                const distributions = responses[1]?.[0]?.data || responses[1]?.data || responses[1]?.Data || [];
+                const invoices = responses[2]?.[0]?.data || responses[2]?.data || responses[2]?.Data || [];
 
-                    const reqMWh = d.monthRequestedMWh ?? d.MonthRequestedMWh ?? 0;
-                    const assignMWh = d.lastAssignment ?? d.LastAssignment ?? 0;
-                    const totalBill = d.totalBilledAccumulated ?? d.TotalBilledAccumulated ?? 0;
-                    const activeF = d.activeForecasts ?? d.ActiveForecasts ?? 0;
+                const reqMWh = forecasts.reduce(function (sum, f) { return sum + Number(f.requestedEnergyMWh ?? f.RequestedEnergyMWh ?? 0); }, 0);
+                const assignMWh = distributions.reduce(function (sum, d) { return sum + Number(d.assignedEnergyMWh ?? d.AssignedEnergyMWh ?? 0); }, 0);
+                const totalBill = invoices
+                    .filter(function (i) { return (i.buyerId ?? i.BuyerId) === userId; })
+                    .reduce(function (sum, i) { return sum + Number(i.totalAmount ?? i.TotalAmount ?? i.amount ?? i.Amount ?? 0); }, 0);
+                const activeF = forecasts.filter(function (f) { return (f.status || f.Status) === "Active"; }).length;
 
-                    setText("buyActiveForecasts", activeF);
-                    setText("buyMonthReq", formatNumber(reqMWh) + " MWh");
-                    setText("buyLastAssign", formatNumber(assignMWh) + " MWh");
-                    setText("buyTotalBilled", formatNumber(totalBill) + " CRC");
+                setText("buyActiveForecasts", activeF);
+                setText("buyMonthReq", formatNumber(reqMWh) + " MWh");
+                setText("buyLastAssign", formatNumber(assignMWh) + " MWh");
+                setText("buyTotalBilled", formatNumber(totalBill) + " CRC");
 
-                    const dateVal = d.lastStatementDate || d.LastStatementDate;
-                    setText("buyLastStmtDate", dateVal ? new Date(dateVal).toLocaleDateString("es-CR") : "Sin registros");
+                const lastInvoice = invoices.filter(function (i) { return (i.buyerId ?? i.BuyerId) === userId; }).sort(function (a, b) {
+                    return new Date(b.createdAt || b.CreatedAt || 0) - new Date(a.createdAt || a.CreatedAt || 0);
+                })[0];
+                const dateVal = lastInvoice?.createdAt || lastInvoice?.CreatedAt;
+                setText("buyLastStmtDate", dateVal ? new Date(dateVal).toLocaleDateString("es-CR") : "Sin registros");
 
-                    renderBuyCharts(reqMWh, assignMWh, totalBill);
-                })
-                .fail(function (xhr) {
-                    handleApiError(xhr);
-                });
+                renderBuyCharts(reqMWh, assignMWh, totalBill);
+            }).catch(function (xhr) {
+                handleApiError(xhr);
+            });
         }
 
         function renderBuyCharts(reqMWh, assignMWh, totalBill) {
@@ -135,23 +144,32 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Foto nueva seleccionada en el perfil (data-URL base64, redimensionada en el cliente).
     let profilePhotoDataUrl = null;
+    let cachedBuyerUser = null;
+
+    function getUserField(user, camel, pascal) {
+        return user?.[camel] ?? user?.[pascal] ?? "";
+    }
+
+    function getBuyerDisplayName(user) {
+        return [getUserField(user, "firstName", "FirstName"), getUserField(user, "firstLastName", "FirstLastName"), getUserField(user, "secondLastName", "SecondLastName")].filter(Boolean).join(" ");
+    }
 
     function loadBuyerProfile() {
-        apiClient.get("Users/" + userId)
+        apiClient.get("Users/RetrieveById/" + userId)
             .done(function (res) {
-                const u = res?.data || res?.Data || {};
-                const fullName = [u.firstName || u.FirstName, u.firstLastName || u.FirstLastName, u.secondLastName || u.SecondLastName].filter(Boolean).join(" ");
+                cachedBuyerUser = res?.data || res?.Data || {};
+                const fullName = getBuyerDisplayName(cachedBuyerUser);
                 setText("profName", fullName || "Comprador SGDE");
-                setText("profEmail", u.email || u.Email || "-");
-                setText("profId", u.identification || u.Identification || "-");
+                setText("profEmail", getUserField(cachedBuyerUser, "email", "Email") || "-");
+                setText("profId", getUserField(cachedBuyerUser, "identification", "Identification") || "-");
 
-                const created = u.createdAt || u.CreatedAt;
+                const created = getUserField(cachedBuyerUser, "createdAt", "CreatedAt");
                 setText("profDate", created ? new Date(created).toLocaleDateString("es-CR") : "-");
 
                 const phoneInput = document.getElementById("pPhone");
-                if (phoneInput) phoneInput.value = u.phone || u.Phone || "";
+                if (phoneInput) phoneInput.value = getUserField(cachedBuyerUser, "phone", "Phone") || getUserField(cachedBuyerUser, "phoneNumber", "PhoneNumber") || "";
 
-                const photo = u.photoUrl || u.PhotoUrl;
+                const photo = getUserField(cachedBuyerUser, "photoUrl", "PhotoUrl") || getUserField(cachedBuyerUser, "profilePhoto", "ProfilePhoto");
                 const imgEl = document.getElementById("profilePhoto");
                 if (photo && imgEl) imgEl.src = photo;
             })
@@ -190,6 +208,8 @@ document.addEventListener("DOMContentLoaded", function () {
     function updateProfile() {
         const phone = document.getElementById("pPhone")?.value.trim();
         const newPass = document.getElementById("pNewPass")?.value;
+        const currentPass = document.getElementById("pCurrPass")?.value || "";
+        const currentUser = cachedBuyerUser || {};
 
         const submitBtn = document.querySelector("#profileForm button[type='submit']");
         if (submitBtn) {
@@ -197,11 +217,19 @@ document.addEventListener("DOMContentLoaded", function () {
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
         }
 
-        // Users/UpdateProfile opera siempre sobre el usuario autenticado (ownership implícito en el backend).
-        apiClient.put("Users/UpdateProfile", {
-            phone: phone,
-            photoUrl: profilePhotoDataUrl,
-            newPassword: newPass || null
+        apiClient.put("Users/Update", {
+            id: parseInt(getUserField(currentUser, "id", "Id") || userId),
+            identification: getUserField(currentUser, "identification", "Identification"),
+            firstName: getUserField(currentUser, "firstName", "FirstName"),
+            firstLastName: getUserField(currentUser, "firstLastName", "FirstLastName"),
+            secondLastName: getUserField(currentUser, "secondLastName", "SecondLastName") || null,
+            email: getUserField(currentUser, "email", "Email"),
+            phoneNumber: phone || "",
+            birthDate: getUserField(currentUser, "birthDate", "BirthDate") || null,
+            password: newPass || currentPass || getUserField(currentUser, "password", "Password") || "",
+            profilePhoto: profilePhotoDataUrl || getUserField(currentUser, "profilePhoto", "ProfilePhoto") || getUserField(currentUser, "photoUrl", "PhotoUrl") || null,
+            role: getUserField(currentUser, "role", "Role") || session.getRole() || "Distributor",
+            status: getUserField(currentUser, "status", "Status") || "Active"
         }).done(function () {
             notify.success("Datos de perfil y seguridad actualizados.");
             if (document.getElementById("pCurrPass")) document.getElementById("pCurrPass").value = "";
@@ -224,10 +252,7 @@ document.addEventListener("DOMContentLoaded", function () {
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Desactivando...';
         }
 
-        apiClient.post("Users/Deactivate", {
-            userId: parseInt(userId),
-            cancelFutureForecasts: !keepForecasts
-        }).done(function () {
+        apiClient.delete("Users/Delete", { id: parseInt(userId) }).done(function () {
             notify.info("Tu cuenta ha sido desactivada. Cerrando sesión...");
             setTimeout(() => {
                 session.clear();
