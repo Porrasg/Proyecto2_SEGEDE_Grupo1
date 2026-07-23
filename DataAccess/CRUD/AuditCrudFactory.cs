@@ -77,6 +77,35 @@ namespace DataAccess.CRUD
 
         }
 
+        // Obtiene los registros de auditoría creados dentro de un rango de fechas
+        public List<Audit> RetrieveByDateRange(DateTime startDate, DateTime endDate)
+        {
+            // Lista que va a contener las auditorías dentro del rango
+            var lsAudits = new List<Audit>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_DATE_RANGE_AUDIT_PR";
+
+            sqlOperation.AddDateTimeParameter("StartDate", startDate);
+            sqlOperation.AddDateTimeParameter("EndDate", endDate);
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer los resultados y construir los objetos Audit
+            if (lsResults.Count > 0)
+            {
+                foreach (var row in lsResults)
+                {
+                    var audit = BuildAudit(row);
+                    lsAudits.Add(audit);
+                }
+            }
+
+            return lsAudits;
+        }
+
         public override T RetrieveById<T>(int id)
         {
             // Definir el SP

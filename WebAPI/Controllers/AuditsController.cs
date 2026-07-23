@@ -24,6 +24,25 @@ namespace WebAPI.Controllers
             }
         }
 
+        // Bitácora filtrada por rango de fechas (pantalla Admin/Audit).
+        // La respuesta se envuelve como { data: { items: [...] } } porque así la
+        // lee el frontend; la paginación de la pantalla es en memoria.
+        [HttpGet]
+        [Route("ByDateRange")]
+        public ActionResult ByDateRange([FromQuery] DateTime from, [FromQuery] DateTime to)
+        {
+            try
+            {
+                var am = new AuditManager();
+                var lstResults = am.RetrieveByDateRange(from, to);
+                return Ok(new { data = new { items = lstResults } });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
         [HttpGet]
         [Route("RetrieveById/{id}")]
         public ActionResult RetrieveById(int id)
