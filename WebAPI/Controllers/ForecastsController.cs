@@ -8,6 +8,22 @@ namespace WebAPI.Controllers
     [ApiController]
     public class ForecastsController : ControllerBase
     {
+        // Cuerpo del registro de pronóstico que envía la pantalla del comprador
+        public class ForecastRegisterRequest
+        {
+            public int BuyerId { get; set; }
+            public int ForecastMonth { get; set; }
+            public int ForecastYear { get; set; }
+            public decimal RequestedEnergyMWh { get; set; }
+        }
+
+        // Cuerpo de la modificación de un pronóstico existente
+        public class ForecastModifyRequest
+        {
+            public int ForecastId { get; set; }
+            public decimal NewRequestedEnergyMWh { get; set; }
+        }
+
         [HttpGet]
         [Route("RetrieveAll")]
         public ActionResult RetrieveAll()
@@ -42,6 +58,7 @@ namespace WebAPI.Controllers
 
         [HttpGet]
         [Route("RetrieveByBuyerId/{buyerId}")]
+        [Route("ByBuyer/{buyerId}")] // alias que usan las pantallas del comprador y Reportes
         public ActionResult RetrieveByBuyerId(int buyerId)
         {
             try
@@ -117,6 +134,92 @@ namespace WebAPI.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
+            }
+        }
+
+        // Pronósticos de un mes/año específico (pantalla Admin/Forecasts)
+        [HttpGet]
+        [Route("ByMonth")]
+        public ActionResult ByMonth([FromQuery] int month, [FromQuery] int year)
+        {
+            try
+            {
+                var fm = new ForecastManager();
+                var lstResults = fm.RetrieveByPeriod(year, month);
+                return Ok(lstResults);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        // Registro de un pronóstico nuevo desde la pantalla del comprador.
+        // El manager asigna el estado inicial "Pending" y valida duplicados y periodos pasados.
+        [HttpPost]
+        [Route("Register")]
+        public ActionResult Register(ForecastRegisterRequest request)
+        {
+            try
+            {
+                var fm = new ForecastManager();
+                var forecast = new Forecast
+                {
+                    BuyerId = request.BuyerId,
+                    ForecastMonth = request.ForecastMonth,
+                    ForecastYear = request.ForecastYear,
+                    RequestedEnergyMWh = request.RequestedEnergyMWh
+                };
+
+                fm.Create(forecast);
+                return Ok(new { message = "Pronóstico registrado con éxito.", data = forecast });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        // Modifica únicamente la energía solicitada de un pronóstico existente.
+        // Se recupera el registro actual para conservar el resto de sus datos y
+        // que el manager aplique sus validaciones (no procesado, no cancelado).
+        [HttpPut]
+        [Route("Modify")]
+        public ActionResult Modify(ForecastModifyRequest request)
+        {
+            try
+            {
+                var fm = new ForecastManager();
+                var forecast = fm.RetrieveById(request.ForecastId);
+
+                forecast.RequestedEnergyMWh = request.NewRequestedEnergyMWh;
+
+                fm.Update(forecast);
+                return Ok(new { message = "Pronóstico actualizado con éxito.", data = forecast });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        // Cancela (baja lógica) un pronóstico. El manager valida que no esté
+        // procesado ni cancelado y asigna el estado "Cancelled".
+        [HttpPost]
+        [Route("Cancel/{id}")]
+        public ActionResult Cancel(int id)
+        {
+            try
+            {
+                var fm = new ForecastManager();
+                var forecast = fm.RetrieveById(id);
+
+                fm.Delete(forecast);
+                return Ok(new { message = "Pronóstico cancelado." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
             }
         }
     }

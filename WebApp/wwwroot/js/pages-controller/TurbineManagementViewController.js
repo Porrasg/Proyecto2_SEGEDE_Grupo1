@@ -35,7 +35,8 @@ document.addEventListener("DOMContentLoaded", function () {
             turbinesBody.innerHTML = '<tr><td colspan="6" class="text-center"><span class="spinner-border spinner-border-sm" role="status"></span> Cargando turbinas...</td></tr>';
             apiClient.get("Turbines/RetrieveAll")
                 .done(function (res) {
-                    allTurbines = res?.data || res?.Data || [];
+                    // El backend devuelve la lista directa (sin envoltura data)
+                    allTurbines = Array.isArray(res) ? res : (res?.data || res?.Data || []);
                     filterAndRenderTurbines();
                 })
                 .fail(function (xhr) {
@@ -263,9 +264,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function loadTurbineDetail(id) {
-        apiClient.get("Turbines/" + id)
+        // Ruta real del backend: Turbines/RetrieveById/{id} (devuelve la turbina directa)
+        apiClient.get("Turbines/RetrieveById/" + id)
             .done(function (res) {
-                const t = res?.data || res?.Data || {};
+                const t = res?.data || res?.Data || res || {};
                 const nameEl = byIdEither("engDetName", "detName");
                 const metaEl = byIdEither("engDetMeta", "detMeta");
                 const statusEl = byIdEither("engDetStatus", "detStatus");

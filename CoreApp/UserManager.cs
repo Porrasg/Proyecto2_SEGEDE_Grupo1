@@ -86,8 +86,6 @@ namespace CoreApp
                 throw new Exception("El identificador del usuario no es válido");
             }
 
-            ValidateUser(user);
-
             var uCrud = new UserCrudFactory();
 
             var currentUser = uCrud.RetrieveById<User>(user.Id);
@@ -113,11 +111,23 @@ namespace CoreApp
                 throw new Exception("Ya existe otro usuario registrado con esa identificación");
             }
 
+            // Guarda el valor original para evitar rehash accidental cuando se conserva la contraseña actual.
+            var originalPassword = user.Password;
+
+            // Si no se envía una nueva contraseña, se conserva la actual para evitar fallos de validación.
+            user.Password = string.IsNullOrWhiteSpace(originalPassword)
+                ? currentUser.Password
+                : originalPassword;
+
+            ValidateUserForUpdate(user, currentUser);
+
             // Se vuelve a calcular la edad
             user.Age = CalculateAge(user.BirthDate);
 
-            // Si la contraseña viene en texto plano, se guarda hasheada
-            user.Password = HashPassword(user.Password);
+            // Si la contraseña viene vacía, se conserva la actual; si viene informada, se re-hashea una sola vez.
+            user.Password = string.IsNullOrWhiteSpace(originalPassword)
+                ? currentUser.Password
+                : (IsHashedPassword(originalPassword) ? originalPassword : HashPassword(originalPassword));
 
             // Se conserva la fecha original de creación
             user.CreatedAt = currentUser.CreatedAt;
@@ -783,7 +793,8 @@ namespace CoreApp
                 throw new Exception("El teléfono debe contener al menos 8 dígitos");
             }
 
-            if (!IsValidPassword(user.Password))
+            // Si ya viene hasheada desde una edición, no se vuelve a validar como texto plano.
+            if (!IsHashedPassword(user.Password) && !IsValidPassword(user.Password))
             {
                 throw new Exception("La contraseña debe tener al menos 8 caracteres, " +
                     "una mayúscula, una minúscula, un número y un carácter especial"
@@ -868,6 +879,64 @@ namespace CoreApp
                    status == "Active" ||
                    status == "Inactive" ||
                    status == "Locked";
+        }
+
+        private bool IsHashedPassword(string password)
+        {
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                return false;
+            }
+
+            var parts = password.Split('.');
+            return parts.Length == 3 && int.TryParse(parts[0], out _);
+        }
+
+        private void ValidateUserForUpdate(User user, User currentUser)
+        {
+            if (HasEmptyFields(user))
+            {
+                throw new Exception("Todos los campos obligatorios son requeridos");
+            }
+
+            if (!IsValidBirthDate(user.BirthDate))
+            {
+                throw new Exception("La fecha de nacimiento no es válida");
+            }
+
+            var age = CalculateAge(user.BirthDate);
+            if (age < 18)
+            {
+                throw new Exception("El usuario debe ser mayor de edad");
+            }
+
+            if (!IsValidEmail(user.Email))
+            {
+                throw new Exception("El correo electrónico no tiene un formato válido");
+            }
+
+            if (!IsValidPhone(user.PhoneNumber))
+            {
+                throw new Exception("El teléfono debe contener al menos 8 dígitos");
+            }
+
+            if (!string.IsNullOrWhiteSpace(user.Password) &&
+                !IsHashedPassword(user.Password) &&
+                !string.Equals(user.Password, currentUser.Password, StringComparison.Ordinal) &&
+                !IsValidPassword(user.Password))
+            {
+                throw new Exception("La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial");
+            }
+
+            if (!IsValidRole(user.Role))
+            {
+                throw new Exception("El rol debe ser Administrator, Engineer o Distributor");
+            }
+
+            if (!IsValidStatus(user.Status))
+            {
+                throw new Exception("El estado debe ser Pending, Active, Inactive o Locked");
+            }
         }
 
         private int CalculateAge(DateTime birthDate)

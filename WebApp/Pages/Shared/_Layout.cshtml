@@ -1,3 +1,4 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 <!DOCTYPE html>
 <html lang="es" data-bs-theme="light">
 <head>
@@ -15,7 +16,10 @@
 </head>
 <body class="sgde-app-body">
     <script>
-        window.SGDE_API_BASE = '@(ViewData["ApiBase"])' || (window.location.protocol === 'http:' ? 'http://localhost:5052/api/' : 'https://localhost:7236/api/');
+        // La URL base de la Web API se toma de configuración (appsettings / variable de entorno
+        // ApiBaseUrl) para que el despliegue en Azure apunte a la API publicada. Si no está
+        // configurada, cae al valor local de desarrollo.
+        window.SGDE_API_BASE = '@(Configuration["ApiBaseUrl"])' || (window.location.protocol === 'http:' ? 'http://localhost:5052/api/' : 'https://localhost:7236/api/');
     </script>
 
 @{

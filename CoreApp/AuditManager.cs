@@ -15,6 +15,20 @@ namespace CoreApp
             return aCrud.RetrieveAll<Audit>();
         }
 
+        // Obtiene los registros de auditoría dentro de un rango de fechas
+        public List<Audit> RetrieveByDateRange(DateTime startDate, DateTime endDate)
+        {
+            // Validar el rango de fechas
+            if (endDate < startDate)
+            {
+                throw new Exception("La fecha final del rango no puede ser anterior a la inicial");
+            }
+
+            var aCrud = new AuditCrudFactory();
+
+            return aCrud.RetrieveByDateRange(startDate, endDate);
+        }
+
 
         public Audit RetrieveById(int id)
         {

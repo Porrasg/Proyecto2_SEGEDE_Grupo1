@@ -8,8 +8,30 @@ namespace WebAPI.Controllers
     [ApiController]
     public class TurbinesController : ControllerBase
     {
+        // Cuerpo del registro de turbinas que envía el frontend (sin estado:
+        // toda turbina nueva inicia como "Active").
+        public class TurbineRegisterRequest
+        {
+            public string Code { get; set; } = string.Empty;
+            public string Name { get; set; } = string.Empty;
+            public string Location { get; set; } = string.Empty;
+            public string Brand { get; set; } = string.Empty;
+            public string Model { get; set; } = string.Empty;
+            public int ManufactureYear { get; set; }
+            public decimal NominalWeeklyCapacityMWh { get; set; }
+        }
+
+        // Cuerpo del cambio de estado operativo que envía el frontend
+        public class ChangeStateRequest
+        {
+            public int TurbineId { get; set; }
+            public string NewState { get; set; } = string.Empty;
+            public string? Reason { get; set; }
+        }
+
         [HttpGet]
         [Route("RetrieveAll")]
+        [Route("All")] // alias que usa el módulo de Reportes
         public ActionResult RetrieveAll()
         {
             try
@@ -21,6 +43,86 @@ namespace WebAPI.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet]
+        [Route("RetrieveById/{id}")]
+        public ActionResult RetrieveById(int id)
+        {
+            try
+            {
+                var tm = new TurbineManager();
+                var turbine = tm.RetrieveTurbineById(id);
+                return Ok(turbine);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost]
+        [Route("Register")]
+        public ActionResult Register(TurbineRegisterRequest request)
+        {
+            try
+            {
+                var tm = new TurbineManager();
+                var turbine = new Turbine
+                {
+                    Code = request.Code,
+                    Name = request.Name,
+                    Location = request.Location,
+                    Brand = request.Brand,
+                    Model = request.Model,
+                    ManufactureYear = request.ManufactureYear,
+                    NominalWeeklyCapacityMWh = request.NominalWeeklyCapacityMWh,
+                    Status = "Active"
+                };
+
+                tm.Create(turbine);
+                return Ok(new { message = "Turbina registrada con éxito.", data = turbine });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [Route("ChangeState")]
+        public ActionResult ChangeState(ChangeStateRequest request, [FromQuery] int? callerUserId)
+        {
+            try
+            {
+                var tm = new TurbineManager();
+                tm.ChangeState(request.TurbineId, request.NewState);
+
+                // El motivo del cambio queda en la bitácora de auditoría (la tabla
+                // de turbinas no guarda un historial de estados propio).
+                try
+                {
+                    var am = new AuditManager();
+                    am.Create(new Audit
+                    {
+                        UserId = callerUserId,
+                        Action = "Update",
+                        EntityName = "Turbines",
+                        EntityId = request.TurbineId,
+                        Description = $"Cambio de estado a {request.NewState}. Motivo: {request.Reason ?? "No indicado"}"
+                    });
+                }
+                catch
+                {
+                    // La auditoría no debe impedir el cambio de estado ya aplicado
+                }
+
+                return Ok(new { message = "Estado de la turbina actualizado." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 

@@ -25,7 +25,13 @@ namespace DataAccess.DAO
         // Paso 2: Redefinir el constructor default de la clase
         private SqlDao(){
 
-            connectionString = @"Data Source=proyecto2grupo1.database.windows.net;Initial Catalog=Proyecto2_SEGEDE_Grupo1;Persist Security Info=True;User ID=sgderootg1;Password=sgde123!.!";
+            // La cadena de conexion se toma de la variable de entorno SGDE_SQL_CONNECTION
+            // (App Service -> Configuration en Azure, o launchSettings/entorno en local).
+            // Si no esta definida, se usa la cadena historica como fallback para no romper
+            // los entornos del equipo. NOTA de seguridad: esa credencial ya quedo expuesta
+            // en el historial de git; debe rotarse en Azure SQL y luego eliminarse este fallback.
+            connectionString = Environment.GetEnvironmentVariable("SGDE_SQL_CONNECTION")
+                ?? @"Data Source=proyecto2grupo1.database.windows.net;Initial Catalog=Proyecto2_SEGEDE_Grupo1;Persist Security Info=True;User ID=sgderootg1;Password=sgde123!.!";
         }
 
         // Paso 3: Definir un metodo estatico que expone la instancia

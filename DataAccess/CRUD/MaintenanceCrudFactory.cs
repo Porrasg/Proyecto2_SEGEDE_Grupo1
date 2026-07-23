@@ -104,6 +104,34 @@ namespace DataAccess.CRUD
             return default(T);
         }
 
+        // Obtiene los mantenimientos asociados a una turbina
+        public List<Maintenance> RetrieveByTurbineId(int turbineId)
+        {
+            // Lista que va a contener los mantenimientos asociados a la turbina
+            var lsMaintenances = new List<Maintenance>();
+
+            // Definir el SP
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_BY_TURBINE_MAINTENANCE_PR";
+
+            sqlOperation.AddIntParameter("TurbineId", turbineId);
+
+            // Ejecutar el SP
+            var lsResults = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Recorrer los resultados y construir los objetos Maintenance
+            if (lsResults.Count > 0)
+            {
+                foreach (var row in lsResults)
+                {
+                    var maintenance = BuildMaintenance(row);
+                    lsMaintenances.Add(maintenance);
+                }
+            }
+
+            return lsMaintenances;
+        }
+
         public override void Update(BaseDTO baseDTO)
         {
             // Convirtiendo el baseDTO en un objeto Maintenance

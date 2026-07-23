@@ -151,6 +151,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             } else {
                 apiClient.post("Forecasts/Register", {
+                    buyerId: parseInt(userId), // ForecastManager exige el comprador del pronóstico
                     forecastMonth: m,
                     forecastYear: y,
                     requestedEnergyMWh: amt

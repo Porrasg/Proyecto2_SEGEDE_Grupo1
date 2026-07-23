@@ -141,7 +141,9 @@ namespace DataAccess.CRUD
                 Status = (string)row["Status"],
                 ExecutedAt = (DateTime)row["ExecutedAt"],
                 CreatedAt = (DateTime)row["CreatedAt"],
-                UpdatedAt = row["UpdatedAt"] != DBNull.Value ? (DateTime?)row["UpdatedAt"] : null // para manejar el caso de que UpdatedAt pueda ser nulo
+                // tblFlushes no tiene columna UpdatedAt (los SP de consulta no la devuelven);
+                // leerla directo del diccionario lanzaba KeyNotFoundException al listar.
+                UpdatedAt = row.ContainsKey("UpdatedAt") && row["UpdatedAt"] != DBNull.Value ? (DateTime?)row["UpdatedAt"] : null
             };
             return flush;
         }
