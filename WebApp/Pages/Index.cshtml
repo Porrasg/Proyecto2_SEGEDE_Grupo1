@@ -137,7 +137,7 @@
                 <div class="col-md-4 border-end">
                     <h5 class="fw-bold mb-2">Arquitectura N-Tier</h5>
                     <p class="text-muted small mb-0">
-                        Backend en ASP.NET Core Web API sobre Azure SQL Database, con capas separadas de datos, negocio y presentación. Frontend en Razor Pages con autenticación JWT.
+                        Backend en ASP.NET Core Web API sobre Azure SQL Database, con capas separadas de datos, negocio y presentación. Frontend en Razor Pages con autenticación por sesión y verificación OTP.
                     </p>
                 </div>
                 <div class="col-md-4 border-end">
@@ -220,7 +220,7 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             // El login del formulario #landingLoginForm lo maneja site.js:initLandingLogin()
-            // (llama a la API real Users/LoginStep1+LoginStep2) — no duplicar el manejador aquí.
+            // (llama a la API real Users/Login y Users/ValidateLoginOtp) — no duplicar el manejador aquí.
 
             // Manejo de Formulario de Contacto
             const contactForm = document.getElementById("contactForm");

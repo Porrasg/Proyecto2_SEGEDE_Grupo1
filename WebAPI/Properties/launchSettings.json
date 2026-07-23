@@ -8,7 +8,9 @@
       "launchUrl": "swagger",
       "applicationUrl": "http://localhost:5052",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "SMTP_USER": "sede.notificationsgroup1@gmail.com",
+        "SMTP_PASSWORD": "efdm ubnq oane psuq"
       }
     },
     "https": {
@@ -18,7 +20,9 @@
       "launchUrl": "swagger",
       "applicationUrl": "https://localhost:7236;http://localhost:5052",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "SMTP_USER": "sede.notificationsgroup1@gmail.com",
+        "SMTP_PASSWORD": "efdm ubnq oane psuq"
       }
     }
   }

@@ -3,9 +3,8 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Inicializando AdminDashboardViewController...");
 
     // Verificación de seguridad en el cliente (RBAC §24.2)
-    const token = session.getToken();
     const role = session.getRole();
-    if (!token || (role !== "Administrator" && role !== "Admin")) {
+    if (role !== "Administrator" && role !== "Admin") {
         notify.error("Acceso denegado. Requiere privilegios de Administrador.");
         setTimeout(() => {
             window.location.href = "/Login";

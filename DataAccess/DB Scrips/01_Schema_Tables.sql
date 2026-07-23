@@ -22,7 +22,7 @@ CREATE TABLE dbo.tblUsers
     BirthDate DATE NOT NULL,
     PhoneNumber NVARCHAR(20) NOT NULL,
     Email NVARCHAR(150) NOT NULL,
-    ProfilePhoto NVARCHAR(500) NULL,
+    ProfilePhoto NVARCHAR(MAX) NULL,
     Password NVARCHAR(255) NOT NULL,
     Age INT NOT NULL,
     Role NVARCHAR(50) NOT NULL,
@@ -34,6 +34,7 @@ CREATE TABLE dbo.tblUsers
     UpdatedAt DATETIME NULL
 );
 GO
+
 
 /*==============================================================================
     TABLA: tblOtp (Verificación en dos pasos)

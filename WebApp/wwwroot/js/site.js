@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function initNavigation() {
-    const isLoggedIn = !session.isExpired() && session.getToken();
+    const isLoggedIn = session.isAuthenticated() && !session.isExpired();
     const role = session.getRole();
     const email = session.getEmail() || "Usuario Autenticado";
 
@@ -114,7 +114,7 @@ function initLandingLogin() {
             btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Conectando...';
         }
 
-        apiClient.post("Users/LoginStep1", { email: ident, password: pass })
+        apiClient.post("Users/Login", { email: ident, password: pass })
             .done(function (res) {
                 sessionStorage.setItem("sgde_login_email", ident);
                 if (typeof notify !== "undefined") notify.success(res?.message || res?.Message || "Código OTP enviado a su correo.");
@@ -142,7 +142,7 @@ function dashboardUrlForRole(role) {
 
 function checkRouteSecurity() {
     const path = window.location.pathname.toLowerCase();
-    const isLoggedIn = !session.isExpired() && session.getToken();
+    const isLoggedIn = session.isAuthenticated() && !session.isExpired();
     const role = session.getRole();
 
     // Regla A1.1: la raíz ("/" o "/Index") redirige de inmediato al dashboard del rol si hay sesión válida.
@@ -156,7 +156,7 @@ function checkRouteSecurity() {
     }
 
     // Páginas públicas que no requieren validación de rol
-    if (path.startsWith("/login") || path.startsWith("/register") || path.startsWith("/recover") || path.startsWith("/reset") || path.startsWith("/activate") || path.startsWith("/accessdenied")) {
+    if (path.startsWith("/login") || path.startsWith("/register") || path.startsWith("/passwordrecoveryselector") || path.startsWith("/passwordrecovery") || path.startsWith("/recoverpassword") || path.startsWith("/recover") || path.startsWith("/reset") || path.startsWith("/changepassword") || path.startsWith("/activate") || path.startsWith("/accessdenied")) {
         return;
     }
 

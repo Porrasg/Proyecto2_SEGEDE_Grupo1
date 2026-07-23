@@ -2,6 +2,12 @@
 document.addEventListener("DOMContentLoaded", function () {
     console.log("Inicializando LoginViewController...");
 
+    //datos estaticos
+    const staticLoginEmails = ["admin@segede.local", "engineer@segede.local", "buyer@segede.local"];
+    function isStaticLoginEmail(email) {
+        return !!email && staticLoginEmails.includes(String(email).trim().toLowerCase());
+    }
+
     // ==========================================
     // 1. FLUJO DE LOGIN - PASO 1 (/Login)
     // ==========================================
@@ -24,32 +30,27 @@ document.addEventListener("DOMContentLoaded", function () {
                 btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Verificando...';
             }
 
-            apiClient.post("Users/LoginStep1", { email: email, password: password })
+            apiClient.post("Users/Login", { email: email, password: password })
                 .done(function (res) {
-                    sessionStorage.setItem("sgde_login_email", email);
+                    if (isStaticLoginEmail(email)) {
+                        sessionStorage.removeItem("sgde_login_email");
+                        sessionStorage.removeItem("sgde_login_userId");
+                        sessionStorage.removeItem("sgde_login_otp_expires_at");
+                        session.save(res);
+                        notify.success("Inicio de sesión exitoso.");
+                        setTimeout(function () {
+                            window.location.href = dashboardUrlForRole(session.getRole()) || "/";
+                        }, 1000);
+                        return;
+                    }
 
-                    // En modo dev local, el backend omite OTP.
-                    // Intentamos LoginStep2 directamente con un código dummy.
-                    apiClient.post("Users/LoginStep2", { email: email, otpCode: "000000" })
-                        .done(function (res2) {
-                            const loginData = res2?.data || res2?.Data || (res2?.token || res2?.Token ? res2 : null);
-                            if (loginData) {
-                                session.save(loginData);
-                                sessionStorage.removeItem("sgde_login_email");
-                                notify.success("¡Inicio de sesión exitoso! Redirigiendo...");
-                                setTimeout(function () {
-                                    window.location.href = dashboardUrlForRole(session.getRole()) || "/";
-                                }, 800);
-                            }
-                        })
-                        .fail(function () {
-                            // Si LoginStep2 directo falla, es porque el backend SÍ requiere OTP real.
-                            // Redirigir al flujo OTP normal.
-                            notify.success(res?.message || res?.Message || "Código OTP enviado a su correo.");
-                            setTimeout(function () {
-                                window.location.href = "/LoginOtp";
-                            }, 1200);
-                        });
+                    sessionStorage.setItem("sgde_login_email", email);
+                    sessionStorage.setItem("sgde_login_userId", res?.userId ?? res?.UserId ?? res?.id ?? res?.Id ?? "");
+                    sessionStorage.setItem("sgde_login_otp_expires_at", String(Date.now() + (3 * 60 * 1000)));
+                    notify.success(res?.message || res?.Message || "Código OTP enviado a su correo.");
+                    setTimeout(function () {
+                        window.location.href = "/LoginOtp";
+                    }, 1200);
                 })
                 .fail(function (xhr) {
                     if (btnSubmit) {
@@ -67,15 +68,64 @@ document.addEventListener("DOMContentLoaded", function () {
     const otpForm = document.getElementById("otpForm");
     if (otpForm) {
         const savedEmail = sessionStorage.getItem("sgde_login_email");
+        const loginOtpExpiryKey = "sgde_login_otp_expires_at";
+        const countdownEl = document.getElementById("loginOtpCountdown");
+        const otpInput = document.getElementById("otpCode");
+        const otpSubmitBtn = otpForm.querySelector("button[type='submit']");
+        const resendBtn = document.getElementById("resendOtpBtn");
+
+        function setLoginOtpExpiry(minutes = 3) {
+            const expiresAt = Date.now() + (minutes * 60 * 1000);
+            sessionStorage.setItem(loginOtpExpiryKey, String(expiresAt));
+            return expiresAt;
+        }
+
+        function startLoginOtpCountdown() {
+            const stored = Number(sessionStorage.getItem(loginOtpExpiryKey) || 0);
+            const expiry = stored > 0 ? stored : setLoginOtpExpiry(3);
+
+            const update = function () {
+                const remaining = Math.max(0, expiry - Date.now());
+                const totalSeconds = Math.floor(remaining / 1000);
+                const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+                const seconds = String(totalSeconds % 60).padStart(2, "0");
+
+                if (countdownEl) countdownEl.textContent = `${minutes}:${seconds}`;
+
+                if (remaining <= 0) {
+                    if (otpSubmitBtn) otpSubmitBtn.disabled = true;
+                    if (resendBtn) resendBtn.disabled = false;
+                    if (otpInput) otpInput.disabled = true;
+                    clearInterval(window.sgdeLoginOtpTimer);
+                    notify.warning("El código OTP expiró. Reenvíe uno nuevo.");
+                } else {
+                    if (otpInput) otpInput.disabled = false;
+                    if (otpSubmitBtn) otpSubmitBtn.disabled = false;
+                }
+            };
+
+            update();
+            clearInterval(window.sgdeLoginOtpTimer);
+            window.sgdeLoginOtpTimer = setInterval(update, 1000);
+        }
+
         if (!savedEmail) {
             notify.warning("Por favor inicie sesión desde el paso 1.");
             setTimeout(function () {
                 window.location.href = "/Login";
             }, 1500);
+        } else {
+            startLoginOtpCountdown();
         }
 
         otpForm.addEventListener("submit", function (e) {
             e.preventDefault();
+            const storedExpiry = Number(sessionStorage.getItem(loginOtpExpiryKey) || 0);
+            if (storedExpiry > 0 && Date.now() > storedExpiry) {
+                notify.warning("El código OTP expiró. Reenvíe uno nuevo.");
+                return;
+            }
+
             const otpCode = document.getElementById("otpCode")?.value.trim();
 
             if (!otpCode || otpCode.length !== 6) {
@@ -83,48 +133,67 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            const btnSubmit = otpForm.querySelector("button[type='submit']");
-            const originalText = btnSubmit ? btnSubmit.innerHTML : "";
-            if (btnSubmit) {
-                btnSubmit.disabled = true;
-                btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Verificando OTP...';
+            const originalText = otpSubmitBtn ? otpSubmitBtn.innerHTML : "";
+            if (otpSubmitBtn) {
+                otpSubmitBtn.disabled = true;
+                otpSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Verificando OTP...';
             }
 
-            apiClient.post("Users/LoginStep2", { email: savedEmail, otpCode: otpCode })
+            apiClient.post("Users/ValidateLoginOtp", { email: savedEmail, otpCode: otpCode })
                 .done(function (res) {
-                    const loginData = res?.data || res?.Data || (res?.token || res?.Token ? res : null);
+                    const loginData = res?.data || res?.Data || res;
                     if (loginData) {
                         session.save(loginData);
                         sessionStorage.removeItem("sgde_login_email");
+                        sessionStorage.removeItem("sgde_login_userId");
+                        sessionStorage.removeItem(loginOtpExpiryKey);
+                        clearInterval(window.sgdeLoginOtpTimer);
                         notify.success("¡Inicio de sesión exitoso! Redirigiendo...");
 
                         setTimeout(function () {
                             window.location.href = dashboardUrlForRole(session.getRole()) || "/";
                         }, 1000);
-                    } else {
-                        notify.error("No se recibieron datos de sesión válidos.");
-                        if (btnSubmit) {
-                            btnSubmit.disabled = false;
-                            btnSubmit.innerHTML = originalText;
-                        }
                     }
                 })
                 .fail(function (xhr) {
-                    if (btnSubmit) {
-                        btnSubmit.disabled = false;
-                        btnSubmit.innerHTML = originalText;
+                    if (otpSubmitBtn) {
+                        otpSubmitBtn.disabled = false;
+                        otpSubmitBtn.innerHTML = originalText;
                     }
                     handleApiError(xhr);
                 });
         });
 
-        const resendBtn = document.getElementById("resendOtpBtn");
         if (resendBtn) {
             resendBtn.addEventListener("click", function () {
-                notify.info("Por seguridad, regrese a la pantalla de inicio de sesión e ingrese sus credenciales para generar un nuevo código.");
-                setTimeout(function () {
-                    window.location.href = "/Login";
-                }, 2000);
+                if (!savedEmail) {
+                    notify.warning("Por favor inicie sesión desde el paso 1.");
+                    return;
+                }
+
+                const original = resendBtn.innerHTML;
+                resendBtn.disabled = true;
+                resendBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Reenviando...';
+
+                apiClient.post("Users/ResendOtp?usageType=Login", { email: savedEmail })
+                    .done(function (res) {
+                        notify.success(res?.message || res?.Message || "Código OTP reenviado correctamente.");
+                        sessionStorage.removeItem(loginOtpExpiryKey);
+                        setLoginOtpExpiry(3);
+                        startLoginOtpCountdown();
+                        if (otpInput) {
+                            otpInput.value = "";
+                            otpInput.disabled = false;
+                            otpInput.focus();
+                        }
+                    })
+                    .fail(function (xhr) {
+                        handleApiError(xhr);
+                    })
+                    .always(function () {
+                        resendBtn.disabled = false;
+                        resendBtn.innerHTML = original;
+                    });
             });
         }
     }
@@ -192,27 +261,37 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const password = document.getElementById("regPassword")?.value;
             const confirmPassword = document.getElementById("regConfirmPassword")?.value;
+            const fullName = document.getElementById("regFirstName")?.value.trim() || "";
+            const ln1 = document.getElementById("regLastName1")?.value.trim() || document.getElementById("regLastName")?.value.trim() || "";
+            const ln2 = document.getElementById("regLastName2")?.value.trim() || "";
+            const email = document.getElementById("regEmail")?.value.trim();
+            const identification = document.getElementById("regId")?.value.trim();
+            const phone = document.getElementById("regPhone")?.value.trim();
+            const birthDate = document.getElementById("regBirthDate")?.value;
+
+            if (!identification || !email || !fullName || !ln1 || !phone || !birthDate || !password || !confirmPassword) {
+                notify.warning("Complete todos los campos obligatorios.");
+                return;
+            }
 
             if (password !== confirmPassword) {
                 notify.error("Las contraseñas ingresadas no coinciden.");
                 return;
             }
 
-            const fn1 = document.getElementById("regFirstName1")?.value.trim() || document.getElementById("regFirstName")?.value.trim() || "";
-            const fn2 = document.getElementById("regFirstName2")?.value.trim() || "";
-            const ln1 = document.getElementById("regLastName1")?.value.trim() || document.getElementById("regLastName")?.value.trim() || "";
-            const ln2 = document.getElementById("regLastName2")?.value.trim() || "";
+            if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(password)) {
+                notify.warning("La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.");
+                return;
+            }
 
-            // Entities-DTOs.User tiene FirstName (un solo campo), FirstLastName y SecondLastName
-            // (nullable) por separado — no un único "lastName" concatenado.
             const dto = {
-                identification: document.getElementById("regId")?.value.trim(),
-                email: document.getElementById("regEmail")?.value.trim(),
-                firstName: fn2 ? `${fn1} ${fn2}` : fn1,
+                identification: identification,
+                email: email,
+                firstName: fullName,
                 firstLastName: ln1,
                 secondLastName: ln2 || null,
-                phone: document.getElementById("regPhone")?.value.trim(),
-                birthDate: document.getElementById("regBirthDate")?.value,
+                phone: phone,
+                birthDate: birthDate,
                 photoUrl: photoDataUrl,
                 password: password
             };
@@ -237,6 +316,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         btnSubmit.disabled = false;
                         btnSubmit.innerHTML = originalText;
                     }
+                    const msg = xhr?.responseJSON?.message || xhr?.responseJSON?.Message || xhr?.responseText || "No se pudo registrar el usuario.";
+                    notify.error(msg);
                     handleApiError(xhr);
                 });
         });
@@ -249,13 +330,54 @@ document.addEventListener("DOMContentLoaded", function () {
     if (activateForm) {
         const actEmailEl = document.getElementById("actEmail");
         const savedActEmail = sessionStorage.getItem("sgde_activate_email");
-        if (actEmailEl && savedActEmail && !actEmailEl.value) {
+        if (actEmailEl && savedActEmail) {
             actEmailEl.value = savedActEmail;
+            actEmailEl.readOnly = true;
         }
+
+        const countdownEl = document.getElementById("actCountdown");
+        const activateBtn = activateForm.querySelector("button[type='submit']");
+        const resendActivationBtn = document.getElementById("resendActivationBtn");
+        const activationExpiryKey = "sgde_activation_expires_at";
+
+        function setActivationExpiry(minutes = 3) {
+            const expiresAt = Date.now() + (minutes * 60 * 1000);
+            sessionStorage.setItem(activationExpiryKey, String(expiresAt));
+            return expiresAt;
+        }
+
+        function startActivationCountdown() {
+            const stored = Number(sessionStorage.getItem(activationExpiryKey) || 0);
+            const expiry = stored > 0 ? stored : setActivationExpiry(3);
+
+            const update = function () {
+                const remaining = Math.max(0, expiry - Date.now());
+                const totalSeconds = Math.floor(remaining / 1000);
+                const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+                const seconds = String(totalSeconds % 60).padStart(2, "0");
+
+                if (countdownEl) countdownEl.textContent = `${minutes}:${seconds}`;
+
+                if (remaining <= 0) {
+                    if (activateBtn) activateBtn.disabled = true;
+                    if (resendActivationBtn) resendActivationBtn.disabled = false;
+                    clearInterval(window.sgdeActivationTimer);
+                    notify.warning("El código de activación expiró. Reenvíe uno nuevo.");
+                } else if (activateBtn) {
+                    activateBtn.disabled = false;
+                }
+            };
+
+            update();
+            clearInterval(window.sgdeActivationTimer);
+            window.sgdeActivationTimer = setInterval(update, 1000);
+        }
+
+        startActivationCountdown();
 
         activateForm.addEventListener("submit", function (e) {
             e.preventDefault();
-            const email = document.getElementById("actEmail")?.value.trim();
+            const email = (savedActEmail || document.getElementById("actEmail")?.value || "").trim();
             const otpCode = document.getElementById("actOtp")?.value.trim();
 
             if (!email || !otpCode || otpCode.length !== 6) {
@@ -270,10 +392,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Activando...';
             }
 
-            apiClient.post("Users/Activate", { email: email, otpCode: otpCode })
+            apiClient.post("Users/Activate", { email: email, tokenCode: otpCode })
                 .done(function (res) {
                     notify.success(res?.message || res?.Message || "Cuenta activada correctamente. Ahora puede iniciar sesión.");
                     sessionStorage.removeItem("sgde_activate_email");
+                    sessionStorage.removeItem(activationExpiryKey);
                     setTimeout(function () {
                         window.location.href = "/Login";
                     }, 1500);
@@ -283,16 +406,24 @@ document.addEventListener("DOMContentLoaded", function () {
                         btnSubmit.disabled = false;
                         btnSubmit.innerHTML = originalText;
                     }
-                    handleApiError(xhr);
+                    const msg = xhr?.responseJSON?.message
+                        || xhr?.responseJSON?.Message
+                        || xhr?.responseJSON?.error
+                        || xhr?.statusText
+                        || xhr?.responseText
+                        || "No se pudo activar la cuenta.";
+                    notify.error(msg);
+                    if (!xhr?.responseJSON?.message && !xhr?.responseJSON?.Message && !xhr?.responseJSON?.error && !xhr?.responseText) {
+                        handleApiError(xhr);
+                    }
                 });
         });
 
         // Reenvío del OTP de activación: usa el endpoint ResendOtp existente. Permite obtener un
         // código nuevo si el anterior expiró, sin tener que volver a llenar el formulario de registro.
-        const resendActivationBtn = document.getElementById("resendActivationBtn");
         if (resendActivationBtn) {
             resendActivationBtn.addEventListener("click", function () {
-                const email = document.getElementById("actEmail")?.value.trim();
+                const email = (savedActEmail || document.getElementById("actEmail")?.value || "").trim();
                 if (!email) {
                     notify.warning("Ingrese su correo electrónico para reenviar el código.");
                     return;
@@ -302,9 +433,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 resendActivationBtn.disabled = true;
                 resendActivationBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Reenviando...';
 
-                apiClient.post("Users/ResendOtp", { email: email, usageType: "Activation" })
+                apiClient.post("Users/ResendOtp?usageType=Activation", { email: email })
                     .done(function (res) {
                         notify.success(res?.message || res?.Message || "Código de activación reenviado. Revise su correo.");
+                        setActivationExpiry(3);
+                        startActivationCountdown();
                     })
                     .fail(function (xhr) {
                         handleApiError(xhr);
@@ -315,45 +448,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
             });
         }
-    }
-
-    // ==========================================
-    // 5. FLUJO DE RECUPERACIÓN (/RecoverPassword)
-    // ==========================================
-    const recoverForm = document.getElementById("recoverForm");
-    if (recoverForm) {
-        recoverForm.addEventListener("submit", function (e) {
-            e.preventDefault();
-            const email = document.getElementById("recEmail")?.value.trim();
-
-            if (!email) {
-                notify.warning("Por favor ingrese su correo electrónico.");
-                return;
-            }
-
-            const btnSubmit = recoverForm.querySelector("button[type='submit']");
-            const originalText = btnSubmit ? btnSubmit.innerHTML : "";
-            if (btnSubmit) {
-                btnSubmit.disabled = true;
-                btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enviando código...';
-            }
-
-            apiClient.post("Users/RecoverPassword", { email: email })
-                .done(function (res) {
-                    notify.success(res?.message || res?.Message || "Código de recuperación enviado a su correo electrónico.");
-                    sessionStorage.setItem("sgde_reset_email", email);
-                    setTimeout(function () {
-                        window.location.href = "/ResetPassword";
-                    }, 1500);
-                })
-                .fail(function (xhr) {
-                    if (btnSubmit) {
-                        btnSubmit.disabled = false;
-                        btnSubmit.innerHTML = originalText;
-                    }
-                    handleApiError(xhr);
-                });
-        });
     }
 
     // CONTROL DEL OJITO PARA VER CONTRASEÑA (Aporte de Josué)
@@ -372,59 +466,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 icon.classList.toggle('bi-eye');
                 icon.classList.toggle('bi-eye-slash');
             }
-        });
-    }
-
-    // ==========================================
-    // 6. FLUJO DE RESTABLECIMIENTO (/ResetPassword)
-    // ==========================================
-    const resetForm = document.getElementById("resetForm");
-    if (resetForm) {
-        const resEmailEl = document.getElementById("resEmail");
-        const savedResEmail = sessionStorage.getItem("sgde_reset_email");
-        if (resEmailEl && savedResEmail && !resEmailEl.value) {
-            resEmailEl.value = savedResEmail;
-        }
-
-        resetForm.addEventListener("submit", function (e) {
-            e.preventDefault();
-            const email = document.getElementById("resEmail")?.value.trim();
-            const otpCode = document.getElementById("resOtp")?.value.trim();
-            const newPassword = document.getElementById("resNewPassword")?.value;
-            const confirmPassword = document.getElementById("resConfirmPassword")?.value;
-
-            if (!email || !otpCode || !newPassword) {
-                notify.warning("Por favor complete todos los campos requeridos.");
-                return;
-            }
-
-            if (newPassword !== confirmPassword) {
-                notify.error("Las nuevas contraseñas ingresadas no coinciden.");
-                return;
-            }
-
-            const btnSubmit = resetForm.querySelector("button[type='submit']");
-            const originalText = btnSubmit ? btnSubmit.innerHTML : "";
-            if (btnSubmit) {
-                btnSubmit.disabled = true;
-                btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Restableciendo...';
-            }
-
-            apiClient.post("Users/ResetPassword", { email: email, otpCode: otpCode, newPassword: newPassword })
-                .done(function (res) {
-                    notify.success(res?.message || res?.Message || "Contraseña restablecida con éxito. Inicie sesión con sus nuevas credenciales.");
-                    sessionStorage.removeItem("sgde_reset_email");
-                    setTimeout(function () {
-                        window.location.href = "/Login";
-                    }, 1500);
-                })
-                .fail(function (xhr) {
-                    if (btnSubmit) {
-                        btnSubmit.disabled = false;
-                        btnSubmit.innerHTML = originalText;
-                    }
-                    handleApiError(xhr);
-                });
         });
     }
 });

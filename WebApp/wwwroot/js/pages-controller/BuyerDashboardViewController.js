@@ -2,11 +2,10 @@
 document.addEventListener("DOMContentLoaded", function () {
     console.log("Inicializando BuyerDashboardViewController...");
 
-    const token = session.getToken();
     const role = session.getRole();
     const userId = session.getUserId() || 1;
 
-    if (!token || (role !== "Distributor" && role !== "Administrator" && role !== "Admin")) {
+    if (role !== "Distributor" && role !== "Administrator" && role !== "Admin") {
         notify.error("Acceso denegado. Requiere privilegios de Comprador.");
         setTimeout(() => {
             window.location.href = "/Login";

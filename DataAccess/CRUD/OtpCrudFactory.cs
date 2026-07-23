@@ -36,6 +36,10 @@ namespace DataAccess.CRUD
         // Si no lo encuentra, retorna null para que la capa superior maneje el error
         public OtpToken RetrieveValidOtp(string email, string tokenCode, string purpose)
         {
+            email = email?.Trim();
+            tokenCode = tokenCode?.Trim();
+            purpose = purpose?.Trim();
+
             // Definir el SP
             var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "RET_VALID_OTP_TOKEN_PR";
