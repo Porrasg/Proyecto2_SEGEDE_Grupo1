@@ -198,7 +198,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const tCodeField = tCodeInput?.closest(".col") || tCodeInput;
 
 
-        //CORREGIDO HFQ
+        //CORREGIDO HFQ 
         // Al abrir el modal para "Nueva Turbina" (no vía botón Editar), limpia cualquier estado de edición previo.
         if (tModalEl) {
             tModalEl.addEventListener("show.bs.modal", function (event) {
