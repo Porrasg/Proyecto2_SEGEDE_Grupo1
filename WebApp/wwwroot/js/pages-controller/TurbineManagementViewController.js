@@ -370,6 +370,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
+
         // ==========================================
         // 2. DETALLE TÉCNICO (/Admin/TurbineDetail y /Engineer/TurbineDetail — IDs con o sin prefijo "eng")
         // ==========================================
