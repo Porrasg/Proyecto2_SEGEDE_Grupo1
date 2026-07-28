@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
 
-        //CORREGIDO HFQ
+        //CORREGIDO HFQ 
         function renderTurbinesTable(turbines) {
             if (!turbines || !turbines.length) {
                 const bodyEl = document.getElementById("opTurbinesBody") || document.getElementById("turbinesTableBody");
