@@ -231,7 +231,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-        // Modal editar y mapeo corregidos HFQ
+        // Modal editar y mapeo corregidos HFQ 
         function openEditModal(t) {
             if (!t) return;
 
