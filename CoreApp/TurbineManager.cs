@@ -62,6 +62,9 @@ namespace CoreApp
             currentTurbine.UpdatedAt = DateTime.Now;
 
             tCrud.Update(currentTurbine);
+            //actualizar en el centralBank
+            var centralBankManager = new CentralBankManager();
+            centralBankManager.UpdateMaximumCapacity();
         }
 
         public void Create(Turbine turbine)
