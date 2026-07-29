@@ -253,7 +253,7 @@ namespace CoreApp
                 throw new Exception("El correo electrónico no tiene un formato válido");
             }
 
-            // dtaos estaticos
+            // datos estaticos
             if (TryLoginStaticAccount(email, password, out User staticUser))
             {
                 return staticUser;
@@ -862,7 +862,7 @@ namespace CoreApp
 
             return Regex.IsMatch(
                 password,
-                @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$"
+                @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$"
             );
         }
 

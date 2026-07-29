@@ -450,7 +450,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // CONTROL DEL OJITO PARA VER CONTRASEÑA (Aporte de Josué)
+    // CONTROL DEL OJITO PARA VER CONTRASEÑA 
     const togglePassword = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('password');
 
