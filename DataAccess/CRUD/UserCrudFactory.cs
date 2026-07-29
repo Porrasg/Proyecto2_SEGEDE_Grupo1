@@ -261,7 +261,7 @@ namespace DataAccess.CRUD
                 Identification = (string)row["Identification"],
                 FirstName = (string)row["FirstName"],
                 FirstLastName = (string)row["FirstLastName"],
-                SecondLastName = row["SecondLastName"] != DBNull.Value ? (string)row["SecondLastName"] : null, // para manejar el caso de que SecondLastName pueda ser nulo
+                SecondLastName = row["SecondLastName"] != DBNull.Value ? (string)row["SecondLastName"] : null, // para manejar el caso de que SecondLastName pueda ser nulo //Operador Ternario 
                 BirthDate = (DateTime)row["BirthDate"],
                 PhoneNumber = (string)row["PhoneNumber"],
                 Email = (string)row["Email"],
