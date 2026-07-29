@@ -221,4 +221,26 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
         });
     }
+
+ 
+
+
 });
+
+// CONTROL DEL OJITO PARA VER CONTRASEÑA esta funcion puede ser REUTILIZABLE)
+function togglePassword(inputId, buttonElement) {
+    const passwordInput = document.getElementById(inputId);
+
+    if (passwordInput) {
+        // Alternar el tipo de input
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+
+        // Alternar el icono del ojito
+        const icon = buttonElement.querySelector('i');
+        if (icon) {
+            icon.classList.toggle('bi-eye');
+            icon.classList.toggle('bi-eye-slash');
+        }
+    }
+};
