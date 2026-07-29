@@ -31,10 +31,12 @@ function initNavigation() {
     const navLiPublicLogin = document.getElementById("navLiPublicLogin");
     const navLiPublicRegister = document.getElementById("navLiPublicRegister");
     const navUserName = document.getElementById("navUserName");
+    const linkProfile = document.getElementById("linkProfile");
     const btnSignOut = document.getElementById("btnSignOut");
 
     if (isLoggedIn) {
         if (btnSignOut) btnSignOut.classList.remove("d-none");
+        if (linkProfile) linkProfile.classList.remove("d-none");
         if (navLiPublicLogin) navLiPublicLogin.classList.add("d-none");
         if (navLiPublicRegister) navLiPublicRegister.classList.add("d-none");
 
@@ -68,10 +70,11 @@ function initNavigation() {
         if (navLiEngineer) navLiEngineer.classList.add("d-none");
         if (navLiBuyer) navLiBuyer.classList.add("d-none");
         if (btnSignOut) btnSignOut.classList.add("d-none");
+        if (linkProfile) linkProfile.classList.add("d-none");
         if (navLiPublicLogin) navLiPublicLogin.classList.remove("d-none");
         if (navLiPublicRegister) navLiPublicRegister.classList.remove("d-none");
         if (navUserName) {
-            navUserName.innerHTML = `🔒 No Autenticado`;
+            navUserName.innerHTML = `No Autenticado`;
             navUserName.className = "badge bg-secondary border border-dark text-dark px-3 py-2 fw-bold";
         }
     }
