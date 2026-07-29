@@ -44,8 +44,65 @@
             </div>
         </div>
     </div>
-    <!-- Modal Turbina -->
-    <div class="modal fade" id="turbineModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Registrar Turbina</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar diálogo"></button></div><div class="modal-body"><form id="turbineForm"><div class="row mb-2"><div class="col"><label class="form-label">Código Único</label><input type="text" class="form-control" id="tCode" required></div><div class="col"><label class="form-label">Nombre</label><input type="text" class="form-control" id="tName" required></div></div><div class="mb-2"><label class="form-label">Ubicación</label><input type="text" class="form-control" id="tLoc" required></div><div class="row mb-2"><div class="col"><label class="form-label">Marca</label><input type="text" class="form-control" id="tBrand" required></div><div class="col"><label class="form-label">Modelo</label><input type="text" class="form-control" id="tModel" required></div></div><div class="row mb-2"><div class="col"><label class="form-label">Año</label><input type="number" class="form-control" id="tYear" required></div><div class="col"><label class="form-label">Capacidad Nominal (MWh/sem)</label><input type="number" step="0.01" class="form-control" id="tCap" required></div></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" id="saveTurbineBtn">Guardar</button></div></div></div></div>
+   
+    <!-- Modal Turbina //  actualizado HFQ -->
+    <div class="modal fade" id="turbineModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTurbineTitle">Registrar Turbina</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar diálogo"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="turbineForm">
+                        <!-- Campo oculto crítico para almacenar el ID en edición -->
+                        <input type="hidden" id="tId" value="0">
+
+                        <div class="row mb-2">
+                            <div class="col">
+                                <label class="form-label">Código Único</label>
+                                <input type="text" class="form-control" id="tCode" required>
+                            </div>
+                            <div class="col">
+                                <label class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="tName" required>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Ubicación</label>
+                            <input type="text" class="form-control" id="tLoc" required>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col">
+                                <label class="form-label">Marca</label>
+                                <input type="text" class="form-control" id="tBrand" required>
+                            </div>
+                            <div class="col">
+                                <label class="form-label">Modelo</label>
+                                <input type="text" class="form-control" id="tModel" required>
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col">
+                                <label class="form-label">Año</label>
+                                <input type="number" class="form-control" id="tYear" required>
+                            </div>
+                            <div class="col">
+                                <label class="form-label">Capacidad Nominal (MWh/sem)</label>
+                                <input type="number" step="0.01" class="form-control" id="tCap" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveTurbineBtn">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
     <!-- Modal Cambio Estado -->
     <div class="modal fade" id="stateModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Cambiar Estado de Turbina</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar diálogo"></button></div><div class="modal-body"><form id="stateForm"><div class="mb-3"><label class="form-label">Nuevo Estado</label><select class="form-select" id="newState"></select></div><div class="mb-3"><label class="form-label">Razón / Justificación</label><textarea class="form-control" id="stateReason" required></textarea></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" id="confirmStateBtn">Confirmar Cambio</button></div></div></div></div>
 </div>
