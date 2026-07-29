@@ -10,62 +10,30 @@
     </div>
 
     <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card h-100 text-center">
-                <div class="card-body">
-                    <img src="/images/default-avatar.png" id="profilePhoto" class="rounded-circle mb-3 border" style="width:100px;height:100px;object-fit:cover;" alt="Foto de perfil">
                     <h5 id="profName">-</h5>
-                    <p class="text-muted" id="profEmail">-</p>
-                    <span class="badge bg-primary" id="profRole">-</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-8">
-            <div class="card mb-3">
-                <div class="card-header">Detalles</div>
-                <div class="card-body">
-                    <p><strong>Nombre:</strong> <span id="detName">-</span></p>
-                    <p><strong>Correo:</strong> <span id="detEmail">-</span></p>
-                    <p><strong>Rol:</strong> <span id="detRole">-</span></p>
-                    <p><strong>Teléfono:</strong> <span id="detPhone">-</span></p>
-                    <div class="mt-3">
-                        <a id="btnChangePass" class="btn btn-outline-primary" href="/ChangePassword">Cambiar contraseña</a>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
+                <div class="card-body">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="pFirstLastName">Primer Apellido</label>
+                                <input type="text" class="form-control" id="pFirstLastName" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="pSecondLastName">Segundo Apellido</label>
+                                <input type="text" class="form-control" id="pSecondLastName">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="pEmail">Correo Electrónico</label>
+                                <input type="email" class="form-control" id="pEmail" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="pPhone">Teléfono de Contacto</label>
+                                <input type="tel" class="form-control" id="pPhone" required>
+                            </div>
+            
 
-@section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // llenar con datos recogidos desde session (cliente)
-            const isLogged = window.session?.isAuthenticated() && !window.session?.isExpired();
-            if (!isLogged) {
-                // checkRouteSecurity en site.js debería redirigir, pero por si acaso
-                window.location.href = `/Login?returnUrl=${encodeURIComponent(window.location.pathname)}`;
-                return;
-            }
-
-            const email = window.session.getEmail() || '-';
-            const role = window.session.getRole() || '-';
-            const name = window.session.get()?.name || window.session.get()?.fullName || email;
-
-            document.getElementById('profName').innerText = name;
-            document.getElementById('profEmail').innerText = email;
-            document.getElementById('profRole').innerText = role;
-
-            document.getElementById('detName').innerText = name;
-            document.getElementById('detEmail').innerText = email;
-            document.getElementById('detRole').innerText = role;
-            document.getElementById('detPhone').innerText = window.session.get()?.phone || '-';
-
-            // Sólo permitir cambiar contraseña si hay sesión
-            if (!isLogged) {
-                const btn = document.getElementById('btnChangePass');
-                if (btn) btn.classList.add('d-none');
-            }
-        });
-    </script>
 }
