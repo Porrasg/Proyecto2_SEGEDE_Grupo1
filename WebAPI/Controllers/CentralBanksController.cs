@@ -87,5 +87,36 @@ namespace WebAPI.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        [HttpPost]
+        [Route("ReceiveEnergy/{id}/{mwh}")]
+        public ActionResult ReceiveEnergy(int id, decimal mwh)
+        {
+            try
+            {
+                var cm = new CentralBankManager();
+                cm.ReceiveEnergy(id, mwh);
+                return Ok(new { message = "Energia recibido con exito" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpPost]
+        [Route("DistributeEnergy/{id}/{mwh}")]
+        public ActionResult DistributeEnergey(int id, decimal mwh)
+        {
+            try
+            {
+                var cm = new CentralBankManager();
+                cm.DistributeEnergy(id, mwh);
+                return Ok(new { message = "Energia distribuida con exito" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

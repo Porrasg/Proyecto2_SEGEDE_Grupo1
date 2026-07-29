@@ -54,7 +54,12 @@ namespace CoreApp
             // Validar la capacidad máxima
             if (centralBank.MaximumCapacityMWh <= 0)
             {
-                throw new Exception("La capacidad máxima debe ser mayor a cero");
+                centralBank.MaximumCapacityMWh = CalculateDefaultCapacity();
+
+                if (centralBank.MaximumCapacityMWh <= 0)
+                {
+                    throw new Exception("No hay turbinas activas para poder realizar el calculo");
+                }
             }
 
             var centralBankCrud = new CentralBankCrudFactory();
@@ -116,7 +121,7 @@ namespace CoreApp
             var centralBankCrud = new CentralBankCrudFactory();
 
             // Obtener el banco central registrado
-            var currentCentralBank =centralBankCrud.RetrieveById<CentralBank>(centralBank.Id);
+            var currentCentralBank = centralBankCrud.RetrieveById<CentralBank>(centralBank.Id);
 
             // Validar que el banco central exista
             if (currentCentralBank == null)
@@ -227,5 +232,106 @@ namespace CoreApp
             return status == "Active" ||
                    status == "Inactive";
         }
+
+        //metodo para calcular la capacidad maxima de acuerdo a las turbianas activas
+        private decimal CalculateDefaultCapacity()
+        {
+            var turbineCrud = new TurbineCrudFactory();
+            var activeTurbines = turbineCrud.RetrieveByStatus("Active");
+            decimal totalCapacity = activeTurbines.Sum(t => t.NominalWeeklyCapacityMWh);
+
+            return totalCapacity;
+        }
+
+        // Método para actualizar el maximo cada vez que una turbina cambie de estado
+        public void UpdateMaximumCapacity()
+        {
+            var centralBankCrud = new CentralBankCrudFactory();
+
+            // se obtiene el Banco Central de la BD
+            var centralBank = centralBankCrud.RetrieveAll<CentralBank>().FirstOrDefault();
+
+            //  si existe
+            if (centralBank != null)
+            {
+                // Recalcula la capacidad basandonos en las turbinas activas
+                centralBank.MaximumCapacityMWh = CalculateDefaultCapacity();
+                centralBank.UpdatedAt = DateTime.Now;
+
+                //  Actualizamos solo si el objeto no es nulo
+                centralBankCrud.Update(centralBank);
+            }
+            else
+            {
+                throw new Exception("No se encontró el registro del Banco Central.");
+            }
+        }
+
+        // entrada de energia
+        public void ReceiveEnergy(int centralBankId, decimal mwhToreceive)
+        {
+            if (mwhToreceive <= 0)
+            {
+                throw new Exception("La cantidad de energia a recibir debe ser mayor a cero");
+            }
+            var centralBankCrud = new TurbineCrudFactory();
+            var centralBank = centralBankCrud.RetrieveById<CentralBank>(centralBankId);
+
+            if (centralBank == null)
+            {
+                throw new Exception("El banco central no existe");
+            }
+            //se acumula el total recibido
+            centralBank.TotalReceivedMWh = mwhToreceive;
+
+            //se calcula el espacio disponible
+            decimal availableSpace = centralBank.MaximumCapacityMWh - centralBank.CurrentInventoryMWh;
+
+            //se calcula se cabe o hay saturacion 
+            if (mwhToreceive <= availableSpace)
+            {
+                //cabe toda la energia
+                centralBank.CurrentInventoryMWh += mwhToreceive;
+            }
+            else
+            {
+                //se llena el inventario maximo
+                centralBank.CurrentInventoryMWh = centralBank.MaximumCapacityMWh;
+                //el exceso para a la saturacion
+                decimal overflow = mwhToreceive - availableSpace;
+                centralBank.TotalSaturationLossMWh += overflow;
+
+            }
+            centralBank.UpdatedAt = DateTime.UtcNow;
+            centralBankCrud.Update(centralBank);
+        }
+        //salida de energia
+        public void DistributeEnergy(int centralBankId, decimal mwhToDistribute)
+        {
+            //validar que la cantidad de energia a distribuir sea positica
+            if (mwhToDistribute <= 0)
+            {
+                throw new Exception("La cantidad de energia a distribuir debe ser mayor a cero");
+            }
+            var centralBankCrud = new CentralBankCrudFactory();
+            var centralBank = centralBankCrud.RetrieveById<CentralBank>(centralBankId);
+            if (centralBank == null)
+            {
+                throw new Exception("El banco centrol no existe");
+            }
+            //se valida que haya sufiente energia para distribuir
+            if (mwhToDistribute > centralBank.CurrentInventoryMWh)
+            {
+                throw new Exception("No hay suficiente energia en el inventario para realizar la distribucion");
+            }
+            // se descuenta del inventario y acumla en lo distribuido
+            centralBank.CurrentInventoryMWh -= mwhToDistribute;
+            centralBank.TotalDistributedMWh += mwhToDistribute;
+
+            centralBankCrud.Update(centralBank);
+            centralBank.UpdatedAt=DateTime.UtcNow;
+        }
     }
 }
+
+
