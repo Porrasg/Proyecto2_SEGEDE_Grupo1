@@ -253,7 +253,7 @@ namespace CoreApp
                 throw new Exception("El correo electrónico no tiene un formato válido");
             }
 
-            // dtaos estaticos
+            // datos estaticos
             if (TryLoginStaticAccount(email, password, out User staticUser))
             {
                 return staticUser;
