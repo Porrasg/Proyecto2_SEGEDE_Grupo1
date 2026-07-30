@@ -90,12 +90,13 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Create")]
-        public ActionResult Create(Distribution distribution)
+        public ActionResult Create(Distribution distribution, [FromQuery] int? callerUserId)
         {
             try
             {
                 var dm = new DistributionManager();
                 dm.Create(distribution);
+                AuditHelper.TryAudit(callerUserId, "Create", "Distributions", distribution.Id, "Distribución de energía creada");
                 return Ok(distribution);
             }
             catch (Exception ex)
@@ -106,12 +107,13 @@ namespace WebAPI.Controllers
 
         [HttpPut]
         [Route("Update")]
-        public ActionResult Update(Distribution distribution)
+        public ActionResult Update(Distribution distribution, [FromQuery] int? callerUserId)
         {
             try
             {
                 var dm = new DistributionManager();
                 dm.Update(distribution);
+                AuditHelper.TryAudit(callerUserId, "Update", "Distributions", distribution.Id, "Distribución de energía actualizada");
                 return Ok(distribution);
             }
             catch (Exception ex)
@@ -122,12 +124,13 @@ namespace WebAPI.Controllers
 
         [HttpDelete]
         [Route("Delete")]
-        public ActionResult Delete(Distribution distribution)
+        public ActionResult Delete(Distribution distribution, [FromQuery] int? callerUserId)
         {
             try
             {
                 var dm = new DistributionManager();
                 dm.Delete(distribution);
+                AuditHelper.TryAudit(callerUserId, "LogicalDelete", "Distributions", distribution.Id, "Distribución de energía eliminada");
                 return Ok(distribution);
             }
             catch (Exception ex)
