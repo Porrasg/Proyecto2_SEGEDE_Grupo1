@@ -419,6 +419,24 @@ namespace CoreApp
 
             uCrud.UpdateLastLogin(user);
 
+            // Auditar el inicio de sesión exitoso; un fallo de auditoría nunca debe
+            // impedir un login ya validado.
+            try
+            {
+                new AuditManager().Create(new Audit
+                {
+                    UserId = user.Id,
+                    Action = "Login",
+                    EntityName = "Users",
+                    EntityId = user.Id,
+                    Description = $"Inicio de sesión exitoso: {user.Email}"
+                });
+            }
+            catch
+            {
+                // No bloquear el login por un fallo de auditoría
+            }
+
             return user;
         }
 

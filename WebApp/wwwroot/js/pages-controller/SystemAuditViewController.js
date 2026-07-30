@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const id = a.id || a.Id;
             const dateStr = a.createdAt || a.CreatedAt ? new Date(a.createdAt || a.CreatedAt).toLocaleString("es-CR") : "-";
             const userId = a.userId ?? a.UserId;
-            const user = userId != null ? (userNames[userId] || `Usuario #${userId}`) : "System";
+            const user = userId != null ? (userNames[userId] || `Usuario #${userId}`) : "Sistema";
             // Entities-DTOs.Audit no distingue "módulo" de "entidad afectada" — es el mismo campo EntityName.
             const mod = a.entityName || a.EntityName || "-";
             const act = a.action || a.Action || "-";
