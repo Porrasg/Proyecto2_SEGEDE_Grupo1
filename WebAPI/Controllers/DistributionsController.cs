@@ -58,6 +58,7 @@ namespace WebAPI.Controllers
 
         [HttpGet]
         [Route("RetrieveByBuyerId/{buyerId}")]
+        [Route("ByBuyer/{buyerId}")] // alias que usa ReportsViewController.js (mismo patrón que ForecastsController)
         public ActionResult RetrieveByBuyerId(int buyerId)
         {
             try
