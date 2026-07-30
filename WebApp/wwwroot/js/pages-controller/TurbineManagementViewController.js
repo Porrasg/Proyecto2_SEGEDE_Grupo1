@@ -228,12 +228,8 @@ document.addEventListener("DOMContentLoaded", function () {
         let editingTurbineId = null;
         const tModalEl = document.getElementById("turbineModal");
         const tCodeInput = document.getElementById("tCode");
-        const tYearInput = document.getElementById("tYear");
-        const tModalTitle = tModalEl?.querySelector(".modal-title");
-        const tCodeField = tCodeInput?.closest(".col") || tCodeInput;
 
-
-        //CORREGIDO HFQ 
+        //CORREGIDO HFQ
         // Al abrir el modal para "Nueva Turbina" (no vía botón Editar), limpia cualquier estado de edición previo.
         if (tModalEl) {
             tModalEl.addEventListener("show.bs.modal", function (event) {
@@ -515,11 +511,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 .fail(function (xhr) {
                     console.error("Error cargando historial de turbina:", xhr);
                 });
-        }
-
-        function setText(id, value) {
-            const el = document.getElementById(id);
-            if (el) el.textContent = value;
         }
 
         function setTextEither(idA, idB, value) {

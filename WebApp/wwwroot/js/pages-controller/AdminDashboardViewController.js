@@ -325,13 +325,6 @@ document.addEventListener("DOMContentLoaded", function () {
             birthDateField.addEventListener("change", updateCalculatedAge);
         }
 
-        function getFullNameValue(user) {
-            const name = (user.firstName || user.FirstName || "").trim();
-            const last1 = (user.firstLastName || user.FirstLastName || "").trim();
-            const last2 = (user.secondLastName || user.SecondLastName || "").trim();
-            return [name, last1, last2].filter(Boolean).join(" ");
-        }
-
         function getFirstNameValue(user) {
             return (user.firstName || user.FirstName || "").trim();
         }
