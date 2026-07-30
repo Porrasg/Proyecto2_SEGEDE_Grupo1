@@ -327,10 +327,10 @@ document.addEventListener("DOMContentLoaded", function () {
         let lastRows = [];
 
         // Join cliente: DistributionDetail.forecastId → Forecast(mes/año) para etiquetar cada período.
-        $.when(apiClient.get("Distributions/ByBuyer/" + userId), apiClient.get("Forecasts/ByBuyer/" + userId))
-            .done(function (distRes, fcRes) {
-                const details = distRes[0]?.data || distRes[0]?.Data || [];
-                const forecasts = fcRes[0]?.data || fcRes[0]?.Data || [];
+        Promise.all([apiClient.get("Distributions/ByBuyer/" + userId), apiClient.get("Forecasts/ByBuyer/" + userId)])
+            .then(function ([distRes, fcRes]) {
+                const details = distRes?.data || distRes?.Data || [];
+                const forecasts = fcRes?.data || fcRes?.Data || [];
                 const fcById = {};
                 forecasts.forEach(f => { fcById[f.id ?? f.Id] = f; });
 
@@ -372,7 +372,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         { label: "Asignado (MWh)", data: tail.map(r => r.asg), backgroundColor: "rgba(94, 106, 210, 0.85)" }
                     ]);
             })
-            .fail(function (xhr) {
+            .catch(function (xhr) {
                 allocBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Error al cargar el reporte de asignación.</td></tr>';
                 handleApiError(xhr);
             });

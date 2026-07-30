@@ -156,31 +156,41 @@ document.addEventListener("DOMContentLoaded", function () {
             const original = confirmExportBtn.innerHTML;
             confirmExportBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
-            $.ajax({
-                url: apiClient.url("Billing/Export"),
+            // Descarga binaria (blob): apiClient solo maneja JSON, así que aquí se usa
+            // fetch() directo en vez de $.ajax, igual de "manual" que el resto del cliente.
+            fetch(apiClient.url("Billing/Export"), {
                 method: "POST",
-                headers: apiClient.authHeader(),
-                contentType: "application/json",
-                data: JSON.stringify({ statementId: parseInt(selectedStatementId), format: format }),
-                xhrFields: { responseType: "blob" }
-            }).done(function (blob) {
-                const ext = format === "EXCEL" ? "xlsx" : format.toLowerCase();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `EstadoCuenta_${selectedStatementId}.${ext}`;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                window.URL.revokeObjectURL(url);
-                notify.success("Estado de cuenta exportado.");
-                exportModal?.hide();
-            }).fail(function (xhr) {
-                handleApiError(xhr);
-            }).always(function () {
-                confirmExportBtn.disabled = false;
-                confirmExportBtn.innerHTML = original;
-            });
+                headers: Object.assign({ "Content-Type": "application/json" }, apiClient.authHeader()),
+                body: JSON.stringify({ statementId: parseInt(selectedStatementId), format: format })
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        const err = new Error("HTTP " + response.status);
+                        err.status = response.status;
+                        throw err;
+                    }
+                    return response.blob();
+                })
+                .then(function (blob) {
+                    const ext = format === "EXCEL" ? "xlsx" : format.toLowerCase();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `EstadoCuenta_${selectedStatementId}.${ext}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                    notify.success("Estado de cuenta exportado.");
+                    exportModal?.hide();
+                })
+                .catch(function (xhr) {
+                    handleApiError(xhr);
+                })
+                .finally(function () {
+                    confirmExportBtn.disabled = false;
+                    confirmExportBtn.innerHTML = original;
+                });
         });
     }
 });
