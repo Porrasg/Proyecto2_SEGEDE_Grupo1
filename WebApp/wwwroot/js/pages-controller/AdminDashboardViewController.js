@@ -612,7 +612,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     BirthDate: birthDateVal,
                     Age: Number.isFinite(parseInt(ageVal)) ? parseInt(ageVal) : 0,
                     ProfilePhoto: userPhotoDataUrl,
-                    Password: passVal || "SEGEDE_Temp123!",
+                    // Sin campo de contraseña en el modal de creación: el backend genera una
+                    // aleatoria que nadie conoce; el usuario define la suya propia al activar
+                    // la cuenta. passVal solo aplica al modal de edición (reseteo puntual).
+                    Password: passVal || "",
                     Status: "Pending"
                 };
 
@@ -706,21 +709,10 @@ document.addEventListener("DOMContentLoaded", function () {
         function reactivateUser(id, email, status) {
             const normalizedStatus = (status || "").toLowerCase();
             if (normalizedStatus === "pending" || normalizedStatus === "pendingactivation") {
-                notify.confirm("¿Desea activar este usuario pendiente?", { confirmText: "Activar" }).then(function (ok) {
-                    if (!ok) return;
-                    const otpCode = window.prompt("Ingrese el código OTP de activación enviado al correo del usuario:");
-                    if (!otpCode) return;
-
-                    apiClient.post("Users/Activate", {
-                        email: email,
-                        tokenCode: otpCode.trim()
-                    }).done(function () {
-                        notify.success("Usuario activado correctamente.");
-                        loadUsers();
-                    }).fail(function (xhr) {
-                        handleApiError(xhr);
-                    });
-                });
+                // La activación ahora exige que el propio usuario establezca su
+                // contraseña (§ auto-creación de contraseña en primer login), así que
+                // el administrador ya no puede completarla en su nombre desde aquí.
+                notify.info("El usuario debe activar su cuenta desde /Activate con el código enviado a su correo; ahí definirá su propia contraseña.");
                 return;
             }
 
