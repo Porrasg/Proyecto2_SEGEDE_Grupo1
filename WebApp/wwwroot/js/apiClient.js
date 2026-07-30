@@ -1,12 +1,16 @@
-// apiClient.js (§24.1) - Cliente HTTP modular para comunicación AJAX con la Web API
+// apiClient.js (§24.1) - Cliente HTTP modular para comunicación AJAX con la Web API.
+// Implementado sobre fetch() nativo (sin jQuery) para controlar directamente las
+// peticiones AJAX, según lo pedido en la revisión. Se expone una interfaz
+// .done()/.fail()/.always() compatible con la que ya consumen las ~20 pantallas
+// de wwwroot/js/pages-controller/, para no tener que reescribir cada llamada.
 const apiClient = (function () {
     // Obtiene la base URL configurada en el servidor o utiliza el valor por defecto
     const BASE = window.SGDE_API_BASE || (window.location.protocol === 'http:' ? "http://localhost:5052/api/" : "https://localhost:7236/api/");
 
     // Construye la URL completa sumando la ruta relativa al endpoint base
-    function url(path) { 
+    function url(path) {
         const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-        return BASE + cleanPath; 
+        return BASE + cleanPath;
     }
 
     // No se envía encabezado de autorización porque este proyecto usa sesión por usuario autenticado
@@ -14,32 +18,64 @@ const apiClient = (function () {
         return {};
     }
 
-    // Realiza una petición asíncrona utilizando jQuery AJAX con soporte de autenticación y JSON
+    // Agrega .done()/.fail()/.always() sobre una Promise nativa, replicando la
+    // forma en que se consumía el jqXHR de jQuery (múltiples callbacks encadenables,
+    // cada uno recibe el valor resuelto o el error rechazado).
+    function withCallbackShim(promise) {
+        promise.done = function (cb) { promise.then(cb); return promise; };
+        promise.fail = function (cb) { promise.catch(cb); return promise; };
+        promise.always = function (cb) { promise.then(cb, cb); return promise; };
+        return promise;
+    }
+
+    // Realiza una petición asíncrona con fetch() y normaliza la respuesta/error a la
+    // misma forma que ya esperan las pantallas (xhr.status, xhr.responseJSON,
+    // xhr.responseText), en particular el manejador global handleApiError()
+    // (WebApp/wwwroot/js/notifications.js).
     function request(method, path, body) {
         const fullUrl = url(path);
-        const jqXHR = $.ajax({
-            url: fullUrl,
+
+        function buildError(message, status, statusText, responseJSON, responseText) {
+            const err = new Error(message);
+            err.status = status;
+            err.statusText = statusText;
+            err.responseJSON = responseJSON;
+            err.responseText = responseText;
+            err.sgdeMethod = method;
+            err.sgdePath = path;
+            err.sgdeUrl = fullUrl;
+            return err;
+        }
+
+        const promise = fetch(fullUrl, {
             method: method,
-            contentType: 'application/json',
-            headers: authHeader(),
-            data: body ? JSON.stringify(body) : null
-        });
+            headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
+            body: body ? JSON.stringify(body) : undefined
+        })
+            .catch(function () {
+                // fetch() solo rechaza la promesa ante un fallo de red/CORS real (sin
+                // respuesta del servidor) - jamás por un status HTTP de error.
+                console.warn('[SGDE apiClient] ' + method + ' ' + fullUrl + ' → HTTP 0 (sin respuesta — la Web API no está disponible o hay un problema de CORS/red)');
+                throw buildError('Sin respuesta del servidor', 0, '', null, '');
+            })
+            .then(function (response) {
+                return response.text().then(function (text) {
+                    let data = null;
+                    if (text) {
+                        try { data = JSON.parse(text); } catch (e) { data = null; }
+                    }
 
-        // Metadatos de diagnóstico adjuntos al jqXHR para que cualquier .fail() aguas abajo
-        // (incluido handleApiError) sepa qué endpoint falló, sin tener que repetirlo en cada llamada.
-        jqXHR.sgdeMethod = method;
-        jqXHR.sgdePath = path;
-        jqXHR.sgdeUrl = fullUrl;
+                    if (!response.ok) {
+                        console.warn('[SGDE apiClient] ' + method + ' ' + fullUrl + ' → HTTP ' + response.status);
+                        const message = (data && (data.message || data.Message)) || response.statusText || ('HTTP ' + response.status);
+                        throw buildError(message, response.status, response.statusText, data, text);
+                    }
 
-        // Registro centralizado en consola de toda petición fallida (ruta + estado HTTP),
-        // independiente de si la página que originó la llamada maneja o no el error visualmente.
-        jqXHR.fail(function (xhr) {
-            const status = xhr.status || 0;
-            const hint = status === 0 ? ' (sin respuesta — la Web API no está disponible o hay un problema de CORS/red)' : '';
-            console.warn('[SGDE apiClient] ' + method + ' ' + fullUrl + ' → HTTP ' + status + hint);
-        });
+                    return data;
+                });
+            });
 
-        return jqXHR;
+        return withCallbackShim(promise);
     }
 
     return {

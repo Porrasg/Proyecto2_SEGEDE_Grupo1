@@ -94,15 +94,15 @@
 
                         <!-- Row 2: Nombres + Apellidos -->
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label" for="uFullName">Nombres</label>
                                 <input type="text" class="form-control" id="uFullName" required placeholder="Ej. Juan Carlos">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <label class="form-label" for="uLast1">Apellido 1</label>
                                 <input type="text" class="form-control" id="uLast1" required placeholder="Ej. Pérez">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <label class="form-label" for="uLast2">Apellido 2</label>
                                 <input type="text" class="form-control" id="uLast2" placeholder="Ej. Rodríguez">
                             </div>
@@ -143,7 +143,7 @@
                             </div>
                         </div>
 
-                        <!-- Row 5: Rol + Contraseña -->
+                        <!-- Row 5: Rol -->
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label" for="uRole">
@@ -155,12 +155,11 @@
                                     <option value="Distributor">Comprador</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label" for="uPass">
-                                    <i class="bi bi-key me-1"></i>Contraseña
-                                    <span class="text-muted small" id="passHint">(requerida)</span>
-                                </label>
-                                <input type="password" class="form-control" id="uPass" placeholder="Mín. 8 caracteres, may, min, num, especial">
+                            <div class="col-md-6 d-flex align-items-end">
+                                <p class="text-muted small mb-2">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    El usuario creará su propia contraseña al activar la cuenta con el código enviado a su correo.
+                                </p>
                             </div>
                         </div>
                     </form>
@@ -203,15 +202,15 @@
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label" for="editFullName">Nombres</label>
                                 <input type="text" class="form-control" id="editFullName" required>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <label class="form-label" for="editLast1">Apellido 1</label>
                                 <input type="text" class="form-control" id="editLast1" required>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <label class="form-label" for="editLast2">Apellido 2</label>
                                 <input type="text" class="form-control" id="editLast2">
                             </div>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Entities_DTOs;
 using DataAccess.CRUD;
@@ -29,6 +30,32 @@ namespace CoreApp
             return aCrud.RetrieveByDateRange(startDate, endDate);
         }
 
+
+        // Filtra la bitácora por módulo (EntityName). No requiere un nuevo SP: se
+        // apoya en RetrieveAllAudits() y filtra en memoria, ya que el volumen de
+        // auditoría de un proyecto de este alcance no lo justifica.
+        public List<Audit> RetrieveByModule(string module)
+        {
+            var all = RetrieveAllAudits();
+
+            if (string.IsNullOrWhiteSpace(module))
+            {
+                return all;
+            }
+
+            return all.Where(a => string.Equals(a.EntityName, module, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+
+        // Filtra la bitácora por usuario responsable
+        public List<Audit> RetrieveByUser(int userId)
+        {
+            if (userId <= 0)
+            {
+                throw new Exception("El identificador del usuario no es válido");
+            }
+
+            return RetrieveAllAudits().Where(a => a.UserId == userId).ToList();
+        }
 
         public Audit RetrieveById(int id)
         {

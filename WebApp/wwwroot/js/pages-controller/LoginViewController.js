@@ -279,7 +279,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(password)) {
+            // Alineado con el backend (UserManager.IsValidPassword): acepta cualquier
+            // símbolo no alfanumérico como carácter especial, no solo la lista cerrada
+            // @$!%*?& (esa lista rechazaba "#", reportado como bug por el profesor).
+            if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/.test(password)) {
                 notify.warning("La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.");
                 return;
             }
@@ -379,9 +382,21 @@ document.addEventListener("DOMContentLoaded", function () {
             e.preventDefault();
             const email = (savedActEmail || document.getElementById("actEmail")?.value || "").trim();
             const otpCode = document.getElementById("actOtp")?.value.trim();
+            const newPassword = document.getElementById("actNewPassword")?.value || "";
+            const confirmPassword = document.getElementById("actConfirmPassword")?.value || "";
 
             if (!email || !otpCode || otpCode.length !== 6) {
                 notify.warning("Por favor ingrese su correo y el código de activación de 6 dígitos.");
+                return;
+            }
+
+            if (!newPassword || !confirmPassword) {
+                notify.warning("Establezca y confirme su nueva contraseña.");
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                notify.warning("La nueva contraseña y la confirmación no coinciden.");
                 return;
             }
 
@@ -392,7 +407,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Activando...';
             }
 
-            apiClient.post("Users/Activate", { email: email, tokenCode: otpCode })
+            apiClient.post("Users/Activate", { email: email, tokenCode: otpCode, newPassword: newPassword, confirmPassword: confirmPassword })
                 .done(function (res) {
                     notify.success(res?.message || res?.Message || "Cuenta activada correctamente. Ahora puede iniciar sesión.");
                     sessionStorage.removeItem("sgde_activate_email");
