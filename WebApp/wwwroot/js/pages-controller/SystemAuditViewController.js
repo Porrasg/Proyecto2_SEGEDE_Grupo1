@@ -1,4 +1,4 @@
-// SystemAuditViewController.js (§22.1, §27) - Controlador para Auditoría Técnica del Sistema (WORM / RN-030)
+// SystemAuditViewController.js (§22.1, §27) - Controlador para Auditoría Técnica del Sistema (registro inmutable / RN-030)
 document.addEventListener("DOMContentLoaded", function () {
     console.log("Inicializando SystemAuditViewController...");
 
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function loadAuditLogs() {
-        auditBody.innerHTML = '<tr><td colspan="7" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando bitácora inmutable (WORM)...</td></tr>';
+        auditBody.innerHTML = '<tr><td colspan="7" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando bitácora inmutable...</td></tr>';
 
         const mod = document.getElementById("engAuditModule")?.value || "";
         const userStr = document.getElementById("engAuditUser")?.value.trim() || "";
