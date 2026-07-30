@@ -268,13 +268,13 @@ namespace CoreApp
         }
 
         // entrada de energia
-        public void ReceiveEnergy(int centralBankId, decimal mwhToreceive)
+        public decimal ReceiveEnergy(int centralBankId, decimal mwhToreceive)
         {
             if (mwhToreceive <= 0)
             {
                 throw new Exception("La cantidad de energia a recibir debe ser mayor a cero");
             }
-            var centralBankCrud = new TurbineCrudFactory();
+            var centralBankCrud = new CentralBankCrudFactory();
             var centralBank = centralBankCrud.RetrieveById<CentralBank>(centralBankId);
 
             if (centralBank == null)
@@ -282,11 +282,12 @@ namespace CoreApp
                 throw new Exception("El banco central no existe");
             }
             //se acumula el total recibido
-            centralBank.TotalReceivedMWh = mwhToreceive;
+            centralBank.TotalReceivedMWh += mwhToreceive;
 
             //se calcula el espacio disponible
             decimal availableSpace = centralBank.MaximumCapacityMWh - centralBank.CurrentInventoryMWh;
 
+            decimal overflow = 0;
             //se calcula se cabe o hay saturacion 
             if (mwhToreceive <= availableSpace)
             {
@@ -298,12 +299,15 @@ namespace CoreApp
                 //se llena el inventario maximo
                 centralBank.CurrentInventoryMWh = centralBank.MaximumCapacityMWh;
                 //el exceso para a la saturacion
-                decimal overflow = mwhToreceive - availableSpace;
+                overflow = mwhToreceive - availableSpace;
                 centralBank.TotalSaturationLossMWh += overflow;
 
             }
+
             centralBank.UpdatedAt = DateTime.UtcNow;
             centralBankCrud.Update(centralBank);
+
+            return overflow;
         }
         //salida de energia
         public void DistributeEnergy(int centralBankId, decimal mwhToDistribute)
@@ -328,8 +332,8 @@ namespace CoreApp
             centralBank.CurrentInventoryMWh -= mwhToDistribute;
             centralBank.TotalDistributedMWh += mwhToDistribute;
 
-            centralBankCrud.Update(centralBank);
-            centralBank.UpdatedAt=DateTime.UtcNow;
+            centralBank.UpdatedAt = DateTime.UtcNow;
+            centralBankCrud.Update(centralBank);   
         }
     }
 }
