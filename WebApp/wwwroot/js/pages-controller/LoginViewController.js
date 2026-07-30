@@ -279,7 +279,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(password)) {
+            // Alineado con el backend (UserManager.IsValidPassword): acepta cualquier
+            // símbolo no alfanumérico como carácter especial, no solo la lista cerrada
+            // @$!%*?& (esa lista rechazaba "#", reportado como bug por el profesor).
+            if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/.test(password)) {
                 notify.warning("La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.");
                 return;
             }
