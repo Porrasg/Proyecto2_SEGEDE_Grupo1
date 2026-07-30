@@ -193,12 +193,26 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Create")]
-        public ActionResult Create(User user)
+        public ActionResult Create(User user, [FromQuery] int? callerUserId)
         {
             try
             {
                 var um = new UserManager();
                 um.Create(user);
+
+                try
+                {
+                    new AuditManager().Create(new Audit
+                    {
+                        UserId = callerUserId,
+                        Action = "Create",
+                        EntityName = "Users",
+                        EntityId = user.Id,
+                        Description = $"Usuario creado por administrador: {user.Email}"
+                    });
+                }
+                catch { /* no bloquear la operación ya aplicada */ }
+
                 return Ok(Sanitize(user));
             }
             catch (Exception ex)
@@ -209,12 +223,26 @@ namespace WebAPI.Controllers
 
         [HttpPut]
         [Route("Update")]
-        public ActionResult Update(User user)
+        public ActionResult Update(User user, [FromQuery] int? callerUserId)
         {
             try
             {
                 var um = new UserManager();
                 um.Update(user);
+
+                try
+                {
+                    new AuditManager().Create(new Audit
+                    {
+                        UserId = callerUserId,
+                        Action = "Update",
+                        EntityName = "Users",
+                        EntityId = user.Id,
+                        Description = $"Usuario actualizado: {user.Email}"
+                    });
+                }
+                catch { /* no bloquear la operación ya aplicada */ }
+
                 return Ok(Sanitize(user));
             }
             catch (Exception ex)
@@ -225,12 +253,26 @@ namespace WebAPI.Controllers
 
         [HttpDelete]
         [Route("Delete")]
-        public ActionResult Delete(User user)
+        public ActionResult Delete(User user, [FromQuery] int? callerUserId)
         {
             try
             {
                 var um = new UserManager();
                 um.Delete(user);
+
+                try
+                {
+                    new AuditManager().Create(new Audit
+                    {
+                        UserId = callerUserId,
+                        Action = "LogicalDelete",
+                        EntityName = "Users",
+                        EntityId = user.Id,
+                        Description = $"Usuario desactivado: {user.Email}"
+                    });
+                }
+                catch { /* no bloquear la operación ya aplicada */ }
+
                 return Ok(Sanitize(user));
             }
             catch (Exception ex)

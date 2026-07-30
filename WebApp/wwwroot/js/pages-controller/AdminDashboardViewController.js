@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Verificación de seguridad en el cliente (RBAC §24.2)
     const role = session.getRole();
+    const userId = session.getUserId() || 1;
     if (role !== "Administrator" && role !== "Admin") {
         notify.error("Acceso denegado. Requiere privilegios de Administrador.");
         setTimeout(() => {
@@ -617,7 +618,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 console.log("[AdminUsers] create payload", dto);
 
-                apiClient.post("Users/Create", dto)
+                apiClient.post("Users/Create?callerUserId=" + userId, dto)
                     .done(function () {
                         notify.success("Usuario creado con éxito.");
                         userModal?.hide();
@@ -672,7 +673,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 console.log("[AdminUsers] update payload", dto);
 
-                apiClient.put("Users/Update", dto)
+                apiClient.put("Users/Update?callerUserId=" + userId, dto)
                     .done(function () {
                         notify.success("Usuario actualizado correctamente.");
                         editUserModal?.hide();
@@ -691,7 +692,7 @@ document.addEventListener("DOMContentLoaded", function () {
         function deactivateUser(id) {
             notify.confirm("¿Está seguro de que desea desactivar este usuario?", { dangerous: true, confirmText: "Desactivar" }).then(function (ok) {
                 if (!ok) return;
-                apiClient.delete("Users/Delete", { id: parseInt(id) })
+                apiClient.delete("Users/Delete?callerUserId=" + userId, { id: parseInt(id) })
                     .done(function () {
                         notify.success("Usuario desactivado correctamente.");
                         loadUsers();
