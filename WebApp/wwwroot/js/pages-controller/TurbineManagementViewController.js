@@ -145,19 +145,40 @@ document.addEventListener("DOMContentLoaded", function () {
         const stateSelect = document.getElementById("opNewState") || document.getElementById("newState");
         const reasonInput = document.getElementById("opStateReason") || document.getElementById("stateReason");
 
+        // Los estados operativos válidos se piden a la API (TurbineManager.ValidStatuses)
+        // en vez de hardcodearlos aquí, para que agregar/quitar un estado sea un cambio
+        // de un solo lugar en el backend.
+        let cachedTurbineStatuses = null;
+
+        function populateStateSelect(currentState) {
+            if (!stateSelect || !cachedTurbineStatuses) return;
+            stateSelect.innerHTML = cachedTurbineStatuses
+                .map(s => `<option value="${s.value}">${s.label}</option>`)
+                .join("");
+            stateSelect.value = currentState || cachedTurbineStatuses[0]?.value || "";
+        }
+
         function openStateModal(id, currentState) {
             selectedTurbineId = id;
-            if (stateSelect) {
-                stateSelect.innerHTML = `
-                    <option value="Active">Active (Operación Normal)</option>
-                    <option value="Maintenance">Maintenance (En Mantenimiento)</option>
-                    <option value="Damaged">Damaged (Falla Técnica)</option>
-                    <option value="Inactive">Inactive (Incumplimiento / Parada)</option>
-                `;
-                stateSelect.value = currentState || "Active";
-            }
             if (reasonInput) reasonInput.value = "";
-            stateModal?.show();
+
+            if (cachedTurbineStatuses) {
+                populateStateSelect(currentState);
+                stateModal?.show();
+                return;
+            }
+
+            apiClient.get("Turbines/Statuses").done(function (res) {
+                cachedTurbineStatuses = (res || []).map(s => ({
+                    value: s.value ?? s.Value,
+                    label: s.label ?? s.Label
+                }));
+                populateStateSelect(currentState);
+            }).fail(function (xhr) {
+                handleApiError(xhr);
+            }).always(function () {
+                stateModal?.show();
+            });
         }
 
         if (confirmStateBtn) {
