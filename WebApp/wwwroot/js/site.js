@@ -159,7 +159,9 @@ function checkRouteSecurity() {
     }
 
     // Páginas públicas que no requieren validación de rol
-    if (path.startsWith("/login") || path.startsWith("/register") || path.startsWith("/passwordrecoveryselector") || path.startsWith("/passwordrecovery") || path.startsWith("/recoverpassword") || path.startsWith("/recover") || path.startsWith("/reset") || path.startsWith("/changepassword") || path.startsWith("/activate") || path.startsWith("/accessdenied")) {
+    // ChangePassword ya NO es pública: requiere sesión activa (a diferencia de
+    // RecoverPassword/ResetPassword, que sí son para "olvidé mi contraseña" sin sesión).
+    if (path.startsWith("/login") || path.startsWith("/register") || path.startsWith("/passwordrecoveryselector") || path.startsWith("/passwordrecovery") || path.startsWith("/recoverpassword") || path.startsWith("/recover") || path.startsWith("/reset") || path.startsWith("/activate") || path.startsWith("/accessdenied")) {
         return;
     }
 

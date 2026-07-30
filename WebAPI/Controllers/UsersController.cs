@@ -64,6 +64,15 @@ namespace WebAPI.Controllers
             public string ConfirmPassword { get; set; } = string.Empty;
         }
 
+        // Cuerpo del cambio de contraseña CON sesión activa (usuario ya autenticado)
+        public class ChangePasswordAuthenticatedRequest
+        {
+            public int UserId { get; set; }
+            public string CurrentPassword { get; set; } = string.Empty;
+            public string NewPassword { get; set; } = string.Empty;
+            public string ConfirmPassword { get; set; } = string.Empty;
+        }
+
         public class ConfirmChangePasswordEmailRequest
         {
             public string Email { get; set; } = string.Empty;
@@ -90,6 +99,27 @@ namespace WebAPI.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
+            }
+        }
+
+        // Cambio de contraseña para un usuario YA logueado (pantalla /ChangePassword).
+        // No usa OTP: la sesión activa + la contraseña actual ya verifican identidad.
+        [HttpPost]
+        [Route("ChangePassword")]
+        public ActionResult ChangePassword(ChangePasswordAuthenticatedRequest request)
+        {
+            try
+            {
+                var um = new UserManager();
+                um.ChangePasswordAuthenticated(request.UserId, request.CurrentPassword, request.NewPassword, request.ConfirmPassword);
+
+                AuditHelper.TryAudit(request.UserId, "Update", "Users", request.UserId, "Cambio de contraseña (sesión activa)");
+
+                return Ok(new { message = "Contraseña actualizada correctamente." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 

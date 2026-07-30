@@ -506,6 +506,71 @@ namespace CoreApp
             otpManager.GenerateAndSendOtp(user.Email, user.FirstName, "CHANGE_PASSWORD");
         }
 
+        // Cambio de contraseña CON sesión activa: el usuario ya está autenticado,
+        // así que se verifica identidad con la contraseña actual (no con OTP) y se
+        // aplica el cambio de inmediato. Distinto de ChangePassword/ConfirmChangePassword
+        // (email + OTP), que es exclusivamente para "olvidé mi contraseña" sin sesión.
+        public void ChangePasswordAuthenticated(int userId, string currentPassword, string newPassword, string confirmPassword)
+        {
+            if (userId <= 0)
+            {
+                throw new Exception("Sesión inválida. Inicie sesión nuevamente");
+            }
+
+            if (string.IsNullOrWhiteSpace(currentPassword))
+            {
+                throw new Exception("La contraseña actual es requerida");
+            }
+
+            if (string.IsNullOrWhiteSpace(newPassword))
+            {
+                throw new Exception("La nueva contraseña es requerida");
+            }
+
+            if (string.IsNullOrWhiteSpace(confirmPassword))
+            {
+                throw new Exception("La confirmación de la contraseña es requerida");
+            }
+
+            if (newPassword != confirmPassword)
+            {
+                throw new Exception("La nueva contraseña y la confirmación no coinciden");
+            }
+
+            if (!IsValidPassword(newPassword))
+            {
+                throw new Exception("La nueva contraseña debe tener al menos 8 caracteres, " +
+                    "una mayúscula, una minúscula, un número y un carácter especial");
+            }
+
+            var uCrud = new UserCrudFactory();
+            var user = uCrud.RetrieveById<User>(userId);
+
+            if (user == null)
+            {
+                throw new Exception("No se encontró el usuario de la sesión actual");
+            }
+
+            if (user.Status != "Active")
+            {
+                throw new Exception("La cuenta no se encuentra activa");
+            }
+
+            if (!VerifyPassword(user.Password, currentPassword))
+            {
+                throw new Exception("La contraseña actual es incorrecta");
+            }
+
+            if (currentPassword == newPassword)
+            {
+                throw new Exception("La nueva contraseña debe ser diferente a la contraseña actual");
+            }
+
+            user.Password = HashPassword(newPassword);
+            user.UpdatedAt = DateTime.Now;
+            uCrud.UpdatePassword(user);
+        }
+
         // Cambio de contraseña sin sesión: valida correo + OTP y actualiza la clave
         public void ConfirmChangePassword(string email, string tokenCode, string newPassword, string confirmPassword)
         {
