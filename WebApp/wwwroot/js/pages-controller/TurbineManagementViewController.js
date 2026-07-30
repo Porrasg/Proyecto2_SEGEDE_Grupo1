@@ -130,13 +130,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
+        // Traducción centralizada de los estados de turbina, reusada tanto en la
+        // tabla (badge con color) como en el detalle técnico (texto simple).
+        function stateLabel(state) {
+            const s = (state || "").toLowerCase();
+            if (s === "active") return "Activa";
+            if (s === "maintenance") return "Mantenimiento";
+            if (s === "damaged") return "Dañada / Falla";
+            if (s === "inactive") return "Suspendida";
+            if (s === "decommissioned") return "Dada de Baja";
+            return state || "-";
+        }
+
         function getStateBadge(state) {
             const s = (state || "").toLowerCase();
-            if (s === "active") return '<span class="badge bg-success">Activa</span>';
-            if (s === "maintenance") return '<span class="badge bg-warning text-dark">Mantenimiento</span>';
-            if (s === "damaged") return '<span class="badge bg-danger">Dañada / Falla</span>';
-            if (s === "inactive") return '<span class="badge bg-dark">Suspendida</span>';
-            return `<span class="badge bg-secondary">${state || "-"}</span>`;
+            const cls = s === "active" ? "bg-success"
+                : s === "maintenance" ? "bg-warning text-dark"
+                : s === "damaged" ? "bg-danger"
+                : s === "inactive" ? "bg-dark"
+                : s === "decommissioned" ? "bg-secondary"
+                : "bg-secondary";
+            return `<span class="badge ${cls}">${stateLabel(state)}</span>`;
         }
 
         const stateModalEl = document.getElementById("opStateModal") || document.getElementById("stateModal");
@@ -425,10 +439,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (metaEl) metaEl.textContent = `Código: ${t.code || t.Code || "-"} | Ubicación: ${t.location || "-"} | Capacidad: ${Number(t.nominalWeeklyCapacityMWh || t.NominalWeeklyCapacityMWh || 0).toLocaleString("es-CR")} MWh/sem`;
 
                     if (statusEl) {
-                        const st = t.status || t.Status || t.state || t.State || "Unknown";
+                        const st = t.status || t.Status || t.state || t.State || "";
                         const s = st.toLowerCase();
-                        statusEl.textContent = st;
-                        statusEl.className = "badge fs-6 " + (s === "active" ? "bg-success" : s === "maintenance" ? "bg-warning text-dark" : s === "damaged" ? "bg-danger" : "bg-secondary");
+                        statusEl.textContent = stateLabel(st) === "-" ? "Desconocido" : stateLabel(st);
+                        statusEl.className = "badge fs-6 " + (s === "active" ? "bg-success" : s === "maintenance" ? "bg-warning text-dark" : s === "damaged" ? "bg-danger" : s === "inactive" ? "bg-dark" : "bg-secondary");
                     }
                 })
                 .fail(function (xhr) {

@@ -436,9 +436,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         function getRoleBadge(role) {
-            if (role === "Administrator") return '<span class="badge bg-danger">Admin</span>';
-            if (role === "Engineer") return '<span class="badge bg-info text-dark">Engineer</span>';
-            if (role === "Distributor") return '<span class="badge bg-success">Buyer</span>';
+            if (role === "Administrator") return '<span class="badge bg-danger">Administrador</span>';
+            if (role === "Engineer") return '<span class="badge bg-info text-dark">Ingeniero</span>';
+            if (role === "Distributor") return '<span class="badge bg-success">Comprador</span>';
             return `<span class="badge bg-secondary">${role || "-"}</span>`;
         }
 
