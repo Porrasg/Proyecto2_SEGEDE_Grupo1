@@ -42,12 +42,13 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Create")]
-        public ActionResult Create(Battery battery)
+        public ActionResult Create(Battery battery, [FromQuery] int? callerUserId)
         {
             try
             {
                 var bm = new BatteryManager();
                 bm.Create(battery);
+                AuditHelper.TryAudit(callerUserId, "Create", "Batterys", battery.Id, "Batería creada");
                 return Ok(battery);
             }
             catch (Exception ex)
@@ -58,12 +59,13 @@ namespace WebAPI.Controllers
 
         [HttpPut]
         [Route("Update")]
-        public ActionResult Update(Battery battery)
+        public ActionResult Update(Battery battery, [FromQuery] int? callerUserId)
         {
             try
             {
                 var bm = new BatteryManager();
                 bm.Update(battery);
+                AuditHelper.TryAudit(callerUserId, "Update", "Batterys", battery.Id, "Batería actualizada");
                 return Ok(battery);
             }
             catch (Exception ex)
@@ -74,12 +76,13 @@ namespace WebAPI.Controllers
 
         [HttpDelete]
         [Route("Delete")]
-        public ActionResult Delete(Battery battery)
+        public ActionResult Delete(Battery battery, [FromQuery] int? callerUserId)
         {
             try
             {
                 var bm = new BatteryManager();
                 bm.Delete(battery);
+                AuditHelper.TryAudit(callerUserId, "LogicalDelete", "Batterys", battery.Id, "Batería desactivada");
                 return Ok(battery);
             }
             catch (Exception ex)

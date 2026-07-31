@@ -64,6 +64,15 @@ namespace WebAPI.Controllers
             public string ConfirmPassword { get; set; } = string.Empty;
         }
 
+        // Cuerpo del cambio de contraseña CON sesión activa (usuario ya autenticado)
+        public class ChangePasswordAuthenticatedRequest
+        {
+            public int UserId { get; set; }
+            public string CurrentPassword { get; set; } = string.Empty;
+            public string NewPassword { get; set; } = string.Empty;
+            public string ConfirmPassword { get; set; } = string.Empty;
+        }
+
         public class ConfirmChangePasswordEmailRequest
         {
             public string Email { get; set; } = string.Empty;
@@ -75,6 +84,8 @@ namespace WebAPI.Controllers
         {
             public string Email { get; set; } = string.Empty;
             public string TokenCode { get; set; } = string.Empty;
+            public string NewPassword { get; set; } = string.Empty;
+            public string ConfirmPassword { get; set; } = string.Empty;
         }
 
         [HttpGet]
@@ -90,6 +101,27 @@ namespace WebAPI.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
+            }
+        }
+
+        // Cambio de contraseña para un usuario YA logueado (pantalla /ChangePassword).
+        // No usa OTP: la sesión activa + la contraseña actual ya verifican identidad.
+        [HttpPost]
+        [Route("ChangePassword")]
+        public ActionResult ChangePassword(ChangePasswordAuthenticatedRequest request)
+        {
+            try
+            {
+                var um = new UserManager();
+                um.ChangePasswordAuthenticated(request.UserId, request.CurrentPassword, request.NewPassword, request.ConfirmPassword);
+
+                AuditHelper.TryAudit(request.UserId, "Update", "Users", request.UserId, "Cambio de contraseña (sesión activa)");
+
+                return Ok(new { message = "Contraseña actualizada correctamente." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 
@@ -191,14 +223,43 @@ namespace WebAPI.Controllers
             }
         }
 
+        // Genera una contraseña aleatoria que cumple los requisitos de complejidad,
+        // usada cuando un administrador crea un usuario y no le asigna una contraseña
+        // real: nadie (ni el admin) la conoce; el usuario define la suya propia al
+        // activar la cuenta (ver UserManager.ActivateAccount).
+        private static string GenerateRandomCompliantPassword()
+        {
+            var digits = System.Security.Cryptography.RandomNumberGenerator.GetInt32(100000, 999999);
+            return $"Tmp{digits}!Ax";
+        }
+
         [HttpPost]
         [Route("Create")]
-        public ActionResult Create(User user)
+        public ActionResult Create(User user, [FromQuery] int? callerUserId)
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(user.Password))
+                {
+                    user.Password = GenerateRandomCompliantPassword();
+                }
+
                 var um = new UserManager();
                 um.Create(user);
+
+                try
+                {
+                    new AuditManager().Create(new Audit
+                    {
+                        UserId = callerUserId,
+                        Action = "Create",
+                        EntityName = "Users",
+                        EntityId = user.Id,
+                        Description = $"Usuario creado por administrador: {user.Email}"
+                    });
+                }
+                catch { /* no bloquear la operación ya aplicada */ }
+
                 return Ok(Sanitize(user));
             }
             catch (Exception ex)
@@ -209,12 +270,26 @@ namespace WebAPI.Controllers
 
         [HttpPut]
         [Route("Update")]
-        public ActionResult Update(User user)
+        public ActionResult Update(User user, [FromQuery] int? callerUserId)
         {
             try
             {
                 var um = new UserManager();
                 um.Update(user);
+
+                try
+                {
+                    new AuditManager().Create(new Audit
+                    {
+                        UserId = callerUserId,
+                        Action = "Update",
+                        EntityName = "Users",
+                        EntityId = user.Id,
+                        Description = $"Usuario actualizado: {user.Email}"
+                    });
+                }
+                catch { /* no bloquear la operación ya aplicada */ }
+
                 return Ok(Sanitize(user));
             }
             catch (Exception ex)
@@ -225,12 +300,26 @@ namespace WebAPI.Controllers
 
         [HttpDelete]
         [Route("Delete")]
-        public ActionResult Delete(User user)
+        public ActionResult Delete(User user, [FromQuery] int? callerUserId)
         {
             try
             {
                 var um = new UserManager();
                 um.Delete(user);
+
+                try
+                {
+                    new AuditManager().Create(new Audit
+                    {
+                        UserId = callerUserId,
+                        Action = "LogicalDelete",
+                        EntityName = "Users",
+                        EntityId = user.Id,
+                        Description = $"Usuario desactivado: {user.Email}"
+                    });
+                }
+                catch { /* no bloquear la operación ya aplicada */ }
+
                 return Ok(Sanitize(user));
             }
             catch (Exception ex)
@@ -337,7 +426,9 @@ namespace WebAPI.Controllers
                 }
 
                 var um = new UserManager();
-                um.ActivateAccount(request.Email?.Trim(), request.OtpCode?.Trim());
+                // Endpoint legado sin campos de contraseña; el flujo real de activación
+                // es la acción Activate (abajo), que sí exige establecer la contraseña.
+                um.ActivateAccount(request.Email?.Trim(), request.OtpCode?.Trim(), null, null);
                 return Ok(new { message = "Cuenta activada correctamente." });
             }
             catch (Exception ex)
@@ -357,8 +448,13 @@ namespace WebAPI.Controllers
                     return BadRequest(new { message = "El correo electrónico y el código OTP son requeridos." });
                 }
 
+                if (string.IsNullOrWhiteSpace(request.NewPassword) || string.IsNullOrWhiteSpace(request.ConfirmPassword))
+                {
+                    return BadRequest(new { message = "Debe establecer y confirmar su nueva contraseña." });
+                }
+
                 var um = new UserManager();
-                um.ActivateAccount(request.Email?.Trim(), request.TokenCode?.Trim());
+                um.ActivateAccount(request.Email?.Trim(), request.TokenCode?.Trim(), request.NewPassword, request.ConfirmPassword);
                 return Ok(new { message = "Cuenta activada con éxito." });
             }
             catch (Exception ex)

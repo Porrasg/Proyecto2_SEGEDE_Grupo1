@@ -26,6 +26,18 @@
                             <label class="form-label">Código de Activación (6 dígitos)</label>
                             <input type="text" class="form-control text-center fs-4" id="actOtp" maxlength="6" required>
                         </div>
+                        <ul class="small text-muted mb-3">
+                            <li>Mínimo 8 caracteres</li>
+                            <li>Al menos una mayúscula, una minúscula, un número y un carácter especial</li>
+                        </ul>
+                        <div class="mb-3">
+                            <label class="form-label" for="actNewPassword">Nueva Contraseña</label>
+                            <input type="password" class="form-control" id="actNewPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="actConfirmPassword">Confirmar Nueva Contraseña</label>
+                            <input type="password" class="form-control" id="actConfirmPassword" required>
+                        </div>
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-success">Activar Cuenta</button>
                             <button type="button" class="btn btn-outline-secondary" id="resendActivationBtn">

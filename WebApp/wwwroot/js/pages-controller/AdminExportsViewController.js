@@ -1,4 +1,4 @@
-// AdminExportsViewController.js (§85 Admin/Exports) - Bitácora de evidencia de exportaciones (WORM, solo lectura)
+// AdminExportsViewController.js (§85 Admin/Exports) - Bitácora de evidencia de exportaciones (registro inmutable, solo lectura)
 document.addEventListener("DOMContentLoaded", function () {
     const exportsBody = document.getElementById("exportsBody");
     if (!exportsBody) return;
