@@ -1,4 +1,4 @@
-// AdminAuditViewController.js (§85 Admin/Audit) - Bitácora WORM con filtros por módulo/usuario/rango de fechas
+// AdminAuditViewController.js (§85 Admin/Audit) - Bitácora inmutable con filtros por módulo/usuario/rango de fechas
 document.addEventListener("DOMContentLoaded", function () {
     const auditBody = document.getElementById("auditBody");
     if (!auditBody) return;

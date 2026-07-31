@@ -1,6 +1,7 @@
 ﻿using CoreApp;
 using Entities_DTOs;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 
 namespace WebAPI.Controllers
 {
@@ -44,6 +45,17 @@ namespace WebAPI.Controllers
             {
                 return StatusCode(500, ex.Message);
             }
+        }
+
+        [HttpGet]
+        [Route("Statuses")]
+        public ActionResult Statuses()
+        {
+            // Fuente única de los estados operativos válidos: el diccionario vive en
+            // TurbineManager, no hardcodeado aquí ni en el frontend.
+            var statuses = TurbineManager.ValidStatuses
+                .Select(s => new { value = s.Key, label = s.Value });
+            return Ok(statuses);
         }
 
         [HttpGet]

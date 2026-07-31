@@ -1,4 +1,4 @@
-// SystemAuditViewController.js (§22.1, §27) - Controlador para Auditoría Técnica del Sistema (WORM / RN-030)
+// SystemAuditViewController.js (§22.1, §27) - Controlador para Auditoría Técnica del Sistema (registro inmutable / RN-030)
 document.addEventListener("DOMContentLoaded", function () {
     console.log("Inicializando SystemAuditViewController...");
 
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function loadAuditLogs() {
-        auditBody.innerHTML = '<tr><td colspan="7" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando bitácora inmutable (WORM)...</td></tr>';
+        auditBody.innerHTML = '<tr><td colspan="7" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando bitácora inmutable...</td></tr>';
 
         const mod = document.getElementById("engAuditModule")?.value || "";
         const userStr = document.getElementById("engAuditUser")?.value.trim() || "";
@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const id = a.id || a.Id;
             const dateStr = a.createdAt || a.CreatedAt ? new Date(a.createdAt || a.CreatedAt).toLocaleString("es-CR") : "-";
             const userId = a.userId ?? a.UserId;
-            const user = userId != null ? (userNames[userId] || `Usuario #${userId}`) : "System";
+            const user = userId != null ? (userNames[userId] || `Usuario #${userId}`) : "Sistema";
             // Entities-DTOs.Audit no distingue "módulo" de "entidad afectada" — es el mismo campo EntityName.
             const mod = a.entityName || a.EntityName || "-";
             const act = a.action || a.Action || "-";

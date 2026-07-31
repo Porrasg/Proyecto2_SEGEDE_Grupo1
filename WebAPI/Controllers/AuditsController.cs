@@ -43,6 +43,40 @@ namespace WebAPI.Controllers
             }
         }
 
+        // Filtro por módulo/entidad afectada (pantalla Engineer/Audit)
+        [HttpGet]
+        [Route("ByModule")]
+        public ActionResult ByModule([FromQuery] string module, [FromQuery] string callerRole = "")
+        {
+            try
+            {
+                var am = new AuditManager();
+                var lstResults = am.RetrieveByModule(module);
+                return Ok(new { data = new { items = lstResults } });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        // Filtro por usuario responsable (pantalla Engineer/Audit)
+        [HttpGet]
+        [Route("ByUser")]
+        public ActionResult ByUser([FromQuery] int userId)
+        {
+            try
+            {
+                var am = new AuditManager();
+                var lstResults = am.RetrieveByUser(userId);
+                return Ok(new { data = new { items = lstResults } });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
         [HttpGet]
         [Route("RetrieveById/{id}")]
         public ActionResult RetrieveById(int id)

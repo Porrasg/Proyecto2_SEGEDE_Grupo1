@@ -3,7 +3,6 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Inicializando CentralBankViewController...");
 
     const role = session.getRole();
-    const userId = session.getUserId() || 1;
 
     if (role !== "Engineer" && role !== "Administrator" && role !== "Admin") {
         notify.error("Acceso denegado. Requiere privilegios de Operaciones.");

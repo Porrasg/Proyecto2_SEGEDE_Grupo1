@@ -57,12 +57,20 @@ document.addEventListener("DOMContentLoaded", function () {
         clearInterval(otpTimerId);
         otpRemaining = seconds || OTP_TTL_SECONDS;
         otpTimerElement.textContent = formatTime(otpRemaining);
+
+        const otpInput = document.getElementById("resOtp");
+        if (otpInput) otpInput.disabled = false;
+
         otpTimerId = setInterval(function () {
             otpRemaining--;
             otpTimerElement.textContent = formatTime(otpRemaining);
             if (otpRemaining <= 0) {
                 clearInterval(otpTimerId);
                 otpTimerId = null;
+                // Mismo comportamiento que Login/ChangePassword al expirar: deshabilitar
+                // el código e informar claramente que hay que reenviar uno nuevo.
+                if (otpInput) otpInput.disabled = true;
+                notify.warning("El código OTP expiró. Reenvíe uno nuevo.");
             }
         }, 1000);
     }

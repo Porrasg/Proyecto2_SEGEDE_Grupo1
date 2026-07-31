@@ -51,6 +51,23 @@ document.addEventListener("DOMContentLoaded", function () {
                 const dateVal = lastInvoice?.createdAt || lastInvoice?.CreatedAt;
                 setText("buyLastStmtDate", dateVal ? new Date(dateVal).toLocaleDateString("es-CR") : "Sin registros");
 
+                // Próxima factura pendiente: la de PaymentStatus "Pending" con la fecha
+                // de vencimiento (DueDate) más próxima.
+                const pendingInvoices = invoices
+                    .filter(function (i) { return (i.buyerId ?? i.BuyerId) === userId && (i.paymentStatus || i.PaymentStatus) === "Pending"; })
+                    .sort(function (a, b) { return new Date(a.dueDate || a.DueDate) - new Date(b.dueDate || b.DueDate); });
+                const nextDue = pendingInvoices[0];
+                if (nextDue) {
+                    setText("buyNextDueAmount", formatNumber(Number(nextDue.totalAmount ?? nextDue.TotalAmount ?? 0)) + " CRC");
+                    const dueDateVal = nextDue.dueDate || nextDue.DueDate;
+                    const dueLabel = document.getElementById("buyNextDueDate");
+                    if (dueLabel) dueLabel.innerHTML = '<i class="bi bi-arrow-right-short"></i> Vence el ' + (dueDateVal ? new Date(dueDateVal).toLocaleDateString("es-CR") : "-");
+                } else {
+                    setText("buyNextDueAmount", "0 CRC");
+                    const dueLabel = document.getElementById("buyNextDueDate");
+                    if (dueLabel) dueLabel.innerHTML = '<i class="bi bi-arrow-right-short"></i> Sin pendientes';
+                }
+
                 renderBuyCharts(reqMWh, assignMWh, totalBill);
             }).catch(function (xhr) {
                 handleApiError(xhr);

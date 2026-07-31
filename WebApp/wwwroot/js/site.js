@@ -31,10 +31,12 @@ function initNavigation() {
     const navLiPublicLogin = document.getElementById("navLiPublicLogin");
     const navLiPublicRegister = document.getElementById("navLiPublicRegister");
     const navUserName = document.getElementById("navUserName");
+    const linkProfile = document.getElementById("linkProfile");
     const btnSignOut = document.getElementById("btnSignOut");
 
     if (isLoggedIn) {
         if (btnSignOut) btnSignOut.classList.remove("d-none");
+        if (linkProfile) linkProfile.classList.remove("d-none");
         if (navLiPublicLogin) navLiPublicLogin.classList.add("d-none");
         if (navLiPublicRegister) navLiPublicRegister.classList.add("d-none");
 
@@ -68,10 +70,11 @@ function initNavigation() {
         if (navLiEngineer) navLiEngineer.classList.add("d-none");
         if (navLiBuyer) navLiBuyer.classList.add("d-none");
         if (btnSignOut) btnSignOut.classList.add("d-none");
+        if (linkProfile) linkProfile.classList.add("d-none");
         if (navLiPublicLogin) navLiPublicLogin.classList.remove("d-none");
         if (navLiPublicRegister) navLiPublicRegister.classList.remove("d-none");
         if (navUserName) {
-            navUserName.innerHTML = `🔒 No Autenticado`;
+            navUserName.innerHTML = `No Autenticado`;
             navUserName.className = "badge bg-secondary border border-dark text-dark px-3 py-2 fw-bold";
         }
     }
@@ -156,7 +159,9 @@ function checkRouteSecurity() {
     }
 
     // Páginas públicas que no requieren validación de rol
-    if (path.startsWith("/login") || path.startsWith("/register") || path.startsWith("/passwordrecoveryselector") || path.startsWith("/passwordrecovery") || path.startsWith("/recoverpassword") || path.startsWith("/recover") || path.startsWith("/reset") || path.startsWith("/changepassword") || path.startsWith("/activate") || path.startsWith("/accessdenied")) {
+    // ChangePassword ya NO es pública: requiere sesión activa (a diferencia de
+    // RecoverPassword/ResetPassword, que sí son para "olvidé mi contraseña" sin sesión).
+    if (path.startsWith("/login") || path.startsWith("/register") || path.startsWith("/passwordrecoveryselector") || path.startsWith("/passwordrecovery") || path.startsWith("/recoverpassword") || path.startsWith("/recover") || path.startsWith("/reset") || path.startsWith("/activate") || path.startsWith("/accessdenied")) {
         return;
     }
 
