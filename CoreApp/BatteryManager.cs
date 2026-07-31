@@ -79,7 +79,12 @@ namespace CoreApp
             var batteries = batteryCrud.RetrieveAll<Battery>();
 
             // Validar que la turbina no tenga una batería asignada
-            foreach (var currentBattery in batteries)
+            foreach (var 
+                
+                
+                
+                
+                currentBattery in batteries)
             {
                 if (currentBattery.TurbineId == battery.TurbineId &&
                     currentBattery.Status != "Inactive")
@@ -274,6 +279,48 @@ namespace CoreApp
             return status == "Active" ||
                    status == "Inactive" ||
                    status == "Maintenance";
+        }
+
+        //metodo para almacenar la energia, para cuando se implemente la simulacion de generacion de energia
+        public decimal StoreEnergy(int batteryId, decimal generatedEnergy)
+        {
+            if (generatedEnergy <= 0)
+            {
+                throw new Exception("La energía generada debe ser mayor a cero.");
+            }
+
+            var batteryCrud = new BatteryCrudFactory();
+            var battery = batteryCrud.RetrieveById<Battery>(batteryId);
+
+            if (battery == null)
+            {
+                throw new Exception("La batería no existe.");
+            }
+
+            decimal availableSpace =
+                battery.MaximumCapacityMWh - battery.CurrentEnergyMWh;
+
+            decimal overflow = 0;
+
+            if (generatedEnergy <= availableSpace)
+            {
+                battery.CurrentEnergyMWh += generatedEnergy;
+            }
+            else
+            {
+                battery.CurrentEnergyMWh = battery.MaximumCapacityMWh;
+
+                overflow = generatedEnergy - availableSpace;
+
+                battery.TotalSaturationLossMWh += overflow;
+            }
+
+            battery.TotalGeneratedMWh += generatedEnergy;
+            battery.UpdatedAt = DateTime.UtcNow;
+
+            batteryCrud.Update(battery);
+
+            return overflow;
         }
     }
 }
