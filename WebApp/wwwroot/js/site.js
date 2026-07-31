@@ -294,12 +294,31 @@ class RoleAccessController {
     updateSidebarUserProfile(activeRoles) {
         const badgeEl = document.getElementById('sidebarUserRoleBadge');
         const nameEl = document.getElementById('sidebarUserName');
+        const avatarImg = document.getElementById('sidebarAvatarImg');
+        const avatarIcon = document.getElementById('sidebarAvatarFallbackIcon');
         if (badgeEl && activeRoles.length > 0) {
             badgeEl.textContent = activeRoles[0].toUpperCase();
         }
         if (nameEl && typeof session !== 'undefined') {
             const email = session.getEmail() || sessionStorage.getItem('sgde_login_email') || 'Usuario Sesión';
             nameEl.textContent = email;
+
+            // Intentar obtener foto de perfil desde la sesión y mostrarla
+            try {
+                const s = typeof session.get === 'function' ? session.get() : (sessionStorage.getItem('sgde_session') ? JSON.parse(sessionStorage.getItem('sgde_session')) : null);
+                const photo = s?.photoUrl || s?.profilePhoto || s?.PhotoUrl || s?.ProfilePhoto || null;
+                if (photo && avatarImg) {
+                    avatarImg.src = photo;
+                    avatarImg.classList.remove('d-none');
+                    if (avatarIcon) avatarIcon.classList.add('d-none');
+                } else {
+                    if (avatarImg) avatarImg.classList.add('d-none');
+                    if (avatarIcon) avatarIcon.classList.remove('d-none');
+                }
+            } catch (e) {
+                if (avatarImg) avatarImg.classList.add('d-none');
+                if (avatarIcon) avatarIcon.classList.remove('d-none');
+            }
         }
     }
 }
