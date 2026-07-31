@@ -16,51 +16,51 @@
 </head>
 <body class="sgde-app-body">
     <script>
-        // La URL base de la Web API se toma de configuración (appsettings / variable de entorno
-        // ApiBaseUrl) para que el despliegue en Azure apunte a la API publicada. Si no está
-        // configurada, cae al valor local de desarrollo.
-        window.SGDE_API_BASE = '@(Configuration["ApiBaseUrl"])' || (window.location.protocol === 'http:' ? 'http://localhost:5052/api/' : 'https://localhost:7236/api/');
+            // La URL base de la Web API se toma de configuración (appsettings / variable de entorno
+            // ApiBaseUrl) para que el despliegue en Azure apunte a la API publicada. Si no está
+            // configurada, cae al valor local de desarrollo.
+            window.SGDE_API_BASE = '@(Configuration["ApiBaseUrl"])' || (window.location.protocol === 'http:' ? 'http://localhost:5052/api/' : 'https://localhost:7236/api/');
     </script>
 
-@{
-    var pagePath = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
-    bool isPublicPage = pagePath.Equals("/Index", StringComparison.OrdinalIgnoreCase)
-                     || pagePath.Equals("/Login", StringComparison.OrdinalIgnoreCase)
-                     || pagePath.Equals("/Register", StringComparison.OrdinalIgnoreCase)
-                     || pagePath.Equals("/LoginOtp", StringComparison.OrdinalIgnoreCase)
-                     || pagePath.Equals("/RecoverPassword", StringComparison.OrdinalIgnoreCase)
-                     || pagePath.Equals("/ResetPassword", StringComparison.OrdinalIgnoreCase)
-                     || pagePath.Equals("/Activate", StringComparison.OrdinalIgnoreCase)
-                     || pagePath.Equals("/AccessDenied", StringComparison.OrdinalIgnoreCase)
-                     || ViewData["HideSidebar"] as bool? == true;
-}
+    @{
+        var pagePath = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+        bool isPublicPage = pagePath.Equals("/Index", StringComparison.OrdinalIgnoreCase)
+                         || pagePath.Equals("/Login", StringComparison.OrdinalIgnoreCase)
+                         || pagePath.Equals("/Register", StringComparison.OrdinalIgnoreCase)
+                         || pagePath.Equals("/LoginOtp", StringComparison.OrdinalIgnoreCase)
+                         || pagePath.Equals("/RecoverPassword", StringComparison.OrdinalIgnoreCase)
+                         || pagePath.Equals("/ResetPassword", StringComparison.OrdinalIgnoreCase)
+                         || pagePath.Equals("/Activate", StringComparison.OrdinalIgnoreCase)
+                         || pagePath.Equals("/AccessDenied", StringComparison.OrdinalIgnoreCase)
+                         || ViewData["HideSidebar"] as bool? == true;
+    }
 
-@if (isPublicPage)
-{
-    <!-- PUBLIC / LANDING FULL-WIDTH LAYOUT (SIN SIDEBAR) -->
-    <div class="d-flex flex-column min-vh-100 bg-app-surface">
-        <header class="sgde-public-topbar border-bottom bg-white sticky-top shadow-sm">
-            <div class="container py-3 d-flex align-items-center justify-content-between">
-                <a asp-page="/Index" class="d-flex align-items-center text-decoration-none gap-2">
-                    <span class="sgde-brand-icon d-flex align-items-center justify-content-center">
-                        <i class="bi bi-lightning-charge-fill fs-5"></i>
-                    </span>
-                    <span class="fs-5 fw-bold tracking-tight text-dark">SGDE <span class="text-primary">Enterprise</span></span>
-                </a>
-                <div class="d-flex align-items-center gap-3">
-                    <a asp-page="/Login" class="btn btn-outline-primary btn-sm fw-semibold px-3">
-                        <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar Sesión
+    @if (isPublicPage)
+    {
+        <!-- PUBLIC / LANDING FULL-WIDTH LAYOUT (SIN SIDEBAR) -->
+        <div class="d-flex flex-column min-vh-100 bg-app-surface">
+            <header class="sgde-public-topbar border-bottom bg-white sticky-top shadow-sm">
+                <div class="container py-3 d-flex align-items-center justify-content-between">
+                    <a asp-page="/Index" class="d-flex align-items-center text-decoration-none gap-2">
+                        <span class="sgde-brand-icon d-flex align-items-center justify-content-center">
+                            <i class="bi bi-lightning-charge-fill fs-5"></i>
+                        </span>
+                        <span class="fs-5 fw-bold tracking-tight text-dark">SGDE <span class="text-primary">Enterprise</span></span>
                     </a>
-                    <a asp-page="/Register" class="btn btn-primary btn-sm fw-semibold px-3">
-                        Registrarse
-                    </a>
+                    <div class="d-flex align-items-center gap-3">
+                        <a asp-page="/Login" class="btn btn-outline-primary btn-sm fw-semibold px-3">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar Sesión
+                        </a>
+                        <a asp-page="/Register" class="btn btn-primary btn-sm fw-semibold px-3">
+                            Registrarse
+                        </a>
+                    </div>
                 </div>
-            </div>
-        </header>
+            </header>
 
-        <main class="flex-grow-1 container py-4 py-md-5">
-            @RenderBody()
-        </main>
+            <main class="flex-grow-1 container py-4 py-md-5">
+                @RenderBody()
+            </main>
 
      
             <footer class="border-top py-4 bg-white mt-auto">
@@ -75,163 +75,180 @@
                     </a>
                 </div>
             </footer>
-    </div>
-}
-else
-{
-    <!-- APP INTERNAL LAYOUT (CON SIDEBAR LATERAL FIJO) -->
-    <div class="d-flex vh-100 overflow-hidden">
-        
-        <!-- SIDEBAR LATERAL IZQUIERDO FIJO -->
-        <aside class="sgde-sidebar d-flex flex-column flex-shrink-0 p-3 border-end">
-            <!-- Header Institucional -->
-            <a asp-page="/Index" class="d-flex align-items-center mb-3 me-md-auto text-decoration-none px-2">
-                <span class="sgde-brand-icon d-flex align-items-center justify-content-center me-2">
-                    <i class="bi bi-lightning-charge-fill fs-5"></i>
-                </span>
-                <span class="fs-5 fw-bold tracking-tight sgde-brand-text">SGDE Core</span>
-            </a>
-            
-            <hr class="my-2 opacity-25" />
-
-            <!-- Menú Navegación Modular por Rol -->
-            <ul class="nav nav-pills flex-column mb-auto gap-1">
-                <li class="nav-item" data-roles="superadmin,administrator,admin,engineer,buyer,customer">
-                    <a asp-page="/Dashboard" class="nav-link d-flex align-items-center gap-3 px-3 py-2" data-nav="/dashboard">
-                        <i class="bi bi-grid-1x2-fill"></i>
-                        <span>Centro de Módulos</span>
-                    </a>
-                </li>
-
-                <!-- Módulos Administrador -->
-                <li class="nav-item" data-roles="superadmin,administrator,admin">
-                    <a href="/Admin/Dashboard" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
-                        <i class="bi bi-shield-check"></i>
-                        <span>Administración</span>
-                    </a>
-                </li>
-                <li class="nav-item" data-roles="superadmin,administrator,admin">
-                    <a href="/Admin/Users" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
-                        <i class="bi bi-people-fill"></i>
-                        <span>Gestión de Usuarios</span>
-                    </a>
-                </li>
-                <li class="nav-item" data-roles="superadmin,administrator,admin">
-                    <a href="/Admin/Turbines" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
-                        <i class="bi bi-gear-wide-connected"></i>
-                        <span>Parque Eólico</span>
-                    </a>
-                </li>
-                <li class="nav-item" data-roles="superadmin,administrator,admin">
-                    <a href="/Admin/CentralBank" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
-                        <i class="bi bi-bank"></i>
-                        <span>Banco Central</span>
-                    </a>
-                </li>
-                <li class="nav-item" data-roles="superadmin,administrator,admin">
-                    <a href="/Admin/EnergyStorage" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
-                        <i class="bi bi-battery-full"></i>
-                        <span>Operación y Cortes</span>
-                    </a>
-                </li>
-
-                <!-- Módulos Ingeniero -->
-                <li class="nav-item" data-roles="superadmin,administrator,admin,engineer">
-                    <a href="/Engineer/Dashboard" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
-                        <i class="bi bi-cpu-fill"></i>
-                        <span>Control Operativo</span>
-                    </a>
-                </li>
-                <li class="nav-item" data-roles="superadmin,administrator,admin,engineer">
-                    <a href="/Engineer/Simulator" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
-                        <i class="bi bi-sliders"></i>
-                        <span>Simulador SCADA</span>
-                    </a>
-                </li>
-                <li class="nav-item" data-roles="superadmin,administrator,admin">
-                    <a href="/Admin/Reports" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
-                        <i class="bi bi-bar-chart-fill"></i>
-                        <span>Centro de Reportes</span>
-                    </a>
-                </li>
-                <li class="nav-item" data-roles="superadmin,administrator,admin">
-                    <a href="/Admin/Audit" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
-                        <i class="bi bi-journal-check"></i>
-                        <span>Bitácora de Auditoría</span>
-                    </a>
-                </li>
-
-                <!-- Módulos Comprador -->
-                <li class="nav-item d-none" data-roles="buyer,customer">
-                    <a href="/Buyer/Dashboard" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
-                        <i class="bi bi-building"></i>
-                        <span>Portal Comprador</span>
-                    </a>
-                </li>
-                <li class="nav-item d-none" data-roles="buyer,customer">
-                    <a href="/Buyer/Statements" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
-                        <i class="bi bi-file-earmark-text-fill"></i>
-                        <span>Estados de Cuenta</span>
-                    </a>
-                </li>
-            </ul>
-
-            <hr class="my-2 opacity-25" />
-
-            <!-- Pie del Sidebar: Usuario + Tema + Logout -->
-            <div class="sgde-user-profile d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center gap-2 overflow-hidden">
-                    <div class="sgde-avatar rounded-circle d-flex align-items-center justify-content-center fw-bold fs-sm">
-                        <i class="bi bi-person-fill"></i>
-                    </div>
-                    <div class="text-truncate">
-                        <div class="fw-semibold fs-sm text-truncate" id="sidebarUserName">Usuario Sesión</div>
-                        <span class="badge bg-secondary text-white border border-dark px-2 py-1 fs-xs" id="sidebarUserRoleBadge">INVITADO</span>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center gap-1">
-                    <a href="/Profile" class="btn btn-sm btn-link text-muted p-1" title="Mi Perfil">
-                        <i class="bi bi-person-gear fs-5"></i>
-                    </a>
-                    <button type="button" class="btn btn-sm btn-link text-muted p-1" id="btnThemeToggle" title="Alternar tema">
-                        <i class="bi bi-moon-stars-fill fs-6"></i>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-link text-muted p-1 d-none" id="btnSignOut" title="Cerrar sesión">
-                        <i class="bi bi-box-arrow-right fs-5 text-danger"></i>
-                    </button>
-                </div>
-            </div>
-        </aside>
-
-        <!-- ÁREA PRINCIPAL SCROLLABLE -->
-        <div class="d-flex flex-column flex-grow-1 overflow-auto bg-app-surface">
-            
-            <!-- Topbar Contextual -->
-            <header class="sgde-topbar px-4 py-3 border-bottom d-flex align-items-center justify-content-between sticky-top">
-                <div class="d-flex align-items-center gap-3">
-                    <h1 class="h5 mb-0 fw-bold tracking-tight">@ViewData["Title"]</h1>
-                </div>
-                <div class="d-flex align-items-center gap-3">
-                    <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-2 d-flex align-items-center gap-2">
-                        <i class="bi bi-circle-fill" style="font-size: 0.5rem;"></i>
-                        <span>SGDE Core en Línea</span>
-                    </span>
-                </div>
-            </header>
-
-            <!-- Main Content Area -->
-            <main class="flex-grow-1 p-4 p-lg-5">
-                @RenderBody()
-            </main>
-
-            <!-- Footer Corporativo -->
-            <footer class="px-4 py-3 border-top mt-auto text-muted fs-xs d-flex justify-content-between">
-                <span>&copy; 2026 SGDE — Sistema de Generación y Despacho Eléctrico</span>
-                <span>Arquitectura N-Tier · CoreForge Technologies</span>
-            </footer>
         </div>
-    </div>
-}
+    }
+    else
+    {
+        <!-- APP INTERNAL LAYOUT (CON SIDEBAR LATERAL FIJO) -->
+        <div class="d-flex vh-100 overflow-hidden">
+
+            <!-- SIDEBAR LATERAL IZQUIERDO FIJO -->
+            <aside class="sgde-sidebar d-flex flex-column flex-shrink-0 p-3 border-end">
+                <!-- Header Institucional -->
+                <a asp-page="/Index" class="d-flex align-items-center mb-3 me-md-auto text-decoration-none px-2">
+                    <span class="sgde-brand-icon d-flex align-items-center justify-content-center me-2">
+                        <i class="bi bi-lightning-charge-fill fs-5"></i>
+                    </span>
+                    <span class="fs-5 fw-bold tracking-tight sgde-brand-text">SGDE Core</span>
+                </a>
+
+                <hr class="my-2 opacity-25" />
+
+                <!-- Menú Navegación Modular por Rol -->
+                <ul class="nav nav-pills flex-column mb-auto gap-1">
+                    <li class="nav-item" data-roles="superadmin,administrator,admin,engineer,buyer,customer">
+                        <a asp-page="/Dashboard" class="nav-link d-flex align-items-center gap-3 px-3 py-2" data-nav="/dashboard">
+                            <i class="bi bi-grid-1x2-fill"></i>
+                            <span>Centro de Módulos</span>
+                        </a>
+                    </li>
+
+                    <!-- Módulos Administrador -->
+                    <li class="nav-item" data-roles="superadmin,administrator,admin">
+                        <a href="/Admin/Dashboard" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-shield-check"></i>
+                            <span>Administración</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="superadmin,administrator,admin">
+                        <a href="/Admin/Users" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-people-fill"></i>
+                            <span>Gestión de Usuarios</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="superadmin,administrator,admin">
+                        <a href="/Admin/Turbines" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-gear-wide-connected"></i>
+                            <span>Parque Eólico</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="superadmin,administrator,admin">
+                        <a href="/Admin/CentralBank" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-bank"></i>
+                            <span>Banco Central</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="superadmin,administrator,admin">
+                        <a href="/Admin/EnergyStorage" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-battery-full"></i>
+                            <span>Operación y Cortes</span>
+                        </a>
+                    </li>
+
+                    <!-- Módulos Ingeniero -->
+                    <li class="nav-item" data-roles="superadmin,administrator,admin,engineer">
+                        <a href="/Engineer/Dashboard" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-cpu-fill"></i>
+                            <span>Control Operativo</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="superadmin,administrator,admin,engineer">
+                        <a href="/Engineer/Simulator" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-sliders"></i>
+                            <span>Simulador SCADA</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="superadmin,administrator,admin">
+                        <a href="/Admin/Reports" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-bar-chart-fill"></i>
+                            <span>Centro de Reportes</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="superadmin,administrator,admin">
+                        <a href="/Admin/Audit" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-journal-check"></i>
+                            <span>Bitácora de Auditoría</span>
+                        </a>
+                    </li>
+
+                   
+                    <!-- Módulos Comprador / Distribuidor -->
+                    <li class="nav-item" data-roles="buyer,customer,distributor">
+                        <a href="/Buyer/Dashboard" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-speedometer2"></i>
+                            <span>Mi Panel de Comprador</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item" data-roles="buyer,customer,distributor">
+                        <a href="/Buyer/Forecasts" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-graph-up"></i>
+                            <span>Gestionar Pronósticos</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item" data-roles="buyer,customer,distributor">
+                        <a href="/Buyer/Statements" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-file-earmark-text-fill"></i>
+                            <span>Estados de Cuenta</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item" data-roles="buyer,customer,distributor">
+                        <a href="/Buyer/Distributions" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-diagram-3-fill"></i>
+                            <span>Consultar Distribuciones</span>
+                        </a>
+                    </li>
+
+                </ul>
+
+                <hr class="my-2 opacity-25" />
+
+                <!-- Pie del Sidebar: Usuario + Tema + Logout -->
+                <div class="sgde-user-profile d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2 overflow-hidden">
+                        <div class="sgde-avatar rounded-circle d-flex align-items-center justify-content-center fw-bold fs-sm">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <div class="text-truncate">
+                            <div class="fw-semibold fs-sm text-truncate" id="sidebarUserName">Usuario Sesión</div>
+                            <span class="badge bg-secondary text-white border border-dark px-2 py-1 fs-xs" id="sidebarUserRoleBadge">INVITADO</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <a href="/Profile" class="btn btn-sm btn-link text-muted p-1" title="Mi Perfil">
+                            <i class="bi bi-person-gear fs-5"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-link text-muted p-1" id="btnThemeToggle" title="Alternar tema">
+                            <i class="bi bi-moon-stars-fill fs-6"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-link text-muted p-1 d-none" id="btnSignOut" title="Cerrar sesión">
+                            <i class="bi bi-box-arrow-right fs-5 text-danger"></i>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- ÁREA PRINCIPAL SCROLLABLE -->
+            <div class="d-flex flex-column flex-grow-1 overflow-auto bg-app-surface">
+
+                <!-- Topbar Contextual -->
+                <header class="sgde-topbar px-4 py-3 border-bottom d-flex align-items-center justify-content-between sticky-top">
+                    <div class="d-flex align-items-center gap-3">
+                        <h1 class="h5 mb-0 fw-bold tracking-tight">@ViewData["Title"]</h1>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-2 d-flex align-items-center gap-2">
+                            <i class="bi bi-circle-fill" style="font-size: 0.5rem;"></i>
+                            <span>SGDE Core en Línea</span>
+                        </span>
+                    </div>
+                </header>
+
+                <!-- Main Content Area -->
+                <main class="flex-grow-1 p-4 p-lg-5">
+                    @RenderBody()
+                </main>
+
+                <!-- Footer Corporativo -->
+                <footer class="px-4 py-3 border-top mt-auto text-muted fs-xs d-flex justify-content-between">
+                    <span>&copy; 2026 SGDE — Sistema de Generación y Despacho Eléctrico</span>
+                    <span>Arquitectura N-Tier · CoreForge Technologies</span>
+                </footer>
+            </div>
+        </div>
+    }
 
     <!-- Scripts Institucionales -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
