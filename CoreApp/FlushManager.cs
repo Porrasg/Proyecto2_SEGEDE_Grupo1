@@ -92,7 +92,7 @@ namespace CoreApp
                 throw new Exception("No se puede realizar un vaciado desde una turbina dada de baja");
             }
 
-            var batteryCrud = new BatteryCrudFactory();
+            var batteryCrud = new BatteriesCrudFactory();
 
             // Obtener la batería asociada
             var battery = batteryCrud.RetrieveById<Battery>(flush.BatteryId);

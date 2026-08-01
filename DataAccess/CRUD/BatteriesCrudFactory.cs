@@ -6,9 +6,9 @@ using System.Text;
 
 namespace DataAccess.CRUD
 {
-    public class BatteryCrudFactory : CrudFactory
+    public class BatteriesCrudFactory : CrudFactory
     {
-        public BatteryCrudFactory(){
+        public BatteriesCrudFactory(){
             sqlDao = SqlDao.GetInstance();
         }
 
@@ -92,7 +92,6 @@ namespace DataAccess.CRUD
             // Si se obtiene un resultado, convertir la primera fila en un objeto Battery y devolverlo, de lo contrario devolver null
             if (lsResults.Count > 0)
             {
-                var item = lsResults[0];
                 var battery = BuildBattery(lsResults[0]);
                 return (T)Convert.ChangeType(battery, typeof(T));
             }

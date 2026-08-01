@@ -8,11 +8,28 @@ namespace CoreApp
 {
     public class BatteryManager
     {
+        /*public List<Battery> RetrieveAllBatteries()
+        {
+            var batteryCrud = new BatteriesCrudFactory();
+            return batteryCrud.RetrieveAll<Battery>();
+        } */
+
         public List<Battery> RetrieveAllBatteries()
         {
-            var batteryCrud = new BatteryCrudFactory();
-            return batteryCrud.RetrieveAll<Battery>();
+            var batteryCrud = new BatteriesCrudFactory();
+
+            // Forzamos la obtención explícita mapeada a través de la firma del factory concreto
+            List<Battery> list = batteryCrud.RetrieveAll<Battery>();
+
+            // Verificación de respaldo para depuración en caliente (Hot Debug)
+            if (list == null)
+            {
+                list = new List<Battery>();
+            }
+
+            return list;
         }
+
 
 
         public Battery RetrieveById(int id)
@@ -22,7 +39,7 @@ namespace CoreApp
                 throw new Exception("El identificador de la batería no es válido");
             }
 
-            var batteryCrud = new BatteryCrudFactory();
+            var batteryCrud = new BatteriesCrudFactory();
 
             // Obtener la batería registrada
             var battery = batteryCrud.RetrieveById<Battery>(id);
@@ -73,7 +90,7 @@ namespace CoreApp
                 throw new Exception("No se puede asignar una batería a una turbina dada de baja");
             }
 
-            var batteryCrud = new BatteryCrudFactory();
+            var batteryCrud = new BatteriesCrudFactory();
 
             // Obtener las baterías registradas
             var batteries = batteryCrud.RetrieveAll<Battery>();
@@ -142,7 +159,7 @@ namespace CoreApp
                 throw new Exception("El estado de la batería no es válido");
             }
 
-            var batteryCrud = new BatteryCrudFactory();
+            var batteryCrud = new BatteriesCrudFactory();
 
             // Obtener la batería registrada
             var currentBattery = batteryCrud.RetrieveById<Battery>(battery.Id);
@@ -223,7 +240,7 @@ namespace CoreApp
                 throw new Exception("El identificador de la batería no es válido");
             }
 
-            var batteryCrud = new BatteryCrudFactory();
+            var batteryCrud = new BatteriesCrudFactory();
 
             // Obtener la batería registrada
             var currentBattery = batteryCrud.RetrieveById<Battery>(battery.Id);
@@ -258,6 +275,7 @@ namespace CoreApp
         private bool HasEmptyFields(Battery battery)
         {
             return battery.TurbineId <= 0 ||
+                   battery.MaximumCapacityMWh <= 0 ||
                    string.IsNullOrWhiteSpace(battery.Status);
         }
 
@@ -271,9 +289,7 @@ namespace CoreApp
 
         private bool IsValidStatus(string status)
         {
-            return status == "Active" ||
-                   status == "Inactive" ||
-                   status == "Maintenance";
+            return status == "Active" || status == "Inactive";
         }
     }
 }

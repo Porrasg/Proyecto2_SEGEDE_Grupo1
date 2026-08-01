@@ -65,126 +65,14 @@
     </div>
 </div>
 
+
 @section Scripts {
-    <script>
-        (function () {
-            const formatDecimal = v => Number(v).toFixed(4);
-
-            async function loadCentralBank() {
-                try {
-                    const res = await apiClient.get('CentralBanks/Inventory');
-                    if (!res || !res.data) { console.error('loadCentralBank: respuesta inesperada', res); return; }
-                    const data = res.data;
-                    // Entities-DTOs.CentralBank solo tiene CurrentInventoryMWh y MaximumCapacityMWh
-                    // (no existe una capacidad "automática" separada de una "manual" en el backend).
-                    const current = data.currentInventoryMWh ?? 0;
-                    const capacity = data.maximumCapacityMWh ?? 0;
-                    $('#cbInventory').text(formatDecimal(current) + ' MWh');
-
-                    const percent = capacity > 0 ? Math.min(100, (current / capacity) * 100) : 0;
-                    $('#cbProgress').css('width', percent + '%').text(Math.round(percent) + '%');
-                    $('#cbCapacityText').text(formatDecimal(current) + ' / ' + formatDecimal(capacity) + ' MWh');
-                } catch (e) {
-                    console.error(e);
-                }
-            }
-
-            async function loadBatteries() {
-                try {
-                    const turbinesRes = await apiClient.get('Turbines/RetrieveAll');
-                    const turbines = turbinesRes.data || [];
-
-                    // Construir todo el HTML antes de tocar el DOM para evitar parpadeo
-                    const cards = [];
-                    for (const t of turbines) {
-                        try {
-                            const bRes = await apiClient.get('Energy/LocalBattery/' + t.id);
-                            const b = bRes.data;
-                            cards.push(`<div class="card p-3" style="width: 14rem;">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="sgde-avatar rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width:40px;height:40px;">
-                                        <i class="bi bi-wind fs-5" aria-hidden="true"></i>
-                                    </div>
-                                    <div>
-                                        <div class="fw-semibold">${t.name}</div>
-                                        <div class="text-muted fs-xs">Turbina #${t.id}</div>
-                                    </div>
-                                </div>
-                                <div class="mt-3">
-                                    <div class="text-muted fs-xs">Energía Almacenada</div>
-                                    <div class="fs-6 fw-bold">${formatDecimal(b.currentEnergyMWh)} MWh</div>
-                                </div>
-                            </div>`);
-                        } catch (ex) {
-                            console.warn('No battery for turbine', t.id);
-                        }
-                    }
-                    // Una sola actualización del DOM al final
-                    $('#batteriesGrid').html(cards.join(''));
-                } catch (e) {
-                    console.error(e);
-                }
-            }
-
-            async function loadHistory() {
-                try {
-                    const res = await apiClient.get('Flushs/History?page=1&pageSize=25');
-                    if (!res || !res.data) { console.error('loadHistory: respuesta inesperada', res); return; }
-                    const rows = res.data.items || [];
-
-                    // Construir todo el HTML antes de tocar el DOM para evitar parpadeo
-                    // Flush solo tiene ExecutedAt (un instante, no un rango Inicio/Fin).
-                    const trs = rows.map(r => `<tr>
-                        <td>${r.id}</td>
-                        <td>${r.executionType}</td>
-                        <td>${r.status}</td>
-                        <td>${new Date(r.executedAt).toLocaleString()}</td>
-                        <td>${Number(r.transferredEnergyMWh).toFixed(4)}</td>
-                        <td>${Number(r.saturationLossMWh).toFixed(4)}</td>
-                    </tr>`).join('');
-
-                    // Una sola actualización del DOM al final
-                    $('#flushHistoryTable tbody').html(trs);
-                    $('#flushHistoryTable').DataTable({ destroy: true });
-                } catch (e) { console.error(e); }
-            }
-
-            async function doFlush() {
-                try {
-                    const result = await Swal.fire({
-                        title: 'Confirmar Vaciado',
-                        text: '¿Desea ejecutar un Flush manual ahora? Esta acción vaciará todas las baterías locales.',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Sí, Ejecutar',
-                        cancelButtonText: 'Cancelar'
-                    });
-                    if (!result.isConfirmed) return;
-
-                    const callerId = window.session?.getUserId() ?? 1;
-                    const r = await apiClient.post('Flushs/ExecuteManual?callerUserId=' + encodeURIComponent(callerId));
-                    Swal.fire('Flush iniciado', r.message || 'Flush ejecutado', 'success');
-                    await refreshAll();
-                } catch (e) {
-                    console.error(e);
-                    Swal.fire('Error', e.responseJSON?.Message || 'Ocurrió un error al ejecutar el flush', 'error');
-                }
-            }
-
-            async function refreshAll() {
-                await loadCentralBank();
-                await loadBatteries();
-                await loadHistory();
-            }
-
-            $(function () {
-                $('#btnFlush').on('click', doFlush);
-                $('#btnFlushSmall').on('click', doFlush);
-                refreshAll();
-
-                // Polling to show near-real-time values (every 30s to match simulation)
-                setInterval(refreshAll, 30000);
-            });
-        })();
-    </script>
+    <!-- Incrementamos a v=1.3 para forzar la lectura del script con los bloques IF -->
+    <script src="~/js/pages-controller/AdminEnergyStorageViewController.js?v=1.5"></script>
 }
+
+
+
+
+
+

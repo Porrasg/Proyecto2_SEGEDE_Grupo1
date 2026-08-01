@@ -6,10 +6,10 @@ namespace WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class BatterysController : ControllerBase
+    public class BatteriesController : ControllerBase
     {
         [HttpGet]
-        [Route("RetrieveAll")]
+        [Route("RetrieveAllBatteries")]
         public ActionResult RetrieveAll()
         {
             try
