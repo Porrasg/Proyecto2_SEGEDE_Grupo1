@@ -13,8 +13,6 @@ namespace CoreApp
             var flushCrud = new FlushCrudFactory();
             return flushCrud.RetrieveAll<Flush>();
         }
-
-
         public Flush RetrieveById(int id)
         {
             if (id <= 0)
@@ -92,7 +90,7 @@ namespace CoreApp
                 throw new Exception("No se puede realizar un vaciado desde una turbina dada de baja");
             }
 
-            var batteryCrud = new BatteryCrudFactory();
+            var batteryCrud = new BatteriesCrudFactory();
 
             // Obtener la batería asociada
             var battery = batteryCrud.RetrieveById<Battery>(flush.BatteryId);
@@ -175,7 +173,7 @@ namespace CoreApp
             var flushCrud = new FlushCrudFactory();
 
             // Obtener el vaciado registrado
-            var currentFlush =flushCrud.RetrieveById<Flush>(flush.Id);
+            var currentFlush = flushCrud.RetrieveById<Flush>(flush.Id);
 
             // Validar que el vaciado exista
             if (currentFlush == null)
@@ -268,6 +266,53 @@ namespace CoreApp
         {
             return status == "Completed" ||
                    status == "Cancelled";
+        }
+ 
+
+    //metodo encargado del vaciado al bancocentral
+    public void ExecuteFlush(Flush flush)
+        {
+            if (flush == null)
+            {
+                throw new ArgumentNullException("La informacion del vaciado es invalida");
+            }
+            if (flush.TransferredEnergyMWh <= 0)
+            {
+                throw new Exception("La energia a transferir debe ser mayor a cero");
+            }
+
+            var batteryCrud = new BatteriesCrudFactory();
+            var battery = batteryCrud.RetrieveById<Battery>(flush.BatteryId);
+
+            if (battery == null)
+            {
+                throw new Exception("La bateria no existe.");
+            }
+            if(battery.Status !="Active")
+            {
+                throw new Exception("Para realizar un vaciado la bateria debe estar activa");
+            }
+            if (battery.CurrentEnergyMWh < flush.TransferredEnergyMWh)
+            {
+                throw new Exception("La bateria no tiene suficiente energia");
+            }
+            flush.SnapshotEnergyMWh = battery.CurrentEnergyMWh;
+
+            var centralManager = new CentralBankManager();
+            var flushCrud = new FlushCrudFactory();
+
+            decimal loss = centralManager.ReceiveEnergy(flush.CentralBankId, flush.TransferredEnergyMWh);
+
+            flush.SaturationLossMWh = loss;
+            battery.CurrentEnergyMWh -= flush.TransferredEnergyMWh;
+            battery.TotalTransferredMWh += flush.TransferredEnergyMWh;
+            battery.UpdatedAt = DateTime.Now;
+            batteryCrud.Update(battery);
+            flush.ExecutedAt = DateTime.UtcNow;
+            flush.CreatedAt = DateTime.UtcNow;
+
+            flush.Status="Completed";
+            flushCrud.Create(flush);
         }
     }
 }
