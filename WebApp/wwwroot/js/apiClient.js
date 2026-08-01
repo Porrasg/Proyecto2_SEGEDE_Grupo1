@@ -4,9 +4,11 @@
 // .done()/.fail()/.always() compatible con la que ya consumen las ~20 pantallas
 // de wwwroot/js/pages-controller/, para no tener que reescribir cada llamada.
 const apiClient = (function () {
-    // Obtiene la base URL configurada en el servidor (Configuration["ApiBaseUrl"], ver
-    // _Layout.cshtml) o cae al valor por defecto de desarrollo local si no está configurada.
-    const BASE = window.SGDE_API_BASE || "http://localhost:5052/api/";
+    // Ruta local de la API
+    //const BASE = window.SGDE_API_BASE || (window.location.protocol === 'http:' ? "http://localhost:5052/api/" : "https://localhost:7236/api/");
+
+    // Ruta de la API publicada en Azure
+    const BASE = "https://segede-api-ebdtf4escubpbmf3.centralus-01.azurewebsites.net/api/"; 
 
     // Construye la URL completa sumando la ruta relativa al endpoint base
     function url(path) {
