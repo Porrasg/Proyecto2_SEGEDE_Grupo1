@@ -406,3 +406,27 @@ CREATE TABLE dbo.tblAudit
     CreatedAt DATETIME NOT NULL
 );
 GO
+
+
+-- tabla para registrar los movimientos de energía hacia y desde el banco central, incluyendo pérdidas por saturación y descripción de la operación.
+CREATE TABLE dbo.tblCentralBankMovements
+(
+    MovementId INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+
+    CentralBankId INT NOT NULL,
+
+    MovementType NVARCHAR(20) NOT NULL,
+
+    EnergyMWh DECIMAL(18,4) NOT NULL,
+
+    InventoryAfterMovement DECIMAL(18,4) NOT NULL,
+
+    SaturationLossMWh DECIMAL(18,4) NOT NULL,
+
+    Description NVARCHAR(500) NOT NULL,
+
+    CreatedAt DATETIME NOT NULL,
+
+    UpdatedAt DATETIME NULL
+);
+GO
