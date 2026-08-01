@@ -305,7 +305,7 @@ namespace CoreApp
                 throw new Exception("La energía generada debe ser mayor a cero.");
             }
 
-            var batteryCrud = new BatteryCrudFactory();
+            var batteryCrud = new BatteriesCrudFactory();
             var battery = batteryCrud.RetrieveById<Battery>(batteryId);
 
             if (battery == null)

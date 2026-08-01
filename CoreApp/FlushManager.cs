@@ -281,7 +281,7 @@ namespace CoreApp
                 throw new Exception("La energia a transferir debe ser mayor a cero");
             }
 
-            var batteryCrud = new BatteryCrudFactory();
+            var batteryCrud = new BatteriesCrudFactory();
             var battery = batteryCrud.RetrieveById<Battery>(flush.BatteryId);
 
             if (battery == null)
