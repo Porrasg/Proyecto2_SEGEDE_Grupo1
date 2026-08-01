@@ -7,8 +7,15 @@ const apiClient = (function () {
     // Ruta local de la API
     //const BASE = window.SGDE_API_BASE || (window.location.protocol === 'http:' ? "http://localhost:5052/api/" : "https://localhost:7236/api/");
 
-    // Ruta de la API publicada en Azure
-    const BASE = "https://segede-api-ebdtf4escubpbmf3.centralus-01.azurewebsites.net/api/"; 
+    // Para trabajar local o en web
+    const isLocal =
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1";
+
+    // Local usa la API local; Azure usa la API publicada
+    const BASE = isLocal
+        ? "https://localhost:7236/api/"
+        : "https://segede-api-ebdtf4escubpbmf3.centralus-01.azurewebsites.net/api/";
 
     // Construye la URL completa sumando la ruta relativa al endpoint base
     function url(path) {
