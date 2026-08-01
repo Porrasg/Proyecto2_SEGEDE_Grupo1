@@ -1,0 +1,50 @@
+@page
+@model SEGEDE_Grupo1.WebApp.Pages.ProfileModel
+@{
+    ViewData["Title"] = "Mi Perfil";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <img src="/images/default-avatar.png" id="profilePhoto" class="rounded-circle mb-3 border" style="width:120px;height:120px;object-fit:cover;" alt="Foto de perfil">
+                    <h4 id="profName">-</h4>
+                    <p class="text-muted mb-1" id="profEmail">-</p>
+                    <span class="badge bg-primary mb-3" id="profRole">-</span>
+                    <hr>
+                    <div class="text-start small">
+                        <p><strong>Identificación:</strong> <span id="profId">-</span></p>
+                        <p><strong>Fecha Registro:</strong> <span id="profDate">-</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>Información del Usuario</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-2"><strong>Nombre:</strong> <div id="detName" class="d-inline ms-2">-</div></div>
+                        <div class="col-md-6 mb-2"><strong>Correo:</strong> <div id="detEmail" class="d-inline ms-2">-</div></div>
+                        <div class="col-md-6 mb-2"><strong>Rol:</strong> <div id="detRole" class="d-inline ms-2">-</div></div>
+                        <div class="col-md-6 mb-2"><strong>Teléfono:</strong> <div id="detPhone" class="d-inline ms-2">-</div></div>
+                    </div>
+                    <div class="mt-4">
+                        <a class="btn btn-outline-primary" href="/ChangePassword">Cambiar contraseña</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages-controller/ProfileViewController.js" asp-append-version="true"></script>
+}

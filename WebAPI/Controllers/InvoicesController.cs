@@ -42,12 +42,13 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Create")]
-        public ActionResult Create(Invoice invoice)
+        public ActionResult Create(Invoice invoice, [FromQuery] int? callerUserId)
         {
             try
             {
                 var im = new InvoiceManager();
                 im.Create(invoice);
+                AuditHelper.TryAudit(callerUserId, "Create", "Invoices", invoice.Id, "Factura creada");
                 return Ok(invoice);
             }
             catch (Exception ex)
@@ -58,12 +59,13 @@ namespace WebAPI.Controllers
 
         [HttpPut]
         [Route("Update")]
-        public ActionResult Update(Invoice invoice)
+        public ActionResult Update(Invoice invoice, [FromQuery] int? callerUserId)
         {
             try
             {
                 var im = new InvoiceManager();
                 im.Update(invoice);
+                AuditHelper.TryAudit(callerUserId, "Update", "Invoices", invoice.Id, "Factura actualizada");
                 return Ok(invoice);
             }
             catch (Exception ex)
@@ -74,12 +76,13 @@ namespace WebAPI.Controllers
 
         [HttpDelete]
         [Route("Delete")]
-        public ActionResult Delete(Invoice invoice)
+        public ActionResult Delete(Invoice invoice, [FromQuery] int? callerUserId)
         {
             try
             {
                 var im = new InvoiceManager();
                 im.Delete(invoice);
+                AuditHelper.TryAudit(callerUserId, "LogicalDelete", "Invoices", invoice.Id, "Factura anulada");
                 return Ok(invoice);
             }
             catch (Exception ex)

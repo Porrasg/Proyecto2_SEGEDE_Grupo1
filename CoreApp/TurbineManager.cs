@@ -8,6 +8,22 @@ namespace CoreApp
 {
     public class TurbineManager
     {
+        // Punto único de configuración de los estados operativos válidos de una turbina.
+        // Agregar/quitar un estado solo requiere tocar este diccionario: tanto la
+        // validación del backend (IsValidStatus) como el selector de la UI (vía
+        // TurbinesController.Statuses) leen de aquí, no hay listas duplicadas.
+        public static readonly Dictionary<string, string> ValidStatuses = new Dictionary<string, string>
+        {
+            { "Active", "Activa" },
+            { "Inactive", "Inactiva" },
+            { "Maintenance", "En Mantenimiento" },
+            { "Damaged", "Dañada" },
+            { "Decommissioned", "Dada de Baja" }
+        };
+
+        private static string InvalidStatusMessage =>
+            "El estado debe ser " + string.Join(", ", ValidStatuses.Values);
+
         public List<Turbine> RetrieveAllTurbines()
         {
             var tCrud = new TurbineCrudFactory();
@@ -56,12 +72,15 @@ namespace CoreApp
 
             if (!IsValidStatus(currentTurbine))
             {
-                throw new Exception("El estado debe ser Activa, Inactiva, En Mantenimiento, Dañada o Dada de Baja");
+                throw new Exception(InvalidStatusMessage);
             }
 
             currentTurbine.UpdatedAt = DateTime.Now;
 
             tCrud.Update(currentTurbine);
+            //actualizar en el centralBank
+            var centralBankManager = new CentralBankManager();
+            centralBankManager.UpdateMaximumCapacity();
         }
 
         public void Create(Turbine turbine)
@@ -90,7 +109,7 @@ namespace CoreApp
 
             if (!IsValidStatus(turbine))
             {
-                throw new Exception( "El estado debe ser Activa, Inactiva, En Mantenimiento, Dañada o Dada de Baja");
+                throw new Exception(InvalidStatusMessage);
             }
 
             var tCrud = new TurbineCrudFactory();
@@ -138,7 +157,7 @@ namespace CoreApp
 
             if (!IsValidStatus(turbine))
             {
-                throw new Exception("El estado debe ser Activa, Inactiva, En Mantenimiento, Dañada o Dada de Baja");
+                throw new Exception(InvalidStatusMessage);
             }
 
             var tCrud = new TurbineCrudFactory();
@@ -216,11 +235,7 @@ namespace CoreApp
 
         private bool IsValidStatus(Turbine turbine)
         {
-            return turbine.Status == "Active" ||
-                   turbine.Status == "Inactive" ||
-                   turbine.Status == "Maintenance" ||
-                   turbine.Status == "Damaged" ||
-                   turbine.Status == "Decommissioned";
+            return turbine.Status != null && ValidStatuses.ContainsKey(turbine.Status);
         }
     }
 }

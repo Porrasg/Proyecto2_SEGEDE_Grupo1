@@ -253,7 +253,7 @@ namespace CoreApp
                 throw new Exception("El correo electrónico no tiene un formato válido");
             }
 
-            // dtaos estaticos
+            // datos estaticos
             if (TryLoginStaticAccount(email, password, out User staticUser))
             {
                 return staticUser;
@@ -419,6 +419,24 @@ namespace CoreApp
 
             uCrud.UpdateLastLogin(user);
 
+            // Auditar el inicio de sesión exitoso; un fallo de auditoría nunca debe
+            // impedir un login ya validado.
+            try
+            {
+                new AuditManager().Create(new Audit
+                {
+                    UserId = user.Id,
+                    Action = "Login",
+                    EntityName = "Users",
+                    EntityId = user.Id,
+                    Description = $"Inicio de sesión exitoso: {user.Email}"
+                });
+            }
+            catch
+            {
+                // No bloquear el login por un fallo de auditoría
+            }
+
             return user;
         }
 
@@ -486,6 +504,71 @@ namespace CoreApp
 
             var otpManager = new OtpManager();
             otpManager.GenerateAndSendOtp(user.Email, user.FirstName, "CHANGE_PASSWORD");
+        }
+
+        // Cambio de contraseña CON sesión activa: el usuario ya está autenticado,
+        // así que se verifica identidad con la contraseña actual (no con OTP) y se
+        // aplica el cambio de inmediato. Distinto de ChangePassword/ConfirmChangePassword
+        // (email + OTP), que es exclusivamente para "olvidé mi contraseña" sin sesión.
+        public void ChangePasswordAuthenticated(int userId, string currentPassword, string newPassword, string confirmPassword)
+        {
+            if (userId <= 0)
+            {
+                throw new Exception("Sesión inválida. Inicie sesión nuevamente");
+            }
+
+            if (string.IsNullOrWhiteSpace(currentPassword))
+            {
+                throw new Exception("La contraseña actual es requerida");
+            }
+
+            if (string.IsNullOrWhiteSpace(newPassword))
+            {
+                throw new Exception("La nueva contraseña es requerida");
+            }
+
+            if (string.IsNullOrWhiteSpace(confirmPassword))
+            {
+                throw new Exception("La confirmación de la contraseña es requerida");
+            }
+
+            if (newPassword != confirmPassword)
+            {
+                throw new Exception("La nueva contraseña y la confirmación no coinciden");
+            }
+
+            if (!IsValidPassword(newPassword))
+            {
+                throw new Exception("La nueva contraseña debe tener al menos 8 caracteres, " +
+                    "una mayúscula, una minúscula, un número y un carácter especial");
+            }
+
+            var uCrud = new UserCrudFactory();
+            var user = uCrud.RetrieveById<User>(userId);
+
+            if (user == null)
+            {
+                throw new Exception("No se encontró el usuario de la sesión actual");
+            }
+
+            if (user.Status != "Active")
+            {
+                throw new Exception("La cuenta no se encuentra activa");
+            }
+
+            if (!VerifyPassword(user.Password, currentPassword))
+            {
+                throw new Exception("La contraseña actual es incorrecta");
+            }
+
+            if (currentPassword == newPassword)
+            {
+                throw new Exception("La nueva contraseña debe ser diferente a la contraseña actual");
+            }
+
+            user.Password = HashPassword(newPassword);
+            user.UpdatedAt = DateTime.Now;
+            uCrud.UpdatePassword(user);
         }
 
         // Cambio de contraseña sin sesión: valida correo + OTP y actualiza la clave
@@ -668,8 +751,12 @@ namespace CoreApp
             uCrud.UpdatePassword(user);
         }
 
-        // Activa la cuenta después de validar el código OTP
-        public void ActivateAccount(string email, string tokenCode)
+        // Activa la cuenta después de validar el código OTP y establece la contraseña
+        // definitiva elegida por el usuario. Es el único momento en que un usuario
+        // creado por un administrador (que nunca recibe una contraseña real utilizable
+        // de manos del admin) define su propia contraseña; para el auto-registro de
+        // compradores esto simplemente confirma/reemplaza la que ya eligió al registrarse.
+        public void ActivateAccount(string email, string tokenCode, string newPassword, string confirmPassword)
         {
             if (string.IsNullOrWhiteSpace(email))
             {
@@ -684,6 +771,22 @@ namespace CoreApp
             if (string.IsNullOrWhiteSpace(tokenCode))
             {
                 throw new Exception("El código OTP es requerido");
+            }
+
+            if (string.IsNullOrWhiteSpace(newPassword) || string.IsNullOrWhiteSpace(confirmPassword))
+            {
+                throw new Exception("Debe establecer y confirmar su nueva contraseña");
+            }
+
+            if (newPassword != confirmPassword)
+            {
+                throw new Exception("La nueva contraseña y la confirmación no coinciden");
+            }
+
+            if (!IsValidPassword(newPassword))
+            {
+                throw new Exception("La contraseña debe tener al menos 8 caracteres, " +
+                    "una mayúscula, una minúscula, un número y un carácter especial");
             }
 
             var uCrud = new UserCrudFactory();
@@ -714,8 +817,13 @@ namespace CoreApp
             // Primero se valida que el OTP sea correcto y vigente en la capa de negocio.
             otpManager.ValidateOtp(email, tokenCode, "ACCOUNT_ACTIVATION");
 
-            // Luego se ejecuta la activación en base de datos.
+            // Luego se ejecuta la activación en base de datos y se fija la contraseña
+            // definitiva elegida por el usuario.
             uCrud.ActivateAccount(email, tokenCode);
+
+            user.Password = HashPassword(newPassword);
+            user.UpdatedAt = DateTime.Now;
+            uCrud.UpdatePassword(user);
         }
 
         // Encripta la contraseña utilizando PBKDF2 con SHA256 y un salt aleatorio
@@ -862,7 +970,7 @@ namespace CoreApp
 
             return Regex.IsMatch(
                 password,
-                @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$"
+                @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$"
             );
         }
 

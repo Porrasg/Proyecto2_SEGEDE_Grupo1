@@ -47,16 +47,19 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
             const badge = { Scheduled: "bg-info text-dark", InProgress: "bg-warning text-dark", Completed: "bg-success", Cancelled: "bg-secondary" };
+            const statusLabels = { Scheduled: "Programado", InProgress: "En Progreso", Completed: "Completado", Cancelled: "Cancelado" };
+            const typeLabels = { Preventive: "Preventivo", Corrective: "Correctivo", Predictive: "Predictivo", Inspection: "Inspección" };
             maintBody.innerHTML = items.map(function (m) {
                 const status = m.status || m.Status || "-";
+                const type = m.maintenanceType || m.MaintenanceType || "-";
                 const turbineId = m.turbineId ?? m.TurbineId;
                 return `<tr>
                     <td>${m.id ?? m.Id}</td>
                     <td>${turbineCodes[turbineId] || `#${turbineId}`}</td>
-                    <td><span class="badge bg-secondary">${m.maintenanceType || m.MaintenanceType || "-"}</span></td>
+                    <td><span class="badge bg-secondary">${typeLabels[type] || type}</span></td>
                     <td>${new Date(m.estimatedStartDate || m.EstimatedStartDate).toLocaleDateString("es-CR")}</td>
                     <td>${new Date(m.estimatedEndDate || m.EstimatedEndDate).toLocaleDateString("es-CR")}</td>
-                    <td><span class="badge ${badge[status] || "bg-secondary"}">${status}</span></td>
+                    <td><span class="badge ${badge[status] || "bg-secondary"}">${statusLabels[status] || status}</span></td>
                     <td>${escapeHtml(m.result || m.Result || "-")}</td>
                 </tr>`;
             }).join("");

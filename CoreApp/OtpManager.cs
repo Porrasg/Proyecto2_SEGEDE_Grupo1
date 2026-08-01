@@ -139,11 +139,6 @@ namespace CoreApp
                 if (string.IsNullOrWhiteSpace(smtpUser) ||
                     string.IsNullOrWhiteSpace(smtpPassword))
                 {
-                    // En entornos de desarrollo es frecuente no tener SMTP configurado.
-                    // No propagamos la excepción para evitar 500 en la API — el OTP ya
-                    // fue almacenado por GenerateAndSaveOtp(). Registramos el token en
-                    // la salida de diagnóstico para que el desarrollador pueda acceder a él.
-                    System.Diagnostics.Debug.WriteLine($"[OTP DEBUG] To: {toEmail} Token: {token} Purpose: {purpose}");
                     return;
                 }
 

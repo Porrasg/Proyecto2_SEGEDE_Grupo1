@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Verificación de seguridad en el cliente (RBAC §24.2)
     const role = session.getRole();
+    const userId = session.getUserId() || 1;
     if (role !== "Administrator" && role !== "Admin") {
         notify.error("Acceso denegado. Requiere privilegios de Administrador.");
         setTimeout(() => {
@@ -324,13 +325,6 @@ document.addEventListener("DOMContentLoaded", function () {
             birthDateField.addEventListener("change", updateCalculatedAge);
         }
 
-        function getFullNameValue(user) {
-            const name = (user.firstName || user.FirstName || "").trim();
-            const last1 = (user.firstLastName || user.FirstLastName || "").trim();
-            const last2 = (user.secondLastName || user.SecondLastName || "").trim();
-            return [name, last1, last2].filter(Boolean).join(" ");
-        }
-
         function getFirstNameValue(user) {
             return (user.firstName || user.FirstName || "").trim();
         }
@@ -435,9 +429,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         function getRoleBadge(role) {
-            if (role === "Administrator") return '<span class="badge bg-danger">Admin</span>';
-            if (role === "Engineer") return '<span class="badge bg-info text-dark">Engineer</span>';
-            if (role === "Distributor") return '<span class="badge bg-success">Buyer</span>';
+            if (role === "Administrator") return '<span class="badge bg-danger">Administrador</span>';
+            if (role === "Engineer") return '<span class="badge bg-info text-dark">Ingeniero</span>';
+            if (role === "Distributor") return '<span class="badge bg-success">Comprador</span>';
             return `<span class="badge bg-secondary">${role || "-"}</span>`;
         }
 
@@ -611,13 +605,16 @@ document.addEventListener("DOMContentLoaded", function () {
                     BirthDate: birthDateVal,
                     Age: Number.isFinite(parseInt(ageVal)) ? parseInt(ageVal) : 0,
                     ProfilePhoto: userPhotoDataUrl,
-                    Password: passVal || "SEGEDE_Temp123!",
+                    // Sin campo de contraseña en el modal de creación: el backend genera una
+                    // aleatoria que nadie conoce; el usuario define la suya propia al activar
+                    // la cuenta. passVal solo aplica al modal de edición (reseteo puntual).
+                    Password: passVal || "",
                     Status: "Pending"
                 };
 
                 console.log("[AdminUsers] create payload", dto);
 
-                apiClient.post("Users/Create", dto)
+                apiClient.post("Users/Create?callerUserId=" + userId, dto)
                     .done(function () {
                         notify.success("Usuario creado con éxito.");
                         userModal?.hide();
@@ -672,7 +669,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 console.log("[AdminUsers] update payload", dto);
 
-                apiClient.put("Users/Update", dto)
+                apiClient.put("Users/Update?callerUserId=" + userId, dto)
                     .done(function () {
                         notify.success("Usuario actualizado correctamente.");
                         editUserModal?.hide();
@@ -691,7 +688,7 @@ document.addEventListener("DOMContentLoaded", function () {
         function deactivateUser(id) {
             notify.confirm("¿Está seguro de que desea desactivar este usuario?", { dangerous: true, confirmText: "Desactivar" }).then(function (ok) {
                 if (!ok) return;
-                apiClient.delete("Users/Delete", { id: parseInt(id) })
+                apiClient.delete("Users/Delete?callerUserId=" + userId, { id: parseInt(id) })
                     .done(function () {
                         notify.success("Usuario desactivado correctamente.");
                         loadUsers();
@@ -705,21 +702,10 @@ document.addEventListener("DOMContentLoaded", function () {
         function reactivateUser(id, email, status) {
             const normalizedStatus = (status || "").toLowerCase();
             if (normalizedStatus === "pending" || normalizedStatus === "pendingactivation") {
-                notify.confirm("¿Desea activar este usuario pendiente?", { confirmText: "Activar" }).then(function (ok) {
-                    if (!ok) return;
-                    const otpCode = window.prompt("Ingrese el código OTP de activación enviado al correo del usuario:");
-                    if (!otpCode) return;
-
-                    apiClient.post("Users/Activate", {
-                        email: email,
-                        tokenCode: otpCode.trim()
-                    }).done(function () {
-                        notify.success("Usuario activado correctamente.");
-                        loadUsers();
-                    }).fail(function (xhr) {
-                        handleApiError(xhr);
-                    });
-                });
+                // La activación ahora exige que el propio usuario establezca su
+                // contraseña (§ auto-creación de contraseña en primer login), así que
+                // el administrador ya no puede completarla en su nombre desde aquí.
+                notify.info("El usuario debe activar su cuenta desde /Activate con el código enviado a su correo; ahí definirá su propia contraseña.");
                 return;
             }
 
