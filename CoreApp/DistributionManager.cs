@@ -132,6 +132,37 @@ namespace CoreApp
 
             // Crear la distribución
             crud.Create(distribution);
+
+            // Notificar al comprador la cuota de energía asignada (correo + registro en la app).
+            // Cada canal en su propio try/catch para no revertir la distribución ya creada.
+            var userCrud = new UserCrudFactory();
+            var buyer = userCrud.RetrieveById<User>(distribution.BuyerId);
+
+            if (buyer != null)
+            {
+                try
+                {
+                    new OtpManager().SendGenericEmail(
+                        buyer.Email,
+                        buyer.FirstName,
+                        "Cuota de energía asignada",
+                        $"Se le asignó una cuota de <strong>{distribution.AssignedEnergyMWh} MWh</strong> " +
+                        $"({distribution.DistributionDate:dd/MM/yyyy}). Puede consultar el detalle en su Estado de Cuenta.");
+                }
+                catch { /* no bloquear la distribución ya creada */ }
+
+                try
+                {
+                    new NotificationManager().Create(new Notification
+                    {
+                        UserId = buyer.Id,
+                        Title = "Cuota de energía asignada",
+                        Message = $"{distribution.AssignedEnergyMWh} MWh asignados el {distribution.DistributionDate:dd/MM/yyyy}.",
+                        NotificationType = "Distribution"
+                    });
+                }
+                catch { /* no bloquear la distribución ya creada */ }
+            }
         }
 
 

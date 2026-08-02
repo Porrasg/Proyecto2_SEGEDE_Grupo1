@@ -161,6 +161,34 @@ namespace CoreApp
             maintenance.UpdatedAt = null;
 
             crud.Create(maintenance);
+
+            // Notificar al ingeniero asignado el agendamiento del mantenimiento (correo + registro
+            // en la app). Cada aviso va en su propio try/catch: un fallo nunca debe revertir el
+            // mantenimiento ya creado, ni un canal debe bloquear al otro. CrudFactory.Create no
+            // devuelve el Id generado por el SP, así que la notificación in-app no queda enlazada
+            // a un ReferenceId específico (se deja sin referencia en vez de usar un Id inválido).
+            try
+            {
+                new OtpManager().SendGenericEmail(
+                    engineer.Email,
+                    engineer.FirstName,
+                    "Mantenimiento agendado - Turbina #" + maintenance.TurbineId,
+                    $"Se le asignó un mantenimiento ({maintenance.MaintenanceType}) para la turbina #{maintenance.TurbineId}, " +
+                    $"programado del {maintenance.EstimatedStartDate:dd/MM/yyyy HH:mm} al {maintenance.EstimatedEndDate:dd/MM/yyyy HH:mm}.");
+            }
+            catch { /* no bloquear el mantenimiento ya creado */ }
+
+            try
+            {
+                new NotificationManager().Create(new Notification
+                {
+                    UserId = engineer.Id,
+                    Title = "Mantenimiento agendado",
+                    Message = $"Turbina #{maintenance.TurbineId}, del {maintenance.EstimatedStartDate:dd/MM/yyyy} al {maintenance.EstimatedEndDate:dd/MM/yyyy}.",
+                    NotificationType = "Maintenance"
+                });
+            }
+            catch { /* no bloquear el mantenimiento ya creado */ }
         }
 
 
