@@ -168,3 +168,25 @@ REFERENCES [dbo].[tblTurbines] ([TurbineId])
 GO
 ALTER TABLE [dbo].[tblEnergyGenerations] CHECK CONSTRAINT [FK_tblEnergyGenerations_tblTurbines]
 GO
+
+/*==============================================================================
+    FOREIGN KEYS: tblEnergyLosses
+==============================================================================*/
+
+/* Relaciona la pérdida de energía con la batería asociada, cuando corresponda. */
+
+ALTER TABLE [dbo].[tblEnergyLosses]  WITH CHECK ADD  CONSTRAINT [FK_tblEnergyLosses_tblBatteries] FOREIGN KEY([BatteryId])
+REFERENCES [dbo].[tblBatteries] ([BatteryId])
+GO
+
+ALTER TABLE [dbo].[tblEnergyLosses] CHECK CONSTRAINT [FK_tblEnergyLosses_tblBatteries]
+GO
+
+/* Relaciona la pérdida de energía con la turbina donde ocurrió. */
+
+ALTER TABLE [dbo].[tblEnergyLosses]  WITH CHECK ADD  CONSTRAINT [FK_tblEnergyLosses_tblTurbines] FOREIGN KEY([TurbineId])
+REFERENCES [dbo].[tblTurbines] ([TurbineId])
+GO
+
+ALTER TABLE [dbo].[tblEnergyLosses] CHECK CONSTRAINT [FK_tblEnergyLosses_tblTurbines]
+GO
