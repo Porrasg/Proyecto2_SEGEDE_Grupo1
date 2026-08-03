@@ -15,18 +15,42 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let allTurbinesMap = {};
 
-    // Cargar mapa de turbinas para traducir IDs a Códigos Únicos
     apiClient.get("Turbines/RetrieveAll").done(function (res) {
-        const list = res?.data || res?.Data || [];
+
+        // Pruebas temporales para verificar la estructura de la respuesta
+        console.log("Turbines respuesta =", res);
+        console.log("¿Es arreglo? =", Array.isArray(res));
+        console.log("res.data =", res?.data);
+
+        // Soporta respuestas que vengan como arreglo directo
+        // o dentro de propiedades como data, Data o items
+        const list = Array.isArray(res)
+            ? res
+            : (res?.data?.items ||
+                res?.data?.Data ||
+                res?.data ||
+                res?.Data ||
+                []);
+
+        console.log("Lista de turbinas =", list);
+
+        // Construir mapa de turbinas para llenar los selectores
         list.forEach(t => {
-            allTurbinesMap[t.id || t.Id] = t.code || t.Code || ("Turbina #" + (t.id || t.Id));
+            const id = t.id ?? t.Id;
+            const code = t.code ?? t.Code ?? ("Turbina #" + id);
+
+            allTurbinesMap[id] = code;
         });
 
-        // Inicializar pantalla correspondiente una vez obtenido el catálogo
+        // Inicializar los módulos después de cargar las turbinas
         initEnergyModule();
         initMaintenancesModule();
         initFailuresModule();
-    }).fail(function () {
+
+    }).fail(function (xhr) {
+
+        console.error("Error al cargar turbinas:", xhr);
+
         initEnergyModule();
         initMaintenancesModule();
         initFailuresModule();
@@ -58,25 +82,67 @@ document.addEventListener("DOMContentLoaded", function () {
         const batLevel = document.getElementById("engBatLevel");
         const batCap = document.getElementById("engBatCap");
 
-        if (genBody) genBody.innerHTML = '<tr><td colspan="4" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando generación...</td></tr>';
-        if (lossBody) lossBody.innerHTML = '<tr><td colspan="4" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando pérdidas...</td></tr>';
+        if (genBody) {
+            genBody.innerHTML =
+                '<tr><td colspan="4" class="text-center">' +
+                '<span class="spinner-border spinner-border-sm"></span> ' +
+                'Cargando generación...</td></tr>';
+        }
+
+        if (lossBody) {
+            lossBody.innerHTML =
+                '<tr><td colspan="4" class="text-center">' +
+                '<span class="spinner-border spinner-border-sm"></span> ' +
+                'Cargando pérdidas...</td></tr>';
+        }
 
         // 1. Batería Local
         apiClient.get("Energy/LocalBattery/" + turbineId).done(function (res) {
-            const b = res?.data || res?.Data || {};
-            if (batLevel) batLevel.textContent = formatNum(b.currentEnergyMWh ?? b.CurrentEnergyMWh ?? 0) + " MWh";
-            if (batCap) batCap.textContent = formatNum(b.maximumCapacityMWh ?? b.MaximumCapacityMWh ?? 0) + " MWh";
+            // 
+            const b = res?.data || res?.Data || res || {};
+
+            if (batLevel) {
+                batLevel.textContent =
+                    formatNum(
+                        b.currentEnergyMWh ??
+                        b.CurrentEnergyMWh ??
+                        0
+                    ) + " MWh";
+            }
+
+            if (batCap) {
+                batCap.textContent =
+                    formatNum(
+                        b.maximumCapacityMWh ??
+                        b.MaximumCapacityMWh ??
+                        0
+                    ) + " MWh";
+            }
         });
+        
 
         // 2. Historial de Generación
         apiClient.get("Energy/GenerationHistory/" + turbineId + "?page=1&pageSize=20").done(function (res) {
-            const list = (res?.data?.items || res?.Data?.Items || res?.data || res?.Data || []);
+            const list =
+                res?.data?.items ||
+                res?.Data?.Items ||
+                res?.data ||
+                res?.Data ||
+                [];
+
             renderGenTable(list);
         });
 
         // 3. Historial de Pérdidas
         apiClient.get("Energy/LossHistory/" + turbineId + "?page=1&pageSize=20").done(function (res) {
-            const list = (res?.data?.items || res?.Data?.Items || res?.data || res?.Data || []);
+           
+            const list =
+                res?.data?.items ||
+                res?.Data?.Items ||
+                res?.data ||
+                res?.Data ||
+                [];
+
             renderLossTable(list);
         });
     }
