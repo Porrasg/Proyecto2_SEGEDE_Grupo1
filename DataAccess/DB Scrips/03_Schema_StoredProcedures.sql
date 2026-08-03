@@ -4576,3 +4576,33 @@ BEGIN
     ORDER BY CreatedAt DESC, AuditId DESC;
 END;
 GO
+
+
+/*==============================================================================
+    PROCEDIMIENTO: RET_BY_TURBINE_ENERGY_GENERATION_PR
+
+    Descripción:
+        Obtiene el historial de generación de energía asociado a una turbina
+        específica, ordenado desde el registro más reciente.
+==============================================================================*/
+
+CREATE OR ALTER PROCEDURE dbo.RET_BY_TURBINE_ENERGY_GENERATION_PR
+(
+    @TurbineId INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        EnergyGenerationId,
+        TurbineId,
+        GeneratedMWh,
+        WindSpeedMs,
+        GeneratedAt,
+        CreatedAt
+    FROM dbo.tblEnergyGenerations
+    WHERE TurbineId = @TurbineId
+    ORDER BY GeneratedAt DESC;
+END;
+GO
