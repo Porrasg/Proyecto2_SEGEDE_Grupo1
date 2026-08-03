@@ -156,3 +156,15 @@ ADD CONSTRAINT FK_tblAudit_tblUsers
 FOREIGN KEY (UserId)
 REFERENCES dbo.tblUsers (UserId);
 GO
+
+/*==============================================================================
+    FOREIGN KEYS: tblEnergyGenerations
+==============================================================================*/
+
+/* Relaciona el registro de energia con la turbina. */
+
+ALTER TABLE [dbo].[tblEnergyGenerations]  WITH CHECK ADD  CONSTRAINT [FK_tblEnergyGenerations_tblTurbines] FOREIGN KEY([TurbineId])
+REFERENCES [dbo].[tblTurbines] ([TurbineId])
+GO
+ALTER TABLE [dbo].[tblEnergyGenerations] CHECK CONSTRAINT [FK_tblEnergyGenerations_tblTurbines]
+GO
