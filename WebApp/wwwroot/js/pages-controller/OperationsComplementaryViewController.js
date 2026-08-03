@@ -145,9 +145,12 @@ document.addEventListener("DOMContentLoaded", function () {
             renderGenTable(list);
         });
 
-        // 3. HISTORIAL DE PERDIDA 
+        // 3. HISTORIAL DE PERDIDA
+
+        // Obtiene los últimos registros de pérdidas de energía de la turbina seleccionada
         apiClient.get("Energy/LossHistory/" + turbineId + "?page=1&pageSize=20").done(function (res) {
-           
+
+            // Obtiene la lista de pérdidas independientemente de si la API// devuelve los datos dentro de items, data/Data o directamente.
             const list =
                 res?.data?.items ||
                 res?.Data?.Items ||
@@ -155,6 +158,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 res?.Data ||
                 [];
 
+            // Envía los registros obtenidos al método encargado
             renderLossTable(list);
         });
     }
