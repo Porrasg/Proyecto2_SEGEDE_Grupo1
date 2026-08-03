@@ -22,8 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("¿Es arreglo? =", Array.isArray(res));
         console.log("res.data =", res?.data);
 
-        // Soporta respuestas que vengan como arreglo directo
-        // o dentro de propiedades como data, Data o items
+        // Soporta respuestas que vengan como arreglo directo o dentro de propiedades como data, Data o items
         const list = Array.isArray(res)
             ? res
             : (res?.data?.items ||
