@@ -75,7 +75,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function loadEnergyData(turbineId) {
+
         if (!turbineId) return;
+
+        // Obtiene los elementos HTML donde se mostrarán los historiales
         const genBody = document.getElementById("engGenBody");
         const lossBody = document.getElementById("engLossBody");
         const batLevel = document.getElementById("engBatLevel");
@@ -95,11 +98,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 'Cargando pérdidas...</td></tr>';
         }
 
-        // 1. Batería Local
+        // 1. BATERIA LOCAL 
+
+        // Obtiene la batería asociada a la turbina seleccionada.
         apiClient.get("Energy/LocalBattery/" + turbineId).done(function (res) {
-            // 
+
+            // Obtiene los datos de la batería independientemente de si la API los devuelve dentro de data/Data o directamente en la respuesta.
             const b = res?.data || res?.Data || res || {};
 
+            // Muestra la cantidad de energía almacenada actualmente en la batería // Si la propiedad no existe, utiliza 0 como valor predeterminado
             if (batLevel) {
                 batLevel.textContent =
                     formatNum(
@@ -109,6 +116,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     ) + " MWh";
             }
 
+            // Muestra la capacidad máxima de almacenamiento de la batería.// Si la propiedad no existe, utiliza 0 como valor predeterminado.
             if (batCap) {
                 batCap.textContent =
                     formatNum(
@@ -120,8 +128,12 @@ document.addEventListener("DOMContentLoaded", function () {
         });
         
 
-        // 2. Historial de Generación
+        // 2. HISTORIAL DE GENERACION DE ENERGIA
+
+        // Obtiene los últimos registros de generación de energía de la turbina seleccionada.// Se solicita la primera página con un máximo de 20 registros.
         apiClient.get("Energy/GenerationHistory/" + turbineId + "?page=1&pageSize=20").done(function (res) {
+
+            // Obtiene la lista de registros independientemente de si la API devuelve los datos dentro de items, data/Data o directamente.// Si no existen registros, utiliza un arreglo vacío.\            
             const list =
                 res?.data?.items ||
                 res?.Data?.Items ||
@@ -129,10 +141,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 res?.Data ||
                 [];
 
+            // Envia la data obtenida para que sea mostrada en la tabla correspondiente. 
             renderGenTable(list);
         });
 
-        // 3. Historial de Pérdidas
+        // 3. HISTORIAL DE PERDIDA 
         apiClient.get("Energy/LossHistory/" + turbineId + "?page=1&pageSize=20").done(function (res) {
            
             const list =
