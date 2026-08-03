@@ -343,6 +343,43 @@
     }
 
 
+    // 5. CALCULAR PRODUCCIÓN NETA DEL PERIODO PARA TODAS LAS TURBINAS ACTIVAS
+    // Flujo: EnergyController.ExecutePeriodProduction() -> EnergyManager (calcula
+    // producción bruta según capacidad nominal menos horas de mantenimiento del
+    // periodo desde el último corte) -> BatteryManager.StoreEnergy (acredita la
+    // producción neta a la batería de cada turbina).
+    async function doExecuteProduction() {
+        try {
+            const result = await Swal.fire({
+                title: 'Calcular Producción del Periodo',
+                text: 'Se calculará la producción neta de cada turbina activa desde su último corte y se acreditará a su batería. ¿Continuar?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, Calcular',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            const callerId = window.session?.getUserId();
+            let endpoint = 'Energy/ExecutePeriodProduction';
+            if (callerId != null) {
+                endpoint += '?callerUserId=' + encodeURIComponent(callerId);
+            }
+
+            const res = await apiClient.post(endpoint);
+
+            await Swal.fire('Producción Calculada', res?.message || 'Producción registrada con éxito.', 'success');
+            await refreshAll();
+        } catch (e) {
+            console.error('Error doExecuteProduction:', e);
+            const msg = e?.responseJSON?.message || e?.responseJSON?.Message || 'No se pudo calcular la producción del periodo.';
+            Swal.fire('Error', msg, 'error');
+        }
+    }
+
     // CORRECCIÓN: Forzamos la ejecución secuencial estricta para evitar bloqueos
     async function refreshAll() {
         await loadCentralBank();
@@ -357,6 +394,11 @@
         $('#btnFlush, #btnFlushSmall').off('click').on('click', function (e) {
             e.preventDefault();
             doFlush();
+        });
+
+        $('#btnExecuteProduction').off('click').on('click', function (e) {
+            e.preventDefault();
+            doExecuteProduction();
         });
     });
 
