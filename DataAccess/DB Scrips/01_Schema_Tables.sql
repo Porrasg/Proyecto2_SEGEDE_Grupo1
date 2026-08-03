@@ -412,8 +412,9 @@ GO
 
     Descripción:
         Almacena el historial de generación de energía de las turbinas dentro
-        del sistema SGDE. 
-        
+        del sistema SGDE. Cada registro representa un evento de generación,
+        incluyendo la energía generada, la velocidad del viento y la fecha
+        y hora en que ocurrió la generación.       
 
 ==============================================================================*/
 
@@ -425,4 +426,32 @@ CREATE TABLE [dbo].[tblEnergyGenerations](
 	[GeneratedAt] [datetime] NOT NULL,
 	[CreatedAt] [datetime] NOT NULL
     );
+GO
+
+/*==============================================================================
+    TABLA: tblEnergyLosses (Pérdidas de energía)
+
+    Descripción:
+        Almacena el historial de pérdidas de energía ocurridas durante la
+        operación de las turbinas dentro del sistema SGDE. Cada registro
+        representa un evento de pérdida, incluyendo la cantidad de energía
+        perdida, el motivo de la pérdida y la fecha y hora en que ocurrió.
+        Opcionalmente, permite asociar la pérdida con una batería específica.
+
+==============================================================================*/
+
+
+CREATE TABLE [dbo].[tblEnergyLosses](
+	[EnergyLossId] [int] IDENTITY(1,1) NOT NULL,
+	[TurbineId] [int] NOT NULL,
+	[LostMWh] [decimal](18, 4) NOT NULL,
+	[Reason] [nvarchar](250) NOT NULL,
+	[OccurredAt] [datetime] NOT NULL,
+	[CreatedAt] [datetime] NOT NULL,
+	[BatteryId] [int] NULL,
+ CONSTRAINT [PK_tblEnergyLosses] PRIMARY KEY CLUSTERED 
+(
+	[EnergyLossId] ASC
+)WITH (STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
 GO
