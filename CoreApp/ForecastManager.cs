@@ -318,6 +318,27 @@ namespace CoreApp
         }
 
 
+        // Transición interna de estado disparada por el sistema (ejecución de distribución
+        // mensual), no por una edición de usuario - por eso no pasa por Update(), que
+        // bloquea cualquier cambio una vez iniciado el periodo del forecast (correcto para
+        // ediciones de usuario, pero la propia ejecución del cierre del mes ocurre
+        // precisamente durante ese periodo).
+        public void MarkAsProcessed(int forecastId)
+        {
+            var crud = new ForecastCrudFactory();
+            var forecast = crud.RetrieveById<Forecast>(forecastId);
+
+            if (forecast == null)
+            {
+                throw new Exception("El forecast no existe");
+            }
+
+            forecast.Status = "Processed";
+            forecast.UpdatedAt = DateTime.Now;
+
+            crud.Update(forecast);
+        }
+
         private bool HasEmptyFields(Forecast forecast)
         {
             return forecast.BuyerId <= 0 || string.IsNullOrWhiteSpace(forecast.Status);

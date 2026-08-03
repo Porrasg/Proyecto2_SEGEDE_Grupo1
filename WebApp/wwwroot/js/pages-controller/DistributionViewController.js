@@ -130,9 +130,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 const original = executeBtn.innerHTML;
                 executeBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Ejecutando...';
 
-                notify.warning("La ejecución mensual no está disponible con el backend actual.");
-                executeBtn.disabled = false;
-                executeBtn.innerHTML = original;
+                const callerId = window.session?.getUserId();
+                let endpoint = `Distributions/ExecuteMonthly?year=${year}&month=${month}`;
+                if (callerId != null) endpoint += "&callerUserId=" + encodeURIComponent(callerId);
+
+                apiClient.post(endpoint)
+                    .done(function (res) {
+                        notify.success(res?.message || "Distribución ejecutada con éxito.");
+                        consultDistribution();
+                    })
+                    .fail(function (xhr) {
+                        handleApiError(xhr);
+                    })
+                    .always(function () {
+                        executeBtn.disabled = false;
+                        executeBtn.innerHTML = original;
+                    });
             });
         });
     }
