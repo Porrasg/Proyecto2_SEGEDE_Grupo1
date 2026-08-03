@@ -58,10 +58,16 @@ namespace CoreApp
                 throw new Exception("El mes debe estar entre 1 y 12");
             }
 
-            // Validar el periodo
+            // Validar el periodo (una vez iniciado el mes en curso, ya no se puede planificar sobre él)
             if (IsPastPeriod(forecast.ForecastYear, forecast.ForecastMonth))
             {
-                throw new Exception("No se puede registrar un forecast para un periodo anterior al actual");
+                throw new Exception("No se puede registrar un forecast para el mes en curso o un periodo anterior");
+            }
+
+            // Validar el límite de 6 meses de anticipación
+            if (IsBeyondAdvanceLimit(forecast.ForecastYear, forecast.ForecastMonth))
+            {
+                throw new Exception("No se puede registrar un forecast con más de 6 meses de anticipación");
             }
 
             // Validar la energía solicitada
@@ -149,10 +155,23 @@ namespace CoreApp
                 throw new Exception("No se puede modificar un forecast cancelado");
             }
 
-            // Validar que el periodo no sea anterior
+            // Validar que el periodo no sea el mes en curso ni uno anterior
             if (IsPastPeriod(forecast.ForecastYear, forecast.ForecastMonth))
             {
-                throw new Exception("No se puede asignar un periodo anterior al actual");
+                throw new Exception("No se puede asignar el mes en curso ni un periodo anterior");
+            }
+
+            // Validar que el forecast que se está editando no esté ya bloqueado por haber
+            // entrado su propio periodo (independiente del nuevo periodo que se le asigne)
+            if (IsPastPeriod(currentForecast.ForecastYear, currentForecast.ForecastMonth))
+            {
+                throw new Exception("No se puede modificar un forecast cuyo periodo ya inició");
+            }
+
+            // Validar el límite de 6 meses de anticipación
+            if (IsBeyondAdvanceLimit(forecast.ForecastYear, forecast.ForecastMonth))
+            {
+                throw new Exception("No se puede asignar un periodo con más de 6 meses de anticipación");
             }
 
             // Buscar otro forecast para el mismo comprador y periodo
@@ -210,6 +229,12 @@ namespace CoreApp
             if (currentForecast.Status == "Processed")
             {
                 throw new Exception("No se puede cancelar un forecast que ya fue procesado");
+            }
+
+            // No cancelar un forecast cuyo periodo ya inició (bloqueado igual que Update)
+            if (IsPastPeriod(currentForecast.ForecastYear, currentForecast.ForecastMonth))
+            {
+                throw new Exception("No se puede cancelar un forecast cuyo periodo ya inició");
             }
 
             // Asignar eliminación lógica
@@ -310,11 +335,22 @@ namespace CoreApp
                    status == "Cancelled";
         }
 
+        // "Pasado" incluye el mes en curso: una vez iniciado, el periodo queda bloqueado
+        // contra creación/edición/cancelación (regla de negocio de la rúbrica).
         private bool IsPastPeriod(int year, int month)
         {
             var currentDate = DateTime.Now;
 
-            return year < currentDate.Year || (year == currentDate.Year && month < currentDate.Month);
+            return year < currentDate.Year || (year == currentDate.Year && month <= currentDate.Month);
+        }
+
+        // No se puede planificar con más de 6 meses de anticipación
+        private bool IsBeyondAdvanceLimit(int year, int month)
+        {
+            var limit = DateTime.Now.AddMonths(6);
+            var periodDate = new DateTime(year, month, 1);
+
+            return periodDate > new DateTime(limit.Year, limit.Month, 1);
         }
     }
 }
