@@ -406,3 +406,23 @@ CREATE TABLE dbo.tblAudit
     CreatedAt DATETIME NOT NULL
 );
 GO
+
+/*==============================================================================
+    TABLA: tblEnergyGenerations  (Generación de energía) 
+
+    Descripción:
+        Almacena el historial de generación de energía de las turbinas dentro
+        del sistema SGDE. 
+        
+
+==============================================================================*/
+
+CREATE TABLE [dbo].[tblEnergyGenerations](
+	[EnergyGenerationId] [int] IDENTITY(1,1) NOT NULL,
+	[TurbineId] [int] NOT NULL,
+	[GeneratedMWh] [decimal](18, 4) NOT NULL,
+	[WindSpeedMs] [decimal](18, 4) NOT NULL,
+	[GeneratedAt] [datetime] NOT NULL,
+	[CreatedAt] [datetime] NOT NULL
+    );
+GO
