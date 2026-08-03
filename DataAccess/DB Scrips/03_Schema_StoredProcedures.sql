@@ -4606,3 +4606,33 @@ BEGIN
     ORDER BY GeneratedAt DESC;
 END;
 GO
+
+/*==============================================================================
+    PROCEDIMIENTO: RET_BY_TURBINE_ENERGY_LOSS_PR
+
+    Descripción:
+        Obtiene el historial de pérdidas de energía asociado a una turbina
+        específica, ordenado desde el registro más reciente.
+==============================================================================*/
+
+CREATE OR ALTER PROCEDURE dbo.RET_BY_TURBINE_ENERGY_LOSS_PR
+(
+    @TurbineId INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        EnergyLossId,
+        TurbineId,
+        BatteryId,
+        LostMWh,
+        Reason,
+        OccurredAt,
+        CreatedAt
+    FROM dbo.tblEnergyLosses
+    WHERE TurbineId = @TurbineId
+    ORDER BY OccurredAt DESC;
+END;
+GO
