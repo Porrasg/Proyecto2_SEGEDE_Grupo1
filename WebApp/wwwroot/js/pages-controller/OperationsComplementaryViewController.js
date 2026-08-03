@@ -171,7 +171,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 const tid = m.turbineId || m.TurbineId;
                 const tCode = allTurbinesMap[tid] || ("Turbina #" + tid);
                 const type = m.maintenanceType || m.MaintenanceType || "Preventive";
-                const typeBadge = type === "Preventive" ? '<span class="badge bg-info text-dark">Preventivo</span>' : '<span class="badge bg-warning text-dark">Correctivo</span>';
+                const typeBadges = {
+                    Preventive: '<span class="badge bg-info text-dark">Preventivo</span>',
+                    Corrective: '<span class="badge bg-warning text-dark">Correctivo</span>',
+                    Predictive: '<span class="badge bg-primary">Predictivo</span>',
+                    Inspection: '<span class="badge bg-secondary">Inspección</span>',
+                    Emergency: '<span class="badge bg-danger">Emergencia</span>'
+                };
+                const typeBadge = typeBadges[type] || `<span class="badge bg-secondary">${type}</span>`;
 
                 const estStart = formatDateTime(m.estimatedStartDate || m.EstimatedStartDate);
                 const estEnd = formatDateTime(m.estimatedEndDate || m.EstimatedEndDate);

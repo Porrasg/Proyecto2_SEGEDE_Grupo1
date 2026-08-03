@@ -41,6 +41,23 @@ namespace WebAPI.Controllers
             }
         }
 
+        // Turbinas sin ningún mantenimiento agendado en el mes en curso (obligatoriedad mensual)
+        [HttpGet]
+        [Route("ComplianceAlert")]
+        public ActionResult ComplianceAlert()
+        {
+            try
+            {
+                var mm = new MaintenanceManager();
+                var lstResults = mm.RetrieveTurbinesWithoutMonthlyMaintenance();
+                return Ok(new { data = lstResults });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
         // Mantenimientos de una turbina específica (filtro de la pantalla de operaciones)
         [HttpGet]
         [Route("ByTurbine/{turbineId}")]
