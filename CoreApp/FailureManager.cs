@@ -117,6 +117,34 @@ namespace CoreApp
             var crud = new FailureCrudFactory();
 
             crud.Create(failure);
+
+            // Alarma de criticidad sistémica: notificar al ingeniero asignado cuando la falla es
+            // Critical. Cada canal en su propio try/catch para no revertir la falla ya registrada.
+            if (failure.Severity == "Critical")
+            {
+                try
+                {
+                    new OtpManager().SendGenericEmail(
+                        engineer.Email,
+                        engineer.FirstName,
+                        "ALERTA CRÍTICA - Falla en Turbina #" + failure.TurbineId,
+                        $"Se reportó una falla de severidad <strong>Crítica</strong> en la turbina #{failure.TurbineId}. " +
+                        $"Descripción: {failure.Description}");
+                }
+                catch { /* no bloquear la falla ya registrada */ }
+
+                try
+                {
+                    new NotificationManager().Create(new Notification
+                    {
+                        UserId = engineer.Id,
+                        Title = "Alarma crítica de falla",
+                        Message = $"Turbina #{failure.TurbineId}: {failure.Description}",
+                        NotificationType = "Failure"
+                    });
+                }
+                catch { /* no bloquear la falla ya registrada */ }
+            }
         }
         public void Update(Failure failure)
         {
