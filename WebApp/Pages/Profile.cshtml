@@ -39,7 +39,10 @@
                         <div class="col-md-6 mb-2"><strong>ID Usuario:</strong> <div id="detUserId" class="d-inline ms-2">-</div></div>
                         <div class="col-md-6 mb-2"><strong>Identificación:</strong> <div id="detIdentification" class="d-inline ms-2">-</div></div>
                     </div>
-                    <div class="mt-4">
+                    <div class="mt-4 d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-primary" id="editProfileBtn" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                            <i class="bi bi-pencil-square me-1"></i>Editar perfil
+                        </button>
                         <a class="btn btn-outline-primary" href="/ChangePassword">Cambiar contraseña</a>
                     </div>
                 </div>
@@ -48,6 +51,56 @@
     </div>
 </div>
 
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProfileModalLabel"><i class="bi bi-pencil-square me-2"></i>Editar perfil</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form id="editProfileForm" novalidate>
+                <div class="modal-body">
+                    <div id="profileEditFields">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label" for="editFirstName">Nombre</label>
+                                <input class="form-control" id="editFirstName" required maxlength="100">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="editFirstLastName">Primer apellido</label>
+                                <input class="form-control" id="editFirstLastName" required maxlength="100">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="editSecondLastName">Segundo apellido</label>
+                                <input class="form-control" id="editSecondLastName" maxlength="100">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="editProfileEmail">Correo electrónico</label>
+                                <input type="email" class="form-control" id="editProfileEmail" required maxlength="200">
+                                <div class="form-text">Un cambio de correo requiere confirmación con un código OTP.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="editProfilePhone">Teléfono</label>
+                                <input type="tel" class="form-control" id="editProfilePhone" required inputmode="numeric" pattern="[0-9]{8,}" maxlength="20">
+                            </div>
+                        </div>
+                        <p class="text-muted small mt-3 mb-0">La identificación, el rol y el ID de usuario no pueden modificarse desde el perfil.</p>
+                    </div>
+                    <div id="emailOtpFields" class="d-none">
+                        <p class="mb-3">Ingrese el código de seis dígitos enviado a <strong id="pendingEmailLabel"></strong>.</p>
+                        <label class="form-label" for="emailChangeOtp">Código OTP</label>
+                        <input type="text" class="form-control" id="emailChangeOtp" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="saveProfileBtn"><i class="bi bi-check-lg me-1"></i>Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
-    <script src="~/js/pages-controller/ProfileViewController.js" asp-append-version="true"></script>
+    <script src="~/js/pages-controller/ProfileViewController.js"></script>
 }
