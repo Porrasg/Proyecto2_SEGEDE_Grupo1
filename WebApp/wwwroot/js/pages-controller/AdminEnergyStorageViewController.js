@@ -364,7 +364,7 @@
             }
 
             const callerId = window.session?.getUserId();
-            let endpoint = 'Energy/ExecutePeriodProduction';
+            let endpoint = 'EnergyProduction/ExecutePeriodProduction';
             if (callerId != null) {
                 endpoint += '?callerUserId=' + encodeURIComponent(callerId);
             }

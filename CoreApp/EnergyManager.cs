@@ -1,146 +1,61 @@
-using DataAccess.CRUD;
+﻿using DataAccess.CRUD;
 using Entities_DTOs;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Text;
 
 namespace CoreApp
 {
-    // Lógica de negocio de "Operación y Cortes para Almacenamiento": calcula la
-    // producción neta de cada turbina para un periodo (producción bruta según su
-    // capacidad nominal, menos las horas perdidas por mantenimiento e inactividad),
-    // la acredita a la batería de la turbina, y deja registro histórico para los
-    // reportes de generación.
     public class EnergyManager
     {
-        private const int DefaultPeriodDays = 7;
-
-        // Ejecuta el corte de producción para todas las turbinas activas: calcula la
-        // producción neta desde el último corte registrado (o los últimos 7 días si
-        // nunca se ha calculado) hasta ahora, la acredita a la batería de la turbina
-        // y guarda el registro histórico.
-        public List<EnergyProduction> ExecutePeriodProduction()
+        // Método para recuperar el historial de generación de energía de una turbina específica
+        public List<EnergyGeneration> RetrieveGenerationHistory(int turbineId) 
         {
-            var turbineCrud = new TurbineCrudFactory();
-            var turbines = turbineCrud.RetrieveAll<Turbine>();
-
-            var results = new List<EnergyProduction>();
-
-            foreach (var turbine in turbines.Where(t => t.Status != "Decommissioned"))
+            // Validar el id de la turbina que existe en la base de datos
+            if (turbineId <= 0)
             {
-                var record = CalculateAndRecordProduction(turbine.Id);
-                if (record != null)
-                {
-                    results.Add(record);
-                }
+                throw new Exception("El id de la turbina no es válido");
             }
 
-            return results;
-        }
-
-        // Calcula y registra la producción neta de una turbina específica desde su
-        // último corte (o los últimos 7 días si nunca se ha calculado). Devuelve null
-        // si la turbina no tiene una batería asociada (no se puede acreditar la energía).
-        public EnergyProduction CalculateAndRecordProduction(int turbineId)
-        {
+            // Validar que la turbina existe en la base de datos
             var turbineCrud = new TurbineCrudFactory();
             var turbine = turbineCrud.RetrieveById<Turbine>(turbineId);
 
             if (turbine == null)
             {
-                throw new Exception("La turbina no existe");
+                throw new Exception("La turbina no existe en la base de datos");
             }
 
-            var epCrud = new EnergyProductionCrudFactory();
-            var last = epCrud.RetrieveLast(turbineId);
+            // Validar que la turbina está activa 
+            var generationCrud = new EnergyGenerationCrudFactory();
 
-            var periodStart = last?.EventDate ?? DateTime.Now.AddDays(-DefaultPeriodDays);
-            var periodEnd = DateTime.Now;
-
-            if (periodEnd <= periodStart)
-            {
-                return null; // ya se calculó producción para este instante, nada que hacer
-            }
-
-            var (gross, maintenanceLoss, net) = CalculateNetProduction(turbine, periodStart, periodEnd);
-
-            var record = new EnergyProduction
-            {
-                TurbineId = turbine.Id,
-                PeriodStart = periodStart,
-                EventDate = periodEnd,
-                GrossEnergyMWh = gross,
-                MaintenanceLossMWh = maintenanceLoss,
-                GeneratedEnergy = net,
-                CreatedAt = DateTime.Now
-            };
-
-            epCrud.Create(record);
-
-            // Acreditar la producción neta a la batería de la turbina, si tiene una asignada
-            if (net > 0)
-            {
-                var batteryCrud = new BatteriesCrudFactory();
-                var battery = batteryCrud.RetrieveAll<Battery>().FirstOrDefault(b => b.TurbineId == turbine.Id && b.Status == "Active");
-
-                if (battery != null)
-                {
-                    new BatteryManager().StoreEnergy(battery.Id, net);
-                }
-            }
-
-            return record;
+            // Retornar el historial de generación de energía de la turbina
+            return generationCrud.RetrieveByTurbine(turbineId);
         }
 
-        // Producción bruta (capacidad nominal semanal prorrateada a las horas del periodo)
-        // menos las horas del periodo que se solapan con mantenimientos no cancelados
-        // (aproximación razonable de "mantenimientos + inactividad": mientras la turbina
-        // está en mantenimiento no genera). Si la turbina no está Active en este momento,
-        // se considera inactiva durante todo el periodo (no hay historial de estados para
-        // reconstruir cuándo exactamente dejó de estar activa).
-        private (decimal gross, decimal maintenanceLoss, decimal net) CalculateNetProduction(
-            Turbine turbine, DateTime periodStart, DateTime periodEnd)
+
+        public List<EnergyLoss> RetrieveLossHistory(int turbineId) 
         {
-            var totalHours = (decimal)(periodEnd - periodStart).TotalHours;
-            var hoursPerWeek = 7m * 24m;
-
-            var gross = turbine.NominalWeeklyCapacityMWh * (totalHours / hoursPerWeek);
-
-            if (turbine.Status != "Active")
+            // Validar el id de la turbina que existe en la base de datos
+            if (turbineId <= 0) 
             {
-                return (Math.Round(gross, 4), Math.Round(gross, 4), 0m);
+                throw new Exception("El id de la turbina no es válido");
             }
 
-            var maintenanceCrud = new MaintenanceCrudFactory();
-            var maintenances = maintenanceCrud.RetrieveByTurbineId(turbine.Id);
+            // Validar que la turbina existe en la base de datos
+            var turbineCrud = new TurbineCrudFactory();
+            var turbine = turbineCrud.RetrieveById<Turbine>(turbineId);
 
-            decimal maintenanceHours = 0;
-            foreach (var m in maintenances.Where(m => m.Status != "Cancelled"))
+            if (turbine == null) 
             {
-                var start = m.ActualStartDate ?? m.EstimatedStartDate;
-                var end = m.ActualEndDate ?? m.EstimatedEndDate;
-
-                var overlapStart = start > periodStart ? start : periodStart;
-                var overlapEnd = end < periodEnd ? end : periodEnd;
-
-                if (overlapEnd > overlapStart)
-                {
-                    maintenanceHours += (decimal)(overlapEnd - overlapStart).TotalHours;
-                }
+                throw new Exception("La turbina no existe en la base de datos");
             }
-
-            var maintenanceLoss = turbine.NominalWeeklyCapacityMWh * (maintenanceHours / hoursPerWeek);
-            if (maintenanceLoss > gross) maintenanceLoss = gross;
-
-            var net = gross - maintenanceLoss;
-
-            return (Math.Round(gross, 4), Math.Round(maintenanceLoss, 4), Math.Round(net, 4));
+            // Obtener el historial de pérdidas de energía de la turbina
+            var lossCrud = new EnergyLossCrudFactory();
+            
+            return lossCrud.RetrieveByTurbine(turbineId);
         }
 
-        public List<EnergyProduction> RetrieveGenerationHistory(int turbineId)
-        {
-            var crud = new EnergyProductionCrudFactory();
-            return crud.RetrieveByTurbineId(turbineId);
-        }
+
     }
 }

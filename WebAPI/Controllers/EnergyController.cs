@@ -1,67 +1,99 @@
+﻿using Microsoft.AspNetCore.Mvc;
 using CoreApp;
-using Microsoft.AspNetCore.Mvc;
-using System.Linq;
+using Entities_DTOs;
+using System.Security.Cryptography.X509Certificates;
 
 namespace WebAPI.Controllers
 {
+
+
     [Route("api/[controller]")]
     [ApiController]
+
+
     public class EnergyController : ControllerBase
     {
-        // Historial de producción neta de una turbina. Paginado en memoria porque el
-        // volumen de cortes de un proyecto de este alcance no justifica paginar en el SP;
-        // ReportsViewController.js ya espera exactamente esta forma de respuesta
-        // ({ data: { items, totalPages } }) para consolidar Energía Generada por turbina
-        // y Energía Suplida por Proveedor.
+
+        [HttpGet]
+        [Route("LocalBattery/{turbineId}")]
+
+        public ActionResult LocalBattery(int turbineId) 
+        {
+            try 
+            {
+                var batteryManager = new BatteryManager();
+
+                var batteries = batteryManager.RetrieveAllBatteries();
+
+                var battery = batteries.FirstOrDefault(b => b.TurbineId == turbineId);
+
+                if (battery == null) 
+                {
+                    return NotFound(new
+                    {
+                        message = "No se encontro una bateria asociada a la turbina"
+                    });
+                }
+
+                return Ok(battery);
+
+            }
+            catch (Exception ex) 
+            {
+                return StatusCode(500, new
+                {
+                    message = ex.Message
+                });            
+            }
+
+        }
+
+
+        
         [HttpGet]
         [Route("GenerationHistory/{turbineId}")]
-        public ActionResult GenerationHistory(int turbineId, [FromQuery] int page = 1, [FromQuery] int pageSize = 1000)
+
+        public ActionResult GenerationHistory(int turbineId)
         {
             try
             {
-                var em = new EnergyManager();
-                var all = em.RetrieveGenerationHistory(turbineId);
+                var energyManager = new EnergyManager();
 
-                var totalPages = pageSize > 0 ? (int)System.Math.Ceiling(all.Count / (double)pageSize) : 1;
-                if (totalPages < 1) totalPages = 1;
+                var generationHistory = energyManager.RetrieveGenerationHistory(turbineId);
 
-                var items = all
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToList();
-
-                return Ok(new { data = new { items, totalPages } });
+                return Ok(generationHistory);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = ex.Message });
-            }
-        }
-
-        // Ejecuta el corte de producción (diario/semanal) para todas las turbinas activas:
-        // calcula la producción neta desde el último corte y la acredita a cada batería.
-        [HttpPost]
-        [Route("ExecutePeriodProduction")]
-        public ActionResult ExecutePeriodProduction([FromQuery] int? callerUserId)
-        {
-            try
-            {
-                var em = new EnergyManager();
-                var results = em.ExecutePeriodProduction();
-
-                AuditHelper.TryAudit(callerUserId, "Execute", "EnergyProduction", null,
-                    $"Corte de producción ejecutado sobre {results.Count} turbina(s)");
-
-                return Ok(new
+                return StatusCode(500, new
                 {
-                    message = $"Producción calculada para {results.Count} turbina(s).",
-                    data = results
+                    message = ex.Message
                 });
             }
-            catch (Exception ex)
+        }
+
+        [HttpGet]
+        [Route("LossHistory/{turbineId}")]
+
+        public ActionResult LossHistory(int turbineId) 
+        {
+            try
             {
-                return StatusCode(500, new { message = ex.Message });
+                var energyManager = new EnergyManager();
+                var lossHistory = energyManager.RetrieveLossHistory(turbineId);
+
+                return Ok(lossHistory);
+
+            }
+            catch (Exception ex) 
+            {
+                return StatusCode(500, new
+                {
+                    message = ex.Message
+                });
             }
         }
+
+
     }
 }

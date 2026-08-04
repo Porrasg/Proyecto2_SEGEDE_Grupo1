@@ -137,6 +137,108 @@ namespace CoreApp
             uCrud.Update(user);
         }
 
+        // Actualizar perfil desde perfil
+        public User UpdateProfile(int userId, string firstName, string firstLastName, string? secondLastName, string phoneNumber)
+        {
+            if (userId <= 0)
+            {
+                throw new Exception("Sesión inválida. Inicie sesión nuevamente");
+            }
+
+            var uCrud = new UserCrudFactory();
+            var user = uCrud.RetrieveById<User>(userId);
+
+            if (user == null)
+            {
+                throw new Exception("No se encontró el usuario de la sesión actual");
+            }
+
+            user.FirstName = firstName?.Trim() ?? string.Empty;
+            user.FirstLastName = firstLastName?.Trim() ?? string.Empty;
+            user.SecondLastName = string.IsNullOrWhiteSpace(secondLastName) ? null : secondLastName.Trim();
+            user.PhoneNumber = phoneNumber?.Trim() ?? string.Empty;
+
+            ValidateUserForUpdate(user, user);
+            user.Age = CalculateAge(user.BirthDate);
+            user.UpdatedAt = DateTime.Now;
+            uCrud.Update(user);
+
+            return user;
+        }
+
+        // Solicita el cambio de correo: valida que el nuevo correo esté disponible y envía un OTP,
+        // pero no modifica el correo del usuario hasta que el código sea confirmado.
+        public void RequestEmailChange(int userId, string newEmail)
+        {
+            if (userId <= 0)
+            {
+                throw new Exception("Sesión inválida. Inicie sesión nuevamente");
+            }
+
+            newEmail = newEmail?.Trim() ?? string.Empty;
+            if (!IsValidEmail(newEmail))
+            {
+                throw new Exception("El correo electrónico no tiene un formato válido");
+            }
+
+            var uCrud = new UserCrudFactory();
+            var user = uCrud.RetrieveById<User>(userId);
+            if (user == null)
+            {
+                throw new Exception("No se encontró el usuario de la sesión actual");
+            }
+
+            if (string.Equals(user.Email, newEmail, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            var existingUser = uCrud.RetrieveByEmail(newEmail);
+            if (existingUser != null && existingUser.Id != userId)
+            {
+                throw new Exception("Ya existe otro usuario registrado con ese correo electrónico");
+            }
+
+            new OtpManager().GenerateAndSendOtp(newEmail, user.FirstName, "CHANGE_EMAIL");
+        }
+
+        // Confirma el cambio de correo validando el OTP enviado a la nueva dirección.
+        // Si el código es válido y el correo sigue disponible, guarda el nuevo correo del usuario.
+        public User ConfirmEmailChange(int userId, string newEmail, string otpCode)
+        {
+            if (userId <= 0)
+            {
+                throw new Exception("Sesión inválida. Inicie sesión nuevamente");
+            }
+
+            newEmail = newEmail?.Trim() ?? string.Empty;
+            if (!IsValidEmail(newEmail))
+            {
+                throw new Exception("El correo electrónico no tiene un formato válido");
+            }
+
+            new OtpManager().ValidateOtp(newEmail, otpCode, "CHANGE_EMAIL");
+
+            var uCrud = new UserCrudFactory();
+            var user = uCrud.RetrieveById<User>(userId);
+            if (user == null)
+            {
+                throw new Exception("No se encontró el usuario de la sesión actual");
+            }
+
+            var existingUser = uCrud.RetrieveByEmail(newEmail);
+            if (existingUser != null && existingUser.Id != userId)
+            {
+                throw new Exception("Ya existe otro usuario registrado con ese correo electrónico");
+            }
+
+            user.Email = newEmail;
+            user.UpdatedAt = DateTime.Now;
+            uCrud.Update(user);
+
+            return user;
+        }
+
         public void Delete(User user)
         {
             if (user == null)
