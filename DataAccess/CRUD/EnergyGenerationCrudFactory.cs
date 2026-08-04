@@ -16,7 +16,21 @@ namespace DataAccess.CRUD
 
         public override void Create(BaseDTO baseDTO)
         {
-            throw new NotImplementedException();
+            // Convertir el BaseDTO en un objeto EnergyGeneration
+            var generation = (EnergyGeneration)baseDTO;
+
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "CRE_ENERGY_GENERATION_PR";
+
+            //Mapear los parametros requeridos por el SP
+            sqlOperation.AddIntParameter("TubineId", generation.TurbineId);
+            sqlOperation.AddDecimalParameter("GenerateMWh", generation.GenerateMWh);
+            sqlOperation.AddDecimalParameter("WindSpeedMs", generation.WindSpeedMs);
+            sqlOperation.AddDateTimeParameter("GenerateAt", generation.GenerateAt);
+            sqlOperation.AddDateTimeParameter("CreatedAt", generation.CreateAt);
+
+            //Ejecutar el SP
+            sqlDao.ExecuteProcedure(sqlOperation);
         }
 
         public override void Delete(BaseDTO baseDTO)
