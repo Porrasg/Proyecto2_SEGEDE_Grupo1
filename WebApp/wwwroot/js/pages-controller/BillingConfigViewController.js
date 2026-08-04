@@ -1,5 +1,7 @@
 // BillingConfigViewController.js (§85 Admin/Prices, Admin/Taxes) - Configuración de precio por MWh e impuestos vigentes
 document.addEventListener("DOMContentLoaded", function () {
+    const userId = session.getUserId() || 1;
+
     // ==========================================
     // 1. PRECIOS (/Admin/Prices)
     // ==========================================
@@ -18,7 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const original = btn ? btn.innerHTML : "";
             if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...'; }
 
-            apiClient.post("Billing/SetPrice", { priceCRCPerMWh: value })
+            apiClient.post("Billing/SetPrice?callerUserId=" + userId, { priceCRCPerMWh: value })
                 .done(function () {
                     notify.success("Nuevo precio registrado. El anterior se cerró automáticamente.");
                     priceForm.reset();
@@ -81,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const original = btn ? btn.innerHTML : "";
             if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...'; }
 
-            apiClient.post("Billing/SetTax", { name: name, percentage: pct / 100 })
+            apiClient.post("Billing/SetTax?callerUserId=" + userId, { name: name, percentage: pct / 100 })
                 .done(function () {
                     notify.success("Nuevo porcentaje de impuesto registrado.");
                     taxForm.reset();
