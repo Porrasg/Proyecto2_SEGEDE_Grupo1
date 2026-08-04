@@ -2,6 +2,7 @@
 using Entities_DTOs;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace CoreApp
@@ -12,6 +13,107 @@ namespace CoreApp
         {
             var crud = new DistributionCrudFactory();
             return crud.RetrieveAll<Distribution>();
+        }
+
+        // Cierre mensual: distribuye la energía disponible en el Banco Central entre todas
+        // las solicitudes de compra (Forecast) Pendientes del periodo. Si el inventario
+        // disponible alcanza para toda la demanda, cada comprador recibe el 100% de lo
+        // solicitado. Si no alcanza, se aplica un prorrateo uniforme (la misma fracción del
+        // inventario disponible para todos) - matemáticamente reproduce los ejemplos de la
+        // rúbrica (90%/80%/70%...) cuando el disponible es exactamente esa fracción de la
+        // demanda total, sin inventar quiebres discrecionales.
+        public List<Distribution> ExecuteMonthlyDistribution(int year, int month, int centralBankId)
+        {
+            var forecastManager = new ForecastManager();
+            var pendingForecasts = forecastManager.RetrieveByPeriod(year, month)
+                .Where(f => f.Status == "Pending")
+                .ToList();
+
+            if (!pendingForecasts.Any())
+            {
+                throw new Exception("No hay solicitudes de compra pendientes para distribuir en el periodo indicado");
+            }
+
+            var centralBankCrud = new CentralBankCrudFactory();
+            var centralBank = centralBankCrud.RetrieveById<CentralBank>(centralBankId);
+
+            if (centralBank == null)
+            {
+                throw new Exception("El banco central indicado no existe");
+            }
+
+            var billingManager = new BillingManager();
+            var activePrice = billingManager.RetrieveActivePrice();
+
+            if (activePrice == null)
+            {
+                throw new Exception("No hay un precio por MWh vigente configurado. Configure uno en Administración > Precios antes de ejecutar la distribución.");
+            }
+
+            var activeTax = billingManager.RetrieveActiveTax();
+
+            var totalDemand = pendingForecasts.Sum(f => f.RequestedEnergyMWh);
+            var available = centralBank.CurrentInventoryMWh;
+
+            // Prorrateo uniforme: 100% si alcanza, o la misma fracción del disponible para todos si no alcanza
+            var ratio = (totalDemand <= 0 || totalDemand <= available) ? 1m : available / totalDemand;
+
+            var crud = new DistributionCrudFactory();
+            var existingBatches = crud.RetrieveAll<Distribution>();
+            var newBatchId = existingBatches.Any() ? existingBatches.Max(d => d.DistributionBatchId) + 1 : 1;
+
+            decimal totalAssigned = 0;
+
+            foreach (var forecast in pendingForecasts)
+            {
+                var assigned = Math.Round(forecast.RequestedEnergyMWh * ratio, 4);
+
+                var distribution = new Distribution
+                {
+                    DistributionBatchId = newBatchId,
+                    ForecastId = forecast.Id,
+                    BuyerId = forecast.BuyerId,
+                    CentralBankId = centralBankId,
+                    RequestedEnergyMWh = forecast.RequestedEnergyMWh,
+                    AssignedEnergyMWh = assigned,
+                    UnitPrice = activePrice.PriceCRCPerMWh
+                };
+
+                Create(distribution);
+
+                totalAssigned += assigned;
+
+                // El forecast pasa a Processed independientemente de si se marca como
+                // "Pending" bloqueado en el futuro - no vuelve a considerarse en otra ejecución.
+                try { forecastManager.MarkAsProcessed(forecast.Id); }
+                catch { /* no revertir la distribución ya creada por un fallo aquí */ }
+            }
+
+            // Descontar del banco central el total efectivamente asignado en este lote
+            if (totalAssigned > 0)
+            {
+                new CentralBankManager().DistributeEnergy(centralBankId, totalAssigned);
+            }
+
+            // Recuperar las distribuciones recién creadas (con su Id real generado por el SP,
+            // que Create() no puede devolver) para generar la factura de cada una y notificar.
+            var createdDistributions = crud.RetrieveByBatchId(newBatchId);
+
+            foreach (var distribution in createdDistributions)
+            {
+                try
+                {
+                    new InvoiceManager().Create(new Invoice
+                    {
+                        DistributionId = distribution.Id,
+                        BuyerId = distribution.BuyerId,
+                        TaxPercentage = (activeTax?.Percentage ?? 0) * 100 // InvoiceManager espera el porcentaje en base 100
+                    });
+                }
+                catch { /* no revertir la distribución ya creada por un fallo al facturar */ }
+            }
+
+            return createdDistributions;
         }
 
         public void Create(Distribution distribution)
@@ -132,6 +234,37 @@ namespace CoreApp
 
             // Crear la distribución
             crud.Create(distribution);
+
+            // Notificar al comprador la cuota de energía asignada (correo + registro en la app).
+            // Cada canal en su propio try/catch para no revertir la distribución ya creada.
+            var userCrud = new UserCrudFactory();
+            var buyer = userCrud.RetrieveById<User>(distribution.BuyerId);
+
+            if (buyer != null)
+            {
+                try
+                {
+                    new OtpManager().SendGenericEmail(
+                        buyer.Email,
+                        buyer.FirstName,
+                        "Cuota de energía asignada",
+                        $"Se le asignó una cuota de <strong>{distribution.AssignedEnergyMWh} MWh</strong> " +
+                        $"({distribution.DistributionDate:dd/MM/yyyy}). Puede consultar el detalle en su Estado de Cuenta.");
+                }
+                catch { /* no bloquear la distribución ya creada */ }
+
+                try
+                {
+                    new NotificationManager().Create(new Notification
+                    {
+                        UserId = buyer.Id,
+                        Title = "Cuota de energía asignada",
+                        Message = $"{distribution.AssignedEnergyMWh} MWh asignados el {distribution.DistributionDate:dd/MM/yyyy}.",
+                        NotificationType = "Distribution"
+                    });
+                }
+                catch { /* no bloquear la distribución ya creada */ }
+            }
         }
 
 

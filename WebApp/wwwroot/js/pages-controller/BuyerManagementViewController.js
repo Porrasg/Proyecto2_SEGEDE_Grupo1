@@ -136,7 +136,7 @@ document.addEventListener("DOMContentLoaded", function () {
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
 
             if (editingForecastId) {
-                apiClient.put("Forecasts/Modify?callerUserId=" + userId, {
+                apiClient.put("Forecasts/Modify?callerUserId=" + userId + "&callerRole=" + role, {
                     forecastId: parseInt(editingForecastId),
                     newRequestedEnergyMWh: amt
                 }).done(function () {
@@ -150,7 +150,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     btn.textContent = "Guardar";
                 });
             } else {
-                apiClient.post("Forecasts/Register?callerUserId=" + userId, {
+                apiClient.post("Forecasts/Register?callerUserId=" + userId + "&callerRole=" + role, {
                     buyerId: parseInt(userId), // ForecastManager exige el comprador del pronóstico
                     forecastMonth: m,
                     forecastYear: y,
@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", function () {
         function cancelForecast(id) {
             notify.confirm("¿Está seguro que desea cancelar este pronóstico de demanda?", { dangerous: true, confirmText: "Cancelar pronóstico" }).then(function (ok) {
                 if (!ok) return;
-                apiClient.post("Forecasts/Cancel/" + id + "?callerUserId=" + userId)
+                apiClient.post("Forecasts/Cancel/" + id + "?callerUserId=" + userId + "&callerRole=" + role)
                     .done(function () {
                         notify.info("Pronóstico cancelado.");
                         loadForecasts();
