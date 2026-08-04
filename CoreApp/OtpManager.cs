@@ -204,6 +204,7 @@ namespace CoreApp
             return purpose == "ACCOUNT_ACTIVATION" ||
                    purpose == "LOGIN" ||
                    purpose == "CHANGE_PASSWORD" ||
+                   purpose == "CHANGE_EMAIL" ||
                    purpose == "RESET_PASSWORD";
         }
 
@@ -223,6 +224,11 @@ namespace CoreApp
             if (purpose == "CHANGE_PASSWORD")
             {
                 return "Cambio de contraseña - Código OTP";
+            }
+
+            if (purpose == "CHANGE_EMAIL")
+            {
+                return "Cambio de correo electrónico - Código OTP";
             }
 
             if (purpose == "RESET_PASSWORD")
@@ -251,6 +257,12 @@ namespace CoreApp
             if (purpose == "CHANGE_PASSWORD")
             {
                 return "Para autorizar el cambio de contraseña, " +
+                       "utilice el siguiente código.";
+            }
+
+            if (purpose == "CHANGE_EMAIL")
+            {
+                return "Para confirmar el cambio de correo electrónico, " +
                        "utilice el siguiente código.";
             }
 

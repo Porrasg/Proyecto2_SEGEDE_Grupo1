@@ -73,11 +73,78 @@ namespace WebAPI.Controllers
             public string ConfirmPassword { get; set; } = string.Empty;
         }
 
+        public class UpdateProfileRequest
+        {
+            public int UserId { get; set; }
+            public string FirstName { get; set; } = string.Empty;
+            public string FirstLastName { get; set; } = string.Empty;
+            public string? SecondLastName { get; set; }
+            public string PhoneNumber { get; set; } = string.Empty;
+        }
+
+        public class EmailChangeRequest
+        {
+            public int UserId { get; set; }
+            public string NewEmail { get; set; } = string.Empty;
+        }
+
+        public class ConfirmEmailChangeRequest : EmailChangeRequest
+        {
+            public string OtpCode { get; set; } = string.Empty;
+        }
+
         public class ConfirmChangePasswordEmailRequest
         {
             public string Email { get; set; } = string.Empty;
             public string NewPassword { get; set; } = string.Empty;
             public string ConfirmPassword { get; set; } = string.Empty;
+        }
+
+        [HttpPut]
+        [Route("Profile")]
+        public ActionResult UpdateProfile(UpdateProfileRequest request)
+        {
+            try
+            {
+                var user = new UserManager().UpdateProfile(request.UserId, request.FirstName, request.FirstLastName, request.SecondLastName, request.PhoneNumber);
+                AuditHelper.TryAudit(request.UserId, "Update", "Users", request.UserId, "Actualización de información de perfil");
+                return Ok(Sanitize(user));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [Route("Profile/RequestEmailChange")]
+        public ActionResult RequestEmailChange(EmailChangeRequest request)
+        {
+            try
+            {
+                new UserManager().RequestEmailChange(request.UserId, request.NewEmail);
+                return Ok(new { message = "Se envió un código de confirmación al correo nuevo." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [Route("Profile/ConfirmEmailChange")]
+        public ActionResult ConfirmEmailChange(ConfirmEmailChangeRequest request)
+        {
+            try
+            {
+                var user = new UserManager().ConfirmEmailChange(request.UserId, request.NewEmail, request.OtpCode);
+                AuditHelper.TryAudit(request.UserId, "Update", "Users", request.UserId, "Cambio de correo electrónico confirmado");
+                return Ok(Sanitize(user));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         public class UserActivationRequest
