@@ -8,6 +8,13 @@ namespace DataAccess.CRUD
 {
     public class EnergyLossCrudFactory : CrudFactory
     {
+
+        // Constructor
+        public EnergyLossCrudFactory() 
+        {
+            sqlDao = SqlDao.GetInstance();        
+        }
+
         public override void Create(BaseDTO baseDTO)
         {
             throw new NotImplementedException();

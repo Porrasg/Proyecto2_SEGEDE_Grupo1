@@ -73,7 +73,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpGet]
-        [Route("LossHistory/{(turbineId)}")]
+        [Route("LossHistory/{turbineId}")]
 
         public ActionResult LossHistory(int turbineId) 
         {
