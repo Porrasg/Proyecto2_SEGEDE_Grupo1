@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using CoreApp;
 using Entities_DTOs;
+using System.Security.Cryptography.X509Certificates;
 
 namespace WebAPI.Controllers
 {
@@ -43,11 +44,34 @@ namespace WebAPI.Controllers
                 {
                     message = ex.Message
                 });            
-            }         
-
-
+            }
 
         }
+
+
+        
+        [HttpGet]
+        [Route("GenerationHistory/{turbineId}")]
+
+        public ActionResult GenerationHistory(int turbineId)
+        {
+            try
+            {
+                var energyManager = new EnergyManager();
+
+                var generationHistory = energyManager.RetrieveGenerationHistory(turbineId);
+
+                return Ok(generationHistory);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
 
     }
 }
