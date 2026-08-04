@@ -95,5 +95,29 @@ namespace WebAPI.Controllers
         }
 
 
+        [HttpPost]
+        [Route("CreateGeneration")]
+
+        public ActionResult CreateGeneration(EnergyGeneration generation) 
+        {
+            try
+            {
+                //Se crea la instancia del manager
+                var energyManager = new EnergyManager();
+                // Se llama al metodo para crear la generacion de energia
+                energyManager.CreateGeneration(generation);
+
+                return Ok(generation);
+            }
+            catch (Exception ex) 
+            {
+                return StatusCode(500, new 
+                { 
+                    message = ex.Message
+                });
+            }
+
+        }
+
     }
 }
