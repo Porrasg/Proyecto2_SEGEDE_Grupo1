@@ -8,6 +8,41 @@ namespace WebAPI.Controllers
     [ApiController]
     public class DistributionsController : ControllerBase
     {
+        // Cierre mensual: distribuye la energía disponible entre las solicitudes pendientes
+        // del periodo (prorrateo si no alcanza), genera factura por cada asignación y
+        // descuenta el total del Banco Central. Si no se indica centralBankId, usa el
+        // primero registrado (el sistema opera con un único Banco Central).
+        [HttpPost]
+        [Route("ExecuteMonthly")]
+        public ActionResult ExecuteMonthly([FromQuery] int year, [FromQuery] int month, [FromQuery] int? centralBankId, [FromQuery] int? callerUserId)
+        {
+            try
+            {
+                var cbId = centralBankId;
+                if (cbId == null || cbId <= 0)
+                {
+                    var banks = new CentralBankManager().RetrieveAllCentralBanks();
+                    if (banks == null || banks.Count == 0)
+                    {
+                        return StatusCode(500, new { message = "No hay ningún Banco Central registrado." });
+                    }
+                    cbId = banks[0].Id;
+                }
+
+                var dm = new DistributionManager();
+                var results = dm.ExecuteMonthlyDistribution(year, month, cbId.Value);
+
+                AuditHelper.TryAudit(callerUserId, "Execute", "Distributions", null,
+                    $"Distribución mensual ejecutada para {month}/{year}: {results.Count} comprador(es)");
+
+                return Ok(new { message = $"Distribución ejecutada con éxito para {results.Count} comprador(es).", data = results });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
         [HttpGet]
         [Route("RetrieveAll")]
         public ActionResult RetrieveAll()

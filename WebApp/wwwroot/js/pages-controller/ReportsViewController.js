@@ -1,6 +1,6 @@
 // ReportsViewController.js - Módulo de Reportes por perfil (Admin / Engineer / Buyer).
 // Reutiliza exclusivamente endpoints existentes (regla de la adenda v3: sin caminos paralelos):
-//   Admin:    Turbines/All + Energy/GenerationHistory/{id} + Maintenances/All|ByTurbine
+//   Admin:    Turbines/All + EnergyProduction/GenerationHistory/{id} + Maintenances/All|ByTurbine
 //   Engineer: Turbines/All (estado/alertas) + Maintenances/All|ByTurbine
 //   Buyer:    Distributions/ByBuyer/{id} + Forecasts/ByBuyer/{id} (join por forecastId para mes/año)
 document.addEventListener("DOMContentLoaded", function () {
@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function fetchAllGeneration(turbineId) {
         const PAGE_SIZE = 1000;
         function page(n, acc) {
-            return apiClient.get(`Energy/GenerationHistory/${turbineId}?page=${n}&pageSize=${PAGE_SIZE}`).then(function (res) {
+            return apiClient.get(`EnergyProduction/GenerationHistory/${turbineId}?page=${n}&pageSize=${PAGE_SIZE}`).then(function (res) {
                 const d = res?.data || res?.Data || {};
                 const items = d.items || d.Items || [];
                 acc = acc.concat(items);
