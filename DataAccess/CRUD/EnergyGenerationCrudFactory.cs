@@ -71,6 +71,7 @@ namespace DataAccess.CRUD
         // Método privado para mapear los resultados de la consulta a objetos EnergyGeneration (DTO)
         private EnergyGeneration BuildEnergyGeneration(Dictionary<string, object> row)
         {
+            // Mapear los valores del diccionario a las propiedades del objeto EnergyGeneration
             var generation = new EnergyGeneration
             {
                 Id = (int)row["EnergyGenerationId"],
