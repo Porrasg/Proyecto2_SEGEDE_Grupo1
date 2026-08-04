@@ -185,6 +185,51 @@ namespace CoreApp
             }
         }
 
+        // Envía un correo genérico (no relacionado a OTP) reutilizando la misma plomería SMTP:
+        // agendamiento de mantenimiento, alarmas de falla crítica, asignación de cuotas, etc.
+        // Si las credenciales SMTP no están configuradas, no lanza excepción (mismo criterio
+        // que SendOtpEmail) para no bloquear la operación de negocio que originó el correo.
+        public void SendGenericEmail(string toEmail, string userName, string subject, string bodyHtml)
+        {
+            if (string.IsNullOrWhiteSpace(toEmail))
+            {
+                return;
+            }
+
+            string smtpHost = "smtp.gmail.com";
+            int smtpPort = 587;
+
+            string smtpUser = Environment.GetEnvironmentVariable("SMTP_USER");
+            string smtpPassword = Environment.GetEnvironmentVariable("SMTP_PASSWORD");
+
+            if (string.IsNullOrWhiteSpace(smtpUser) || string.IsNullOrWhiteSpace(smtpPassword))
+            {
+                return;
+            }
+
+            using (var mail = new MailMessage())
+            {
+                mail.From = new MailAddress(smtpUser, "SEGEDE - Sistema de Energía");
+                mail.To.Add(toEmail);
+                mail.Subject = subject;
+                mail.Body = $@"
+                    <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; max-width: 600px;'>
+                        <h3 style='color: #333;'>Estimado(a) {userName},</h3>
+                        <p>{bodyHtml}</p>
+                        <hr style='border: none; border-top: 1px solid #eee;' />
+                        <small style='color: #777;'>Este es un correo automático del sistema SEGEDE, no responda a este mensaje.</small>
+                    </div>";
+                mail.IsBodyHtml = true;
+
+                using (var smtp = new SmtpClient(smtpHost, smtpPort))
+                {
+                    smtp.Credentials = new NetworkCredential(smtpUser, smtpPassword);
+                    smtp.EnableSsl = true;
+                    smtp.Send(mail);
+                }
+            }
+        }
+
         //Validaciones
         // Verifica que el OTP tenga exactamente 6 números
         private bool IsValidOtpFormat(string tokenCode)
@@ -204,6 +249,7 @@ namespace CoreApp
             return purpose == "ACCOUNT_ACTIVATION" ||
                    purpose == "LOGIN" ||
                    purpose == "CHANGE_PASSWORD" ||
+                   purpose == "CHANGE_EMAIL" ||
                    purpose == "RESET_PASSWORD";
         }
 
@@ -223,6 +269,11 @@ namespace CoreApp
             if (purpose == "CHANGE_PASSWORD")
             {
                 return "Cambio de contraseña - Código OTP";
+            }
+
+            if (purpose == "CHANGE_EMAIL")
+            {
+                return "Cambio de correo electrónico - Código OTP";
             }
 
             if (purpose == "RESET_PASSWORD")
@@ -251,6 +302,12 @@ namespace CoreApp
             if (purpose == "CHANGE_PASSWORD")
             {
                 return "Para autorizar el cambio de contraseña, " +
+                       "utilice el siguiente código.";
+            }
+
+            if (purpose == "CHANGE_EMAIL")
+            {
+                return "Para confirmar el cambio de correo electrónico, " +
                        "utilice el siguiente código.";
             }
 

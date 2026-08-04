@@ -26,14 +26,50 @@
     <div class="row g-4">
         <div class="col-md-6">
             <div class="card h-100">
-                <div class="card-header">Historial de Generación (Ciclos 30s)</div>
-                <div class="card-body p-0"><table class="table table-sm table-striped mb-0"><thead><tr><th>ID</th><th>Fecha/Hora</th><th>Energía Generada (MWh)</th><th>Velocidad Viento</th></tr></thead><tbody id="engGenBody"><tr><td colspan="4" class="text-center">Seleccione una turbina...</td></tr></tbody></table></div>
+                <div class="card-header">Historial de Generación (Ciclos 30s)</div> 
+                <div class="card-body p-0">
+                    <table class="table table-sm table-striped mb-0"> <!--Table Historial Generacion inicio-->
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha/Hora</th>
+                                <th>Energía Generada (MWh)</th>
+                                <th>Velocidad Viento</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="engGenBody">
+                            <tr>
+                                <td colspan="4" class="text-center">Seleccione una turbina...</td>
+                            </tr>
+                        </tbody>
+                    </table> <!--Table Historial Generacion final -->
+                </div>
             </div>
         </div>
         <div class="col-md-6">
             <div class="card h-100">
                 <div class="card-header">Historial de Pérdidas de Energía</div>
-                <div class="card-body p-0"><table class="table table-sm table-hover mb-0"><thead><tr><th>ID</th><th>Fecha/Hora</th><th>Pérdida (MWh)</th><th>Causa / Motivo</th></tr></thead><tbody id="engLossBody"><tr><td colspan="4" class="text-center">Seleccione una turbina...</td></tr></tbody></table></div>
+                <div class="card-body p-0">
+                    <table class="table table-sm table-hover mb-0"> <!--Table Historial Perdidas inicio-->
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha/Hora</th>
+                                <th>Pérdida (MWh)</th>
+                                <th>Causa / Motivo</th>
+                            </tr>
+                        </thead>
+                        
+                        <tbody id="engLossBody">
+                            <tr>
+                                <td colspan="4" class="text-center">
+                                    Seleccione una turbina...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table> <!--Table Historial Perdidas final -->
+                </div>
             </div>
         </div>
     </div>

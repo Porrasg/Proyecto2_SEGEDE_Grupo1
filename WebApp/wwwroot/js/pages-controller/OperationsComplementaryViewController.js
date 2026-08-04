@@ -15,18 +15,41 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let allTurbinesMap = {};
 
-    // Cargar mapa de turbinas para traducir IDs a Códigos Únicos
     apiClient.get("Turbines/RetrieveAll").done(function (res) {
-        const list = res?.data || res?.Data || [];
+
+        // Pruebas temporales para verificar la estructura de la respuesta
+        console.log("Turbines respuesta =", res);
+        console.log("¿Es arreglo? =", Array.isArray(res));
+        console.log("res.data =", res?.data);
+
+        // Soporta respuestas que vengan como arreglo directo o dentro de propiedades como data, Data o items
+        const list = Array.isArray(res)
+            ? res
+            : (res?.data?.items ||
+                res?.data?.Data ||
+                res?.data ||
+                res?.Data ||
+                []);
+
+        console.log("Lista de turbinas =", list);
+
+        // Construir mapa de turbinas para llenar los selectores
         list.forEach(t => {
-            allTurbinesMap[t.id || t.Id] = t.code || t.Code || ("Turbina #" + (t.id || t.Id));
+            const id = t.id ?? t.Id;
+            const code = t.code ?? t.Code ?? ("Turbina #" + id);
+
+            allTurbinesMap[id] = code;
         });
 
-        // Inicializar pantalla correspondiente una vez obtenido el catálogo
+        // Inicializar los módulos después de cargar las turbinas
         initEnergyModule();
         initMaintenancesModule();
         initFailuresModule();
-    }).fail(function () {
+
+    }).fail(function (xhr) {
+
+        console.error("Error al cargar turbinas:", xhr);
+
         initEnergyModule();
         initMaintenancesModule();
         initFailuresModule();
@@ -52,31 +75,90 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function loadEnergyData(turbineId) {
+
         if (!turbineId) return;
+
+        // Obtiene los elementos HTML donde se mostrarán los historiales
         const genBody = document.getElementById("engGenBody");
         const lossBody = document.getElementById("engLossBody");
         const batLevel = document.getElementById("engBatLevel");
         const batCap = document.getElementById("engBatCap");
 
-        if (genBody) genBody.innerHTML = '<tr><td colspan="4" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando generación...</td></tr>';
-        if (lossBody) lossBody.innerHTML = '<tr><td colspan="4" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando pérdidas...</td></tr>';
+        if (genBody) {
+            genBody.innerHTML =
+                '<tr><td colspan="4" class="text-center">' +
+                '<span class="spinner-border spinner-border-sm"></span> ' +
+                'Cargando generación...</td></tr>';
+        }
 
-        // 1. Batería Local
+        if (lossBody) {
+            lossBody.innerHTML =
+                '<tr><td colspan="4" class="text-center">' +
+                '<span class="spinner-border spinner-border-sm"></span> ' +
+                'Cargando pérdidas...</td></tr>';
+        }
+
+        // 1. BATERIA LOCAL 
+
+        // Obtiene la batería asociada a la turbina seleccionada.
         apiClient.get("Energy/LocalBattery/" + turbineId).done(function (res) {
-            const b = res?.data || res?.Data || {};
-            if (batLevel) batLevel.textContent = formatNum(b.currentEnergyMWh ?? b.CurrentEnergyMWh ?? 0) + " MWh";
-            if (batCap) batCap.textContent = formatNum(b.maximumCapacityMWh ?? b.MaximumCapacityMWh ?? 0) + " MWh";
-        });
 
-        // 2. Historial de Generación
+            // Obtiene los datos de la batería independientemente de si la API los devuelve dentro de data/Data o directamente en la respuesta.
+            const b = res?.data || res?.Data || res || {};
+
+            // Muestra la cantidad de energía almacenada actualmente en la batería // Si la propiedad no existe, utiliza 0 como valor predeterminado
+            if (batLevel) {
+                batLevel.textContent =
+                    formatNum(
+                        b.currentEnergyMWh ??
+                        b.CurrentEnergyMWh ??
+                        0
+                    ) + " MWh";
+            }
+
+            // Muestra la capacidad máxima de almacenamiento de la batería.// Si la propiedad no existe, utiliza 0 como valor predeterminado.
+            if (batCap) {
+                batCap.textContent =
+                    formatNum(
+                        b.maximumCapacityMWh ??
+                        b.MaximumCapacityMWh ??
+                        0
+                    ) + " MWh";
+            }
+        });
+        
+
+        // 2. HISTORIAL DE GENERACION DE ENERGIA
+
+        // Obtiene los últimos registros de generación de energía de la turbina seleccionada.// Se solicita la primera página con un máximo de 20 registros.
         apiClient.get("Energy/GenerationHistory/" + turbineId + "?page=1&pageSize=20").done(function (res) {
-            const list = (res?.data?.items || res?.Data?.Items || res?.data || res?.Data || []);
+
+            // Obtiene la lista de registros independientemente de si la API devuelve los datos dentro de items, data/Data o directamente.// Si no existen registros, utiliza un arreglo vacío.\            
+            const list =
+                res?.data?.items ||
+                res?.Data?.Items ||
+                res?.data ||
+                res?.Data ||
+                [];
+
+            // Envia la data obtenida para que sea mostrada en la tabla correspondiente. 
             renderGenTable(list);
         });
 
-        // 3. Historial de Pérdidas
+        // 3. HISTORIAL DE PERDIDAS
+
+        // Obtiene los últimos registros de pérdidas de energía de la turbina seleccionada
         apiClient.get("Energy/LossHistory/" + turbineId + "?page=1&pageSize=20").done(function (res) {
-            const list = (res?.data?.items || res?.Data?.Items || res?.data || res?.Data || []);
+
+            // Obtiene la lista de pérdidas independientemente de si la API// devuelve los datos dentro de items, data/Data o directamente.
+            const list =
+                res?.data?.items ||
+                res?.Data?.Items ||
+                res?.data ||
+                res?.Data ||
+                [];
+
+            // Envía los registros obtenidos al método encargado
             renderLossTable(list);
         });
     }
@@ -171,7 +253,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 const tid = m.turbineId || m.TurbineId;
                 const tCode = allTurbinesMap[tid] || ("Turbina #" + tid);
                 const type = m.maintenanceType || m.MaintenanceType || "Preventive";
-                const typeBadge = type === "Preventive" ? '<span class="badge bg-info text-dark">Preventivo</span>' : '<span class="badge bg-warning text-dark">Correctivo</span>';
+                const typeBadges = {
+                    Preventive: '<span class="badge bg-info text-dark">Preventivo</span>',
+                    Corrective: '<span class="badge bg-warning text-dark">Correctivo</span>',
+                    Predictive: '<span class="badge bg-primary">Predictivo</span>',
+                    Inspection: '<span class="badge bg-secondary">Inspección</span>',
+                    Emergency: '<span class="badge bg-danger">Emergencia</span>'
+                };
+                const typeBadge = typeBadges[type] || `<span class="badge bg-secondary">${type}</span>`;
 
                 const estStart = formatDateTime(m.estimatedStartDate || m.EstimatedStartDate);
                 const estEnd = formatDateTime(m.estimatedEndDate || m.EstimatedEndDate);

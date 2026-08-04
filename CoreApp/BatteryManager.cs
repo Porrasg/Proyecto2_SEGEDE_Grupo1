@@ -96,12 +96,7 @@ namespace CoreApp
             var batteries = batteryCrud.RetrieveAll<Battery>();
 
             // Validar que la turbina no tenga una batería asignada
-            foreach (var 
-                
-                
-                
-                
-                currentBattery in batteries)
+            foreach (var currentBattery in batteries)
             {
                 if (currentBattery.TurbineId == battery.TurbineId &&
                     currentBattery.Status != "Inactive")

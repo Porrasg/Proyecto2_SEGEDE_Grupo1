@@ -154,12 +154,42 @@ namespace WebAPI.Controllers
             }
         }
 
+        // Las solicitudes de compra son "Interfaz exclusiva para usuarios Distribuidores"
+        // (rúbrica). La UI ya oculta estas pantallas a otros roles, pero eso es solo
+        // cosmético del lado del cliente; esta validación es la que realmente lo exige
+        // en el servidor. No hay autenticación por token en el proyecto (sesión vive en
+        // sessionStorage del navegador), así que sigue siendo el mismo modelo de
+        // confianza que el resto de la API - pero al menos ya no basta con ocultar el
+        // botón en el frontend para saltarse la regla.
+        private static ActionResult ValidateDistributorRole(string callerRole)
+        {
+            // El propio frontend (BuyerManagementViewController.js) ya permite Distributor
+            // Y Administrator/Admin en esta pantalla (soporte/gestión en nombre del comprador);
+            // la validación del backend debe reflejar exactamente esa misma regla.
+            bool isAllowed = string.Equals(callerRole, "Distributor", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(callerRole, "Administrator", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(callerRole, "Admin", StringComparison.OrdinalIgnoreCase);
+
+            if (!isAllowed)
+            {
+                return new ObjectResult(new { message = "Esta operación es exclusiva para usuarios Distribuidores o Administradores." })
+                {
+                    StatusCode = 403
+                };
+            }
+
+            return null;
+        }
+
         // Registro de un pronóstico nuevo desde la pantalla del comprador.
         // El manager asigna el estado inicial "Pending" y valida duplicados y periodos pasados.
         [HttpPost]
         [Route("Register")]
-        public ActionResult Register(ForecastRegisterRequest request, [FromQuery] int? callerUserId)
+        public ActionResult Register(ForecastRegisterRequest request, [FromQuery] int? callerUserId, [FromQuery] string callerRole)
         {
+            var roleError = ValidateDistributorRole(callerRole);
+            if (roleError != null) return roleError;
+
             try
             {
                 var fm = new ForecastManager();
@@ -187,8 +217,11 @@ namespace WebAPI.Controllers
         // que el manager aplique sus validaciones (no procesado, no cancelado).
         [HttpPut]
         [Route("Modify")]
-        public ActionResult Modify(ForecastModifyRequest request, [FromQuery] int? callerUserId)
+        public ActionResult Modify(ForecastModifyRequest request, [FromQuery] int? callerUserId, [FromQuery] string callerRole)
         {
+            var roleError = ValidateDistributorRole(callerRole);
+            if (roleError != null) return roleError;
+
             try
             {
                 var fm = new ForecastManager();
@@ -211,8 +244,11 @@ namespace WebAPI.Controllers
         // procesado ni cancelado y asigna el estado "Cancelled".
         [HttpPost]
         [Route("Cancel/{id}")]
-        public ActionResult Cancel(int id, [FromQuery] int? callerUserId)
+        public ActionResult Cancel(int id, [FromQuery] int? callerUserId, [FromQuery] string callerRole)
         {
+            var roleError = ValidateDistributorRole(callerRole);
+            if (roleError != null) return roleError;
+
             try
             {
                 var fm = new ForecastManager();

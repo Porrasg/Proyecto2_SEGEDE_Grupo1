@@ -43,6 +43,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 const totalT = turbines.length;
                 const activeT = turbines.filter(function (t) { return (t.status || t.Status) === "Active"; }).length;
+                const maintenanceT = turbines.filter(function (t) { return (t.status || t.Status) === "Maintenance"; }).length;
                 const cbInv = Number((centralBanks[0]?.currentInventoryMWh ?? centralBanks[0]?.CurrentInventoryMWh) || 0);
                 const effCap = Number((centralBanks[0]?.maximumCapacityMWh ?? centralBanks[0]?.MaximumCapacityMWh) || 0);
                 const monthF = forecasts.length;
@@ -50,10 +51,27 @@ document.addEventListener("DOMContentLoaded", function () {
                 const totalBill = invoices.reduce(function (sum, i) { return sum + Number(i.totalAmount ?? i.TotalAmount ?? i.amount ?? i.Amount ?? 0); }, 0);
                 const flushDate = flushes[0]?.executedAt || flushes[0]?.ExecutedAt;
 
+                // Producción del periodo: suma de energía efectivamente transferida al Banco Central
+                // (Flush.TransferredEnergyMWh) en vaciados completados del mes en curso. Es la métrica
+                // de producción real más cercana disponible hoy mientras no exista el cálculo de
+                // producción neta por turbina (pendiente en Operación y Cortes).
+                const now = new Date();
+                const periodProduction = flushes
+                    .filter(function (f) {
+                        const status = f.status || f.Status;
+                        const executedAt = f.executedAt || f.ExecutedAt;
+                        if (status !== "Completed" || !executedAt) return false;
+                        const d = new Date(executedAt);
+                        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                    })
+                    .reduce(function (sum, f) { return sum + Number(f.transferredEnergyMWh ?? f.TransferredEnergyMWh ?? 0); }, 0);
+
                 setText("kpiTotalTurbines", totalT);
                 setText("kpiActiveTurbines", activeT);
+                setText("kpiTurbinesInMaintenance", maintenanceT);
                 setText("kpiCbInventory", formatNumber(cbInv) + " MWh");
                 setText("kpiEffectiveCap", formatNumber(effCap) + " MWh");
+                setText("kpiPeriodProduction", formatNumber(periodProduction) + " MWh");
                 setText("kpiMonthForecasts", monthF);
                 setText("kpiTotalDemand", formatNumber(totalDem) + " MWh");
                 setText("kpiTotalBilled", "₡ " + formatNumber(totalBill));

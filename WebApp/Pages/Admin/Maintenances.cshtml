@@ -8,10 +8,14 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>@ViewData["Title"]</h2>
     </div>
+    <div id="maintComplianceAlert" class="alert alert-warning d-none">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        <span id="maintComplianceAlertText"></span>
+    </div>
         <div class="d-flex justify-content-between mb-3">
         <div class="d-flex gap-2">
             <select class="form-select" id="maintStatus"><option value="">Todos los Estados</option><option value="Scheduled">Programado</option><option value="InProgress">En Progreso</option><option value="Completed">Completado</option></select>
-            <select class="form-select" id="maintType"><option value="">Todos los Tipos</option><option value="Preventive">Preventivo</option><option value="Corrective">Correctivo</option></select>
+            <select class="form-select" id="maintType"><option value="">Todos los Tipos</option><option value="Preventive">Preventivo</option><option value="Corrective">Correctivo</option><option value="Predictive">Predictivo</option><option value="Inspection">Inspección</option><option value="Emergency">Emergencia</option></select>
         </div>
     </div>
     <table class="table table-bordered">
