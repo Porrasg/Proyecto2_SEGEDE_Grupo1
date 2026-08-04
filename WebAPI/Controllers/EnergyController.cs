@@ -72,6 +72,28 @@ namespace WebAPI.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("LossHistory/{(turbineId)}")]
+
+        public ActionResult LossHistory(int turbineId) 
+        {
+            try
+            {
+                var energyManager = new EnergyManager();
+                var lossHistory = energyManager.RetrieveLossHistory(turbineId);
+
+                return Ok(lossHistory);
+
+            }
+            catch (Exception ex) 
+            {
+                return StatusCode(500, new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
 
     }
 }
