@@ -141,15 +141,22 @@ namespace CoreApp
 
             var maintenances = crud.RetrieveAll<Maintenance>();
 
-            // Validar que no haya más de un mantenimiento programado para el mismo día en diferentes turbinas
-            foreach (var currentMaintenance in maintenances)
+            // Validar que no haya más de un mantenimiento programado para el mismo día en diferentes
+            // turbinas. Un mantenimiento de tipo Emergency (falla no planificada) está exento de esta
+            // regla en ambos sentidos: puede agendarse aunque otra turbina ya tenga mantenimiento ese
+            // día, y no bloquea a un mantenimiento planificado que se agende después.
+            if (maintenance.MaintenanceType != "Emergency")
             {
-                if (currentMaintenance.Status != "Cancelled" &&
-                    currentMaintenance.EstimatedStartDate.Date ==
-                    maintenance.EstimatedStartDate.Date &&
-                    currentMaintenance.TurbineId != maintenance.TurbineId)
+                foreach (var currentMaintenance in maintenances)
                 {
-                    throw new Exception("No se puede programar el mantenimiento de más de una turbina el mismo día");
+                    if (currentMaintenance.Status != "Cancelled" &&
+                        currentMaintenance.MaintenanceType != "Emergency" &&
+                        currentMaintenance.EstimatedStartDate.Date ==
+                        maintenance.EstimatedStartDate.Date &&
+                        currentMaintenance.TurbineId != maintenance.TurbineId)
+                    {
+                        throw new Exception("No se puede programar el mantenimiento de más de una turbina el mismo día");
+                    }
                 }
             }
 
@@ -161,6 +168,34 @@ namespace CoreApp
             maintenance.UpdatedAt = null;
 
             crud.Create(maintenance);
+
+            // Notificar al ingeniero asignado el agendamiento del mantenimiento (correo + registro
+            // en la app). Cada aviso va en su propio try/catch: un fallo nunca debe revertir el
+            // mantenimiento ya creado, ni un canal debe bloquear al otro. CrudFactory.Create no
+            // devuelve el Id generado por el SP, así que la notificación in-app no queda enlazada
+            // a un ReferenceId específico (se deja sin referencia en vez de usar un Id inválido).
+            try
+            {
+                new OtpManager().SendGenericEmail(
+                    engineer.Email,
+                    engineer.FirstName,
+                    "Mantenimiento agendado - Turbina #" + maintenance.TurbineId,
+                    $"Se le asignó un mantenimiento ({maintenance.MaintenanceType}) para la turbina #{maintenance.TurbineId}, " +
+                    $"programado del {maintenance.EstimatedStartDate:dd/MM/yyyy HH:mm} al {maintenance.EstimatedEndDate:dd/MM/yyyy HH:mm}.");
+            }
+            catch { /* no bloquear el mantenimiento ya creado */ }
+
+            try
+            {
+                new NotificationManager().Create(new Notification
+                {
+                    UserId = engineer.Id,
+                    Title = "Mantenimiento agendado",
+                    Message = $"Turbina #{maintenance.TurbineId}, del {maintenance.EstimatedStartDate:dd/MM/yyyy} al {maintenance.EstimatedEndDate:dd/MM/yyyy}.",
+                    NotificationType = "Maintenance"
+                });
+            }
+            catch { /* no bloquear el mantenimiento ya creado */ }
         }
 
 
@@ -285,15 +320,20 @@ namespace CoreApp
             var maintenances = crud.RetrieveAll<Maintenance>();
 
             // Validar que no exista un mantenimiento para otra turbina el mismo día
-            foreach (var current in maintenances)
+            // (los de tipo Emergency están exentos, ver Create para la justificación)
+            if (maintenance.MaintenanceType != "Emergency")
             {
-                if (current.Id != maintenance.Id &&
-                    current.Status != "Cancelled" &&
-                    current.EstimatedStartDate.Date ==
-                    maintenance.EstimatedStartDate.Date &&
-                    current.TurbineId != maintenance.TurbineId)
+                foreach (var current in maintenances)
                 {
-                    throw new Exception("No se puede programar el mantenimiento de más de una turbina el mismo día");
+                    if (current.Id != maintenance.Id &&
+                        current.Status != "Cancelled" &&
+                        current.MaintenanceType != "Emergency" &&
+                        current.EstimatedStartDate.Date ==
+                        maintenance.EstimatedStartDate.Date &&
+                        current.TurbineId != maintenance.TurbineId)
+                    {
+                        throw new Exception("No se puede programar el mantenimiento de más de una turbina el mismo día");
+                    }
                 }
             }
 
@@ -353,6 +393,50 @@ namespace CoreApp
         }
 
 
+        // Turbinas que aún NO tienen ningún mantenimiento (planificado o completado, no cancelado)
+        // agendado para el mes en curso. Indicador de cumplimiento de la obligatoriedad mensual
+        // pedida por la rúbrica - se implementa como reporte/alerta, no como validación bloqueante,
+        // porque es una obligación retrospectiva del mes (no tiene sentido impedir crear un
+        // mantenimiento futuro por una obligación que se evalúa sobre el mes actual).
+        public List<Turbine> RetrieveTurbinesWithoutMonthlyMaintenance()
+        {
+            var turbineCrud = new TurbineCrudFactory();
+            var turbines = turbineCrud.RetrieveAll<Turbine>();
+
+            var crud = new MaintenanceCrudFactory();
+            var maintenances = crud.RetrieveAll<Maintenance>();
+
+            var now = DateTime.Now;
+
+            var turbineIdsWithMaintenanceThisMonth = new HashSet<int>();
+            foreach (var m in maintenances)
+            {
+                if (m.Status != "Cancelled" &&
+                    m.EstimatedStartDate.Month == now.Month &&
+                    m.EstimatedStartDate.Year == now.Year)
+                {
+                    turbineIdsWithMaintenanceThisMonth.Add(m.TurbineId);
+                }
+            }
+
+            var result = new List<Turbine>();
+            foreach (var turbine in turbines)
+            {
+                // Una turbina dada de baja ya no requiere mantenimiento mensual
+                if (turbine.Status == "Decommissioned")
+                {
+                    continue;
+                }
+
+                if (!turbineIdsWithMaintenanceThisMonth.Contains(turbine.Id))
+                {
+                    result.Add(turbine);
+                }
+            }
+
+            return result;
+        }
+
         private bool HasEmptyFields(Maintenance m)
         {
             return m.TurbineId <= 0 ||
@@ -368,7 +452,8 @@ namespace CoreApp
             return maintenance.MaintenanceType == "Preventive" ||
                    maintenance.MaintenanceType == "Corrective" ||
                    maintenance.MaintenanceType == "Predictive" ||
-                   maintenance.MaintenanceType == "Inspection";
+                   maintenance.MaintenanceType == "Inspection" ||
+                   maintenance.MaintenanceType == "Emergency"; // mantenimiento no planificado por falla de emergencia
         }
 
 

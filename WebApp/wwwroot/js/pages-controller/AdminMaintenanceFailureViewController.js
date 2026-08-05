@@ -19,6 +19,22 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }).always(loadMaintenances);
 
+        // Aviso de cumplimiento: turbinas sin mantenimiento agendado en el mes en curso
+        // (obligatoriedad mensual de la rúbrica).
+        const complianceAlert = document.getElementById("maintComplianceAlert");
+        const complianceAlertText = document.getElementById("maintComplianceAlertText");
+        if (complianceAlert && complianceAlertText) {
+            apiClient.get("Maintenances/ComplianceAlert").done(function (res) {
+                const turbines = res?.data || res?.Data || [];
+                if (turbines.length > 0) {
+                    const codes = turbines.map(t => t.code || t.Code || `#${t.id || t.Id}`).join(", ");
+                    complianceAlertText.textContent =
+                        `${turbines.length} turbina(s) sin mantenimiento agendado este mes: ${codes}.`;
+                    complianceAlert.classList.remove("d-none");
+                }
+            });
+        }
+
         function loadMaintenances() {
             maintBody.innerHTML = '<tr><td colspan="7" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando mantenimientos...</td></tr>';
             apiClient.get("Maintenances/RetrieveAll")
@@ -48,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
             const badge = { Scheduled: "bg-info text-dark", InProgress: "bg-warning text-dark", Completed: "bg-success", Cancelled: "bg-secondary" };
             const statusLabels = { Scheduled: "Programado", InProgress: "En Progreso", Completed: "Completado", Cancelled: "Cancelado" };
-            const typeLabels = { Preventive: "Preventivo", Corrective: "Correctivo", Predictive: "Predictivo", Inspection: "Inspección" };
+            const typeLabels = { Preventive: "Preventivo", Corrective: "Correctivo", Predictive: "Predictivo", Inspection: "Inspección", Emergency: "Emergencia" };
             maintBody.innerHTML = items.map(function (m) {
                 const status = m.status || m.Status || "-";
                 const type = m.maintenanceType || m.MaintenanceType || "-";
