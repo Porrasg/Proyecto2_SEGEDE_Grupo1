@@ -1,8 +1,7 @@
-// AdminDashboardViewController.js (§22.1, §27) - Controlador JS para el Panel de Administración y Gestión de Usuarios
+// AdminDashboardViewController.js - Controlador JS para el Panel de Administración y Gestión de Usuarios
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("Inicializando AdminDashboardViewController...");
 
-    // Verificación de seguridad en el cliente (RBAC §24.2)
+    // Verificación de seguridad en el cliente
     const role = session.getRole();
     const userId = session.getUserId() || 1;
     if (role !== "Administrator" && role !== "Admin") {
@@ -13,8 +12,23 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    // ==========================================
+    // Normaliza la respuesta de la API: acepta un array directo o un objeto { data: [...] }
+    function normalizeResponse(r) {
+        if (!r) return [];
+        if (Array.isArray(r)) return r;
+        return r.data || r.Data || r.items || r.Items || [];
+    }
+
+    // Obtiene un campo tratando variantes de nombre (por ejemplo status o Status)
+    function getField(obj, names) {
+        for (const n of names) {
+            if (obj && obj[n] !== undefined) return obj[n];
+        }
+        return undefined;
+    }
+
     // 1. PANEL PRINCIPAL (/Admin/Dashboard)
+    // Funciones principales: carga métricas y gráficos del administrador.
     if (document.getElementById("kpiTotalTurbines")) {
         let turbineChartInstance = null;
         let capacityChartInstance = null;
@@ -25,6 +39,8 @@ document.addEventListener("DOMContentLoaded", function () {
         setInterval(loadAdminDashboard, 15000);
         setInterval(loadUserStats, 30000);
 
+        // Carga y procesa los datos que alimentan los KPI del panel administrador.
+        // Usa normalizeResponse() para aceptar distintos formatos de respuesta.
         function loadAdminDashboard() {
             Promise.all([
                 apiClient.get("Turbines/RetrieveAll"),
@@ -34,29 +50,28 @@ document.addEventListener("DOMContentLoaded", function () {
                 apiClient.get("Invoices/RetrieveAll"),
                 apiClient.get("Flushs/RetrieveAll")
             ]).then(function (responses) {
-                const turbines = responses[0]?.[0]?.data || responses[0]?.data || responses[0]?.Data || [];
-                const centralBanks = responses[1]?.[0]?.data || responses[1]?.data || responses[1]?.Data || [];
-                const forecasts = responses[2]?.[0]?.data || responses[2]?.data || responses[2]?.Data || [];
-                const distributions = responses[3]?.[0]?.data || responses[3]?.data || responses[3]?.Data || [];
-                const invoices = responses[4]?.[0]?.data || responses[4]?.data || responses[4]?.Data || [];
-                const flushes = responses[5]?.[0]?.data || responses[5]?.data || responses[5]?.Data || [];
+                // Reutiliza utilitario común para homogenizar respuestas de API.
+                const turbines = normalizeResponse(responses[0]);
+                const centralBanks = normalizeResponse(responses[1]);
+                const forecasts = normalizeResponse(responses[2]);
+                const distributions = normalizeResponse(responses[3]);
+                const invoices = normalizeResponse(responses[4]);
+                const flushes = normalizeResponse(responses[5]);
 
-                const totalT = turbines.length;
-                const activeT = turbines.filter(function (t) { return (t.status || t.Status) === "Active"; }).length;
-                const maintenanceT = turbines.filter(function (t) { return (t.status || t.Status) === "Maintenance"; }).length;
-                const cbInv = Number((centralBanks[0]?.currentInventoryMWh ?? centralBanks[0]?.CurrentInventoryMWh) || 0);
-                const effCap = Number((centralBanks[0]?.maximumCapacityMWh ?? centralBanks[0]?.MaximumCapacityMWh) || 0);
-                const monthF = forecasts.length;
-                const totalDem = forecasts.reduce(function (sum, f) { return sum + Number(f.requestedEnergyMWh ?? f.RequestedEnergyMWh ?? 0); }, 0);
-                const totalBill = invoices.reduce(function (sum, i) { return sum + Number(i.totalAmount ?? i.TotalAmount ?? i.amount ?? i.Amount ?? 0); }, 0);
-                const flushDate = flushes[0]?.executedAt || flushes[0]?.ExecutedAt;
+
+                const totalTurbines = (turbines || []).length;
+                const activeTurbines = (turbines || []).filter(function (t) { return ((getField(t, ["status", "Status"]) || "")) === "Active"; }).length;
+                const turbinesInMaintenance = (turbines || []).filter(function (t) { return ((getField(t, ["status", "Status"]) || "")) === "Maintenance"; }).length;
+                const centralBankInventoryMWh = Number((centralBanks[0]?.currentInventoryMWh ?? centralBanks[0]?.CurrentInventoryMWh) || 0);
+                const effectiveCapacityMWh = Number((centralBanks[0]?.maximumCapacityMWh ?? centralBanks[0]?.MaximumCapacityMWh) || 0);
+                const monthForecasts = (forecasts || []).length;
+                const totalDemandMWh = (forecasts || []).reduce(function (sum, f) { return sum + Number(f.requestedEnergyMWh ?? f.RequestedEnergyMWh ?? 0); }, 0);
+                const totalBilledAmount = (invoices || []).reduce(function (sum, i) { return sum + Number(i.totalAmount ?? i.TotalAmount ?? i.amount ?? i.Amount ?? 0); }, 0);
+                const flushDate = (flushes && flushes[0]) ? (flushes[0].executedAt || flushes[0].ExecutedAt) : null;
 
                 // Producción del periodo: suma de energía efectivamente transferida al Banco Central
-                // (Flush.TransferredEnergyMWh) en vaciados completados del mes en curso. Es la métrica
-                // de producción real más cercana disponible hoy mientras no exista el cálculo de
-                // producción neta por turbina (pendiente en Operación y Cortes).
                 const now = new Date();
-                const periodProduction = flushes
+                const periodProductionMWh = (flushes || [])
                     .filter(function (f) {
                         const status = f.status || f.Status;
                         const executedAt = f.executedAt || f.ExecutedAt;
@@ -66,29 +81,30 @@ document.addEventListener("DOMContentLoaded", function () {
                     })
                     .reduce(function (sum, f) { return sum + Number(f.transferredEnergyMWh ?? f.TransferredEnergyMWh ?? 0); }, 0);
 
-                setText("kpiTotalTurbines", totalT);
-                setText("kpiActiveTurbines", activeT);
-                setText("kpiTurbinesInMaintenance", maintenanceT);
-                setText("kpiCbInventory", formatNumber(cbInv) + " MWh");
-                setText("kpiEffectiveCap", formatNumber(effCap) + " MWh");
-                setText("kpiPeriodProduction", formatNumber(periodProduction) + " MWh");
-                setText("kpiMonthForecasts", monthF);
-                setText("kpiTotalDemand", formatNumber(totalDem) + " MWh");
-                setText("kpiTotalBilled", "₡ " + formatNumber(totalBill));
+                setText("kpiTotalTurbines", totalTurbines);
+                setText("kpiActiveTurbines", activeTurbines);
+                setText("kpiTurbinesInMaintenance", turbinesInMaintenance);
+                setText("kpiCbInventory", formatNumber(centralBankInventoryMWh) + " MWh");
+                setText("kpiEffectiveCap", formatNumber(effectiveCapacityMWh) + " MWh");
+                setText("kpiPeriodProduction", formatNumber(periodProductionMWh) + " MWh");
+                setText("kpiMonthForecasts", monthForecasts);
+                setText("kpiTotalDemand", formatNumber(totalDemandMWh) + " MWh");
+                setText("kpiTotalBilled", "₡ " + formatNumber(totalBilledAmount));
                 setText("kpiLastFlush", flushDate ? new Date(flushDate).toLocaleDateString("es-CR", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "Sin registros");
 
-                renderAdminCharts(totalT, activeT, cbInv, effCap, totalDem);
+                renderAdminCharts(totalTurbines, activeTurbines, centralBankInventoryMWh, effectiveCapacityMWh, totalDemandMWh);
             }).catch(function (xhr) {
                 handleApiError(xhr);
             });
         }
 
+        // Carga estadísticas específicas de usuarios.
         function loadUserStats() {
             apiClient.get("Users/RetrieveAll")
                 .done(function (res) {
-                    const users = res?.data || res?.Data || [];
-                    const active = users.filter(u => (u.status || u.Status) === 'Active').length;
-                    const total = users.length;
+                    const users = Array.isArray(res) ? res : (res?.data || res?.Data || res?.items || res?.Items || []);
+                    const active = (users || []).filter(u => ((u.status || u.Status) || "").toLowerCase() === 'active').length;
+                    const total = (users || []).length;
                     setText("kpiActiveUsers", active);
                     const hint = document.getElementById("kpiTotalUsersHint");
                     if (hint) hint.innerHTML = `<i class="bi bi-arrow-right-short"></i> ${active} activos de ${total} total`;
@@ -96,22 +112,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 .fail(function () { setText("kpiActiveUsers", "-"); });
         }
 
-        function renderAdminCharts(totalT, activeT, cbInv, effCap, totalDem) {
+        function renderAdminCharts(totalTurbines, activeTurbines, centralBankInventoryMWh, effectiveCapacityMWh, totalDemandMWh) {
             if (typeof Chart === "undefined") return;
 
-            const inactiveT = Math.max(0, totalT - activeT);
+            const inactiveTurbines = Math.max(0, totalTurbines - activeTurbines);
             const ctxTurbine = document.getElementById("adminTurbineChart")?.getContext("2d");
             if (ctxTurbine) {
                 if (turbineChartInstance) {
-                    turbineChartInstance.data.datasets[0].data = [activeT, inactiveT];
+                    turbineChartInstance.data.datasets[0].data = [activeTurbines, inactiveTurbines];
                     turbineChartInstance.update();
                 } else {
                     turbineChartInstance = new Chart(ctxTurbine, {
                         type: "doughnut",
                         data: {
                             labels: ["Activas", "Inactivas / Mantenimiento"],
-                            datasets: [{
-                                data: [activeT, inactiveT],
+                                datasets: [{
+                                data: [activeTurbines, inactiveTurbines],
                                 backgroundColor: ["#107C62", "#D97706"],
                                 borderWidth: 1
                             }]
@@ -130,7 +146,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const ctxCap = document.getElementById("adminCapacityChart")?.getContext("2d");
             if (ctxCap) {
                 if (capacityChartInstance) {
-                    capacityChartInstance.data.datasets[0].data = [cbInv, effCap, totalDem];
+                    capacityChartInstance.data.datasets[0].data = [centralBankInventoryMWh, effectiveCapacityMWh, totalDemandMWh];
                     capacityChartInstance.update();
                 } else {
                     capacityChartInstance = new Chart(ctxCap, {
@@ -139,7 +155,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             labels: ["Inventario Actual", "Capacidad Vigente", "Demanda Mes"],
                             datasets: [{
                                 label: "Energía (MWh)",
-                                data: [cbInv, effCap, totalDem],
+                                data: [centralBankInventoryMWh, effectiveCapacityMWh, totalDemandMWh],
                                 backgroundColor: ["#5A2CA0", "#2563EB", "#B91C1C"],
                                 borderRadius: 6
                             }]
@@ -169,9 +185,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return Number(num).toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    // ==========================================
     // 2. GESTIÓN DE USUARIOS (/Admin/Users)
-    // ==========================================
     const tableBody = document.getElementById("usersTableBody");
     if (tableBody) {
         let allUsers = [];
@@ -363,6 +377,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return [firstName, last1, last2].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
         }
 
+        // Carga la lista completa de usuarios y llama al filtrado/render.
         function loadUsers() {
             tableBody.innerHTML = '<tr><td colspan="7" class="text-center"><span class="spinner-border spinner-border-sm" role="status"></span> Cargando usuarios...</td></tr>';
             apiClient.get("Users/RetrieveAll")
@@ -394,6 +409,7 @@ document.addEventListener("DOMContentLoaded", function () {
             renderUsersTable(filtered);
         }
 
+        // Renderiza la tabla de usuarios en el DOM. Recibe un arreglo ya filtrado.
         function renderUsersTable(users) {
             if (!users.length) {
                 tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No se encontraron usuarios que coincidan con los filtros.</td></tr>';
