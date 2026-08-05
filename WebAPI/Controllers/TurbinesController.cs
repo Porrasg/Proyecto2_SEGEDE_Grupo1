@@ -185,5 +185,73 @@ namespace WebAPI.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+       
+        // =========================================================================
+        // 🔹 ENDPOINTS PARA DETALLE TÉCNICO Y MÉTRICAS / HISTORIAL DE TURBINAS
+        // =========================================================================
+
+        [HttpGet]
+        [Route("Metrics/{id}")]
+        public ActionResult GetMetrics(int id)
+        {
+            try
+            {
+                var turbine = new TurbineManager().RetrieveTurbineById(id);
+                if (turbine == null)
+                    return NotFound(new { message = $"No se encontró la turbina con ID {id}" });
+
+                var maints = new MaintenanceManager().RetrieveByTurbineId(id) ?? new List<Maintenance>();
+
+                // Enviamos SOLO los datos crudos
+                return Ok(new
+                {
+                    availability = turbine.ManufactureYear,
+                    maintenances = maints
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        [Route("History/{id}")]
+        public ActionResult GetHistory(int id)
+        {
+            try
+            {
+                var audits = new AuditManager().RetrieveAllAudits() ?? new List<Audit>();
+                var logs = audits.Where(a => a != null && string.Equals(a.EntityName, "Turbines", StringComparison.OrdinalIgnoreCase) && a.EntityId == id);
+                return Ok(logs);
+            }
+            catch (Exception ex) { return StatusCode(500, new { message = ex.Message }); }
+        }
+
+        [HttpGet]
+        [Route("Maintenances/{id}")]
+        public ActionResult GetMaintenances(int id)
+        {
+            try
+            {
+                var maints = new MaintenanceManager().RetrieveAllMaintenances() ?? new List<Maintenance>();
+                return Ok(maints.Where(m => m != null && m.TurbineId == id));
+            }
+            catch (Exception ex) { return StatusCode(500, new { message = ex.Message }); }
+        }
+
+        [HttpGet]
+        [Route("Failures/{id}")]
+        public ActionResult GetFailures(int id)
+        {
+            try
+            {
+                var failures = new FailureManager().RetrieveAllFailures() ?? new List<Failure>();
+                return Ok(failures.Where(f => f != null && f.TurbineId == id));
+            }
+            catch (Exception ex) { return StatusCode(500, new { message = ex.Message }); }
+        }
+    }
+}
     }
 }
