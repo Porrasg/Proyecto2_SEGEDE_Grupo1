@@ -12,7 +12,8 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    // Normaliza la respuesta de la API: acepta un array directo o un objeto { data: [...] }
+    // Algunas respuestas de la API vienen como arreglo y otras dentro de data o items.
+    // Esta función las convierte al mismo formato para poder trabajarlas igual.
     function normalizeResponse(r) {
         if (!r) return [];
         if (Array.isArray(r)) return r;
@@ -50,7 +51,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 apiClient.get("Invoices/RetrieveAll"),
                 apiClient.get("Flushs/RetrieveAll")
             ]).then(function (responses) {
-                // Reutiliza utilitario común para homogenizar respuestas de API.
+                // Guardo cada respuesta en una variable con un nombre más fácil de entender.
                 const turbines = normalizeResponse(responses[0]);
                 const centralBanks = normalizeResponse(responses[1]);
                 const forecasts = normalizeResponse(responses[2]);
@@ -70,6 +71,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const flushDate = (flushes && flushes[0]) ? (flushes[0].executedAt || flushes[0].ExecutedAt) : null;
 
                 // Producción del periodo: suma de energía efectivamente transferida al Banco Central
+                // Calculo solamente la energía completada durante el mes y año actuales.
                 const now = new Date();
                 const periodProductionMWh = (flushes || [])
                     .filter(function (f) {
@@ -98,7 +100,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
-        // Carga estadísticas específicas de usuarios.
+        // Traigo todos los usuarios y cuento cuántos tienen estado activo.
         function loadUserStats() {
             apiClient.get("Users/RetrieveAll")
                 .done(function (res) {
