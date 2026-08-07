@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    // ==========================================
+    
     // 1. PANEL PRINCIPAL (/Admin/Dashboard)
     if (document.getElementById("kpiTotalTurbines")) {
         let turbineChartInstance = null;

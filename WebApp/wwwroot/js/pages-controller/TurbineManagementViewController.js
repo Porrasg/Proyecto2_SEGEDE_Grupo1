@@ -518,7 +518,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         let currentStateTracker = "Active";
 
                         const processedLogs = cronoLogs.map(s => {
-                            console.log("Objeto de cambio individual (History):", s); // <--- Revisa este objeto en F12
+                            console.log("Objeto de cambio individual (History):", s); 
 
                             let newSt = s.newState || s.NewState || s.action || s.Action || "";
                             const reasonText = s.reason || s.Reason || s.description || s.Description || "";
