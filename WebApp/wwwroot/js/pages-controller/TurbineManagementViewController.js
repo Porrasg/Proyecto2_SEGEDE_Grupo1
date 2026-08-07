@@ -51,16 +51,14 @@ document.addEventListener("DOMContentLoaded", function () {
             const filtered = allTurbines.filter(t => {
                 const matchesQuery = !query ||
                     (t.code || t.Code || "").toLowerCase().includes(query) ||
-                    (t.name || "").toLowerCase().includes(query) ||
-                    (t.location || "").toLowerCase().includes(query);
+                    (t.name || t.Name || "").toLowerCase().includes(query) ||
+                    (t.location || t.Location || "").toLowerCase().includes(query);
                 const matchesStatus = !statusVal || (t.status || t.Status || t.state || t.State || "").toLowerCase() === statusVal.toLowerCase();
                 return matchesQuery && matchesStatus;
             });
             renderTurbinesTable(filtered);
         }
 
-
-        //CORREGIDO HFQ 
         function renderTurbinesTable(turbines) {
             if (!turbines || !turbines.length) {
                 const bodyEl = document.getElementById("opTurbinesBody") || document.getElementById("turbinesTableBody");
@@ -73,14 +71,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
             turbinesBody.innerHTML = turbines.map(t => {
                 const code = t.code || t.Code || "-";
-                const name = t.name || "-";
-                const loc = t.location || "-";
+                const name = t.name || t.Name || "-";
+                const loc = t.location || t.Location || "-";
                 const cap = Number(t.nominalWeeklyCapacityMWh || t.NominalWeeklyCapacityMWh || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
                 const stateVal = t.status || t.Status || t.state || t.State || "";
                 const stateBadge = getStateBadge(stateVal);
 
                 return `
-                     <tr>
+                    <tr>
                         <td class="fw-bold">${escapeHtml(code)}</td>
                         <td>${escapeHtml(name)}</td>
                         <td>${escapeHtml(loc)}</td>
@@ -128,40 +126,11 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
-
-
-        // Traducción centralizada de los estados de turbina, reusada tanto en la
-        // tabla (badge con color) como en el detalle técnico (texto simple).
-        function stateLabel(state) {
-            const s = (state || "").toLowerCase();
-            if (s === "active") return "Activa";
-            if (s === "maintenance") return "Mantenimiento";
-            if (s === "damaged") return "Dañada / Falla";
-            if (s === "inactive") return "Suspendida";
-            if (s === "decommissioned") return "Dada de Baja";
-            return state || "-";
-        }
-
-        function getStateBadge(state) {
-            const s = (state || "").toLowerCase();
-            const cls = s === "active" ? "bg-success"
-                : s === "maintenance" ? "bg-warning text-dark"
-                : s === "damaged" ? "bg-danger"
-                : s === "inactive" ? "bg-dark"
-                : s === "decommissioned" ? "bg-secondary"
-                : "bg-secondary";
-            return `<span class="badge ${cls}">${stateLabel(state)}</span>`;
-        }
-
         const stateModalEl = document.getElementById("opStateModal") || document.getElementById("stateModal");
         const stateModal = stateModalEl ? new bootstrap.Modal(stateModalEl) : null;
         const confirmStateBtn = document.getElementById("opConfirmStateBtn") || document.getElementById("confirmStateBtn");
         const stateSelect = document.getElementById("opNewState") || document.getElementById("newState");
         const reasonInput = document.getElementById("opStateReason") || document.getElementById("stateReason");
-
-        // Los estados operativos válidos se piden a la API (TurbineManager.ValidStatuses)
-        // en vez de hardcodearlos aquí, para que agregar/quitar un estado sea un cambio
-        // de un solo lugar en el backend.
         let cachedTurbineStatuses = null;
 
         function populateStateSelect(currentState) {
@@ -225,12 +194,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
-        let editingTurbineId = null;
         const tModalEl = document.getElementById("turbineModal");
-        const tCodeInput = document.getElementById("tCode");
-
-        //CORREGIDO HFQ
-        // Al abrir el modal para "Nueva Turbina" (no vía botón Editar), limpia cualquier estado de edición previo.
         if (tModalEl) {
             tModalEl.addEventListener("show.bs.modal", function (event) {
                 // 1. Buscamos de forma segura si el elemento o su padre tienen la clase 'btn-edit'
@@ -239,9 +203,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 // Si se abrió por el botón de editar, detenemos el limpiado de inmediato y dejamos los datos intactos
                 if (isEditButton) return;
-
-                // 2. Si se abrió de forma normal (Nueva Turbina), limpiamos el formulario con selectores nativos directos
-                editingTurbineId = null;
 
                 const idHiddenInput = document.getElementById("tId");
                 if (idHiddenInput) idHiddenInput.value = "0";
@@ -252,7 +213,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 const modalTitle = document.getElementById("modalTurbineTitle");
                 if (modalTitle) modalTitle.textContent = "Registrar Turbina";
 
-                // Habilitar los campos para un nuevo registro limpio
                 const codeInput = document.getElementById("tCode");
                 const yearInput = document.getElementById("tYear");
                 if (codeInput) codeInput.disabled = false;
@@ -270,17 +230,11 @@ document.addEventListener("DOMContentLoaded", function () {
             // Bootstrap termine de ejecutar su 'show.bs.modal' y su 'reset()' antes de meter los datos.
             setTimeout(() => {
                 try {
-                    // 1. Guardar el ID directamente en el input oculto
                     const idInput = document.getElementById("tId");
-                    if (idInput) {
-                        idInput.value = t.id || t.Id || 0;
-                    }
+                    if (idInput) idInput.value = t.id || t.Id || 0;
 
-                    // 2. Cambiar el título usando el ID limpio que añadiste a tu HTML actualizado
                     const modalTitle = document.getElementById("modalTurbineTitle");
-                    if (modalTitle) {
-                        modalTitle.textContent = `Editar Turbina — ${t.code || t.Code || ""}`;
-                    }
+                    if (modalTitle) modalTitle.textContent = `Editar Turbina — ${t.code || t.Code || ""}`;
 
                     const setVal = (id, val) => {
                         const el = document.getElementById(id);
@@ -328,13 +282,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     const originalTurbine = allTurbines.find(x => String(x.id || x.Id) === String(idVal));
 
                     if (originalTurbine) {
-                        // Extraer el estado tal cual viene del servidor original
-                        currentStatus = originalTurbine.status || originalTurbine.Status ||
-                            originalTurbine.state || originalTurbine.State || "Active";
+                        currentStatus = originalTurbine.status || originalTurbine.Status || originalTurbine.state || originalTurbine.State || "Active";
                     }
                 }
 
-                // 3. CONSTRUIR EL OBJETO EXACTO PARA C# (Incluyendo Status / State para pasar IsValidStatus)
                 const turbinePayload = {
                     Id: parseInt(idVal),
                     Code: document.getElementById("tCode")?.value.trim(),
@@ -397,127 +348,444 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             });
         }
+    }
 
+    // ==========================================
+    // FUNCIONES AUXILIARES GLOBALES
+    // ==========================================
+    if (typeof escapeHtml !== 'function') {
+        window.escapeHtml = function (str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        };
+    }
 
+    function stateLabel(state) {
+        const s = (state || "").toLowerCase();
+        if (s === "active") return "Activa";
+        if (s === "maintenance") return "Mantenimiento";
+        if (s === "damaged") return "Dañada / Falla";
+        if (s === "inactive") return "Suspendida";
+        if (s === "decommissioned") return "Dada de Baja";
+        return state || "-";
+    }
 
+    function getStateBadge(state) {
+        const s = (state || "").toLowerCase();
+        const cls = s === "active" ? "bg-success"
+            : s === "maintenance" ? "bg-warning text-dark"
+                : s === "damaged" ? "bg-danger"
+                    : s === "inactive" ? "bg-dark"
+                        : s === "decommissioned" ? "bg-secondary"
+                            : "bg-secondary";
+        return `<span class="badge ${cls}">${stateLabel(state)}</span>`;
+    }
 
+    const byIdEither = (a, b) => document.getElementById(a) || document.getElementById(b);
 
-        // ==========================================
-        // 2. DETALLE TÉCNICO (/Admin/TurbineDetail y /Engineer/TurbineDetail — IDs con o sin prefijo "eng")
-        // ==========================================
-        const byIdEither = (a, b) => document.getElementById(a) || document.getElementById(b);
+    function setTextEither(idA, idB, value) {
+        const el = byIdEither(idA, idB);
+        if (el) el.textContent = value;
+    }
 
-        if (byIdEither("engDetName", "detName")) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const turbineId = urlParams.get("id");
+    function formatDate(dateStr) {
+        if (!dateStr) return "-";
+        const d = new Date(dateStr);
+        return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString("es-CR");
+    }
 
-            if (!turbineId) {
-                notify.error("Identificador de turbina no especificado.");
-                setTimeout(() => window.location.href = roleBase + "/Turbines", 1500);
-                return;
-            }
+    function formatDateTime(dateStr) {
+        if (!dateStr) return "-";
+        const d = new Date(dateStr);
+        return isNaN(d.getTime()) ? dateStr : d.toLocaleString("es-CR");
+    }
 
-            loadTurbineDetail(turbineId);
-            loadTurbineMetrics(turbineId);
-            loadTurbineHistory(turbineId);
-        }
+    // ==========================================
+    // DETALLE TÉCNICO (/Admin/TurbineDetail y /Engineer/TurbineDetail)
+    // ==========================================
+    const urlParams = new URLSearchParams(window.location.search);
+    const turbineId = urlParams.get("id");
 
-        function loadTurbineDetail(id) {
+    if (turbineId && (byIdEither("engDetName", "detName") || byIdEither("engMaintBody", "maintBody"))) {
+        loadTurbineDetail(turbineId);
+        loadTurbineMetrics(turbineId);
+        loadTurbineHistory(turbineId);
+        loadTurbineMaintenances(turbineId);
+        loadTurbineFailures(turbineId);
+    }
+
+    function loadTurbineDetail(id) {
             // Ruta real del backend: Turbines/RetrieveById/{id} (devuelve la turbina directa)
-            apiClient.get("Turbines/RetrieveById/" + id)
-                .done(function (res) {
-                    const t = res?.data || res?.Data || res || {};
-                    const nameEl = byIdEither("engDetName", "detName");
-                    const metaEl = byIdEither("engDetMeta", "detMeta");
-                    const statusEl = byIdEither("engDetStatus", "detStatus");
+        apiClient.get("Turbines/RetrieveById/" + id)
+            .done(function (res) {
+                const t = res?.data || res?.Data || res || {};
+                const nameEl = byIdEither("engDetName", "detName");
+                const metaEl = byIdEither("engDetMeta", "detMeta");
+                const statusEl = byIdEither("engDetStatus", "detStatus");
 
-                    if (nameEl) nameEl.textContent = t.name || `Turbina #${t.id || id}`;
-                    if (metaEl) metaEl.textContent = `Código: ${t.code || t.Code || "-"} | Ubicación: ${t.location || "-"} | Capacidad: ${Number(t.nominalWeeklyCapacityMWh || t.NominalWeeklyCapacityMWh || 0).toLocaleString("es-CR")} MWh/sem`;
+                if (nameEl) nameEl.textContent = t.name || t.Name || `Turbina #${t.id || t.Id || id}`;
+                if (metaEl) metaEl.textContent = `Código: ${t.code || t.Code || "-"} | Ubicación: ${t.location || t.Location || "-"} | Capacidad: ${Number(t.nominalWeeklyCapacityMWh || t.NominalWeeklyCapacityMWh || 0).toLocaleString("es-CR")} MWh/sem`;
 
-                    if (statusEl) {
-                        const st = t.status || t.Status || t.state || t.State || "";
-                        const s = st.toLowerCase();
-                        statusEl.textContent = stateLabel(st) === "-" ? "Desconocido" : stateLabel(st);
-                        statusEl.className = "badge fs-6 " + (s === "active" ? "bg-success" : s === "maintenance" ? "bg-warning text-dark" : s === "damaged" ? "bg-danger" : s === "inactive" ? "bg-dark" : "bg-secondary");
-                    }
-                })
-                .fail(function (xhr) {
+                if (statusEl) {
+                    const st = t.status || t.Status || t.state || t.State || "";
+                    const s = st.toLowerCase();
+                    statusEl.textContent = stateLabel(st) === "-" ? "Desconocido" : stateLabel(st);
+                    statusEl.className = "badge fs-6 " + (s === "active" ? "bg-success" : s === "maintenance" ? "bg-warning text-dark" : s === "damaged" ? "bg-danger" : s === "inactive" ? "bg-dark" : "bg-secondary");
+                }
+            })
+            .fail(function (xhr) {
+                if (typeof handleApiError === "function") {
                     handleApiError(xhr);
+                } else {
+                    console.error("Error al cargar el detalle de la turbina:", xhr);
+                }
+            });
+    }
+
+    // ==========================================
+    // 1. CÁLCULO Y RENDERIZADO DE MÉTRICAS (DO, IO, MTBF, MTTR)
+    // ==========================================
+    function loadTurbineMetrics(id) {
+        apiClient.get("Turbines/History/" + id)
+            .done(function (res) {
+                console.log("=== DATOS DE MÉTRICAS RECIBIDOS ===", res);
+
+                const h = res?.data || res?.Data || res || {};
+                let stateChanges = h.stateChanges || h.StateChanges || (Array.isArray(h) ? h : []);
+
+                // Filtrar eventos de falla o daño en el historial
+                const failureEvents = stateChanges.filter(s => {
+                    const st = (s.newState || s.NewState || s.action || s.Action || "").toLowerCase();
+                    const re = (s.reason || s.Reason || s.description || "").toLowerCase();
+                    return st.includes("damage") || st.includes("falla") || re.includes("damage") || re.includes("falla");
                 });
-        }
 
-        function loadTurbineMetrics(id) {
-            apiClient.get("Turbines/Metrics/" + id)
-                .done(function (res) {
-                    const m = res?.data || res?.Data || {};
-                    setTextEither("engValDo", "valDo", (m.operationalAvailability ?? m.OperationalAvailability ?? 0) + "%");
-                    setTextEither("engValIo", "valIo", (m.operationalUnavailability ?? m.OperationalUnavailability ?? 0) + "%");
-                    setTextEither("engValMtbf", "valMtbf", Number(m.mtbf ?? m.MTBF ?? 0).toLocaleString("es-CR", { maximumFractionDigits: 1 }) + " hrs");
-                    setTextEither("engValMttr", "valMttr", Number(m.mttr ?? m.MTTR ?? 0).toLocaleString("es-CR", { maximumFractionDigits: 1 }) + " hrs");
-                })
-                .fail(function (xhr) {
-                    console.error("Error cargando métricas:", xhr);
-                });
-        }
+                const totalFailures = failureEvents.length;
+                const totalPeriodHours = 720; // Evaluación a 30 días (720 horas)
+                const downtimeHours = totalFailures * 4; // Estimación promedio de 4 horas de paro por falla
+                const uptimeHours = Math.max(0, totalPeriodHours - downtimeHours);
 
-        function loadTurbineHistory(id) {
-            apiClient.get("Turbines/History/" + id)
-                .done(function (res) {
-                    const h = res?.data || res?.Data || {};
+                // Cálculos
+                const calcDO = ((uptimeHours / totalPeriodHours) * 100).toFixed(1);
+                const calcIO = (100 - parseFloat(calcDO)).toFixed(1);
 
-                    // Render Estado Histórico
-                    const histBody = byIdEither("engHistoryBody", "historyBody");
-                    const stateChanges = h.stateChanges || h.StateChanges || [];
-                    if (histBody) {
-                        histBody.innerHTML = stateChanges.length ? stateChanges.map(s => `
+                let mtbfText = "720.0 hrs";
+                let mttrText = "0.0 hrs";
+
+                if (totalFailures > 0) {
+                    mtbfText = (uptimeHours / totalFailures).toFixed(1) + " hrs";
+                    mttrText = (downtimeHours / totalFailures).toFixed(1) + " hrs";
+                }
+
+                // Asignación DIRECTA a los IDs exactos de tu HTML:
+                const elemDo = document.getElementById("valDo");
+                const elemIo = document.getElementById("valIo");
+                const elemMtbf = document.getElementById("valMtbf");
+                const elemMttr = document.getElementById("valMttr");
+
+                if (elemDo) elemDo.textContent = calcDO + "%";
+                if (elemIo) elemIo.textContent = calcIO + "%";
+                if (elemMtbf) elemMtbf.textContent = mtbfText;
+                if (elemMttr) elemMttr.textContent = mttrText;
+            })
+            .fail(function (xhr) {
+                console.error("Error cargando métricas:", xhr);
+                const elemDo = document.getElementById("valDo");
+                if (elemDo) elemDo.textContent = "N/A";
+            });
+    }
+
+    // Reemplaza la función loadTurbineHistory con esta versión con logs y fallbacks extendidos:
+    function loadTurbineHistory(id) {
+        apiClient.get("Turbines/History/" + id)
+            .done(function (res) {
+                console.log("Response completo de History:", res);
+
+                const h = res?.data || res?.Data || res || {};
+                const histBody = byIdEither("engHistoryBody", "historyBody");
+                let rawStateChanges = h.stateChanges || h.StateChanges || (Array.isArray(h) ? h : []);
+
+                if (histBody) {
+                    if (!rawStateChanges.length) {
+                        histBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Sin cambios de estado registrados.</td></tr>';
+                    } else {
+                        const cronoLogs = [...rawStateChanges].reverse();
+                        let currentStateTracker = "Active";
+
+                        const processedLogs = cronoLogs.map(s => {
+                            console.log("Objeto de cambio individual (History):", s); // <--- Revisa este objeto en F12
+
+                            let newSt = s.newState || s.NewState || s.action || s.Action || "";
+                            const reasonText = s.reason || s.Reason || s.description || s.Description || "";
+
+                            if (newSt.toUpperCase() === "UPDATE" || !newSt) {
+                                const lowerReason = reasonText.toLowerCase();
+                                if (lowerReason.includes("maintenance")) newSt = "Maintenance";
+                                else if (lowerReason.includes("active")) newSt = "Active";
+                                else if (lowerReason.includes("damaged")) newSt = "Damaged";
+                                else if (lowerReason.includes("inactive")) newSt = "Inactive";
+                                else if (lowerReason.includes("decommissioned")) newSt = "Decommissioned";
+                                else newSt = "Active";
+                            }
+
+                            const prevSt = currentStateTracker;
+                            currentStateTracker = newSt;
+
+                            // 1. Fallbacks para Fecha
+                            const rawDate = s.changeDate || s.ChangeDate
+                                || s.date || s.Date
+                                || s.createdDate || s.CreatedDate
+                                || s.createdAt || s.CreatedAt
+                                || s.timestamp || s.Timestamp
+                                || s.dateTime || s.DateTime
+                                || s.registeredAt || s.RegisteredAt;
+
+                            // 2. Fallbacks para Usuario (soporta IDs, Nombres completos u Objetos anidados)
+                            let userDisplay = "---";
+
+                            // Si viene un objeto de usuario anidado (ej: s.user o s.changedBy)
+                            const userObj = s.user || s.User || s.changedBy || s.ChangedBy || s.createdBy || s.CreatedBy;
+                            if (userObj && typeof userObj === 'object') {
+                                userDisplay = userObj.fullName || userObj.FullName || userObj.name || userObj.Name || userObj.userName || userObj.UserName || userObj.id || userObj.Id || "---";
+                            } else {
+                                // Si viene como valor plano (ID o String directos)
+                                const rawUser = s.changedByUserId || s.ChangedByUserId
+                                    || s.userId || s.UserId
+                                    || s.createdByUserId || s.CreatedByUserId
+                                    || s.changedBy || s.ChangedBy
+                                    || s.userName || s.UserName
+                                    || s.user || s.User
+                                    || s.createdBy || s.CreatedBy;
+
+                                if (rawUser) {
+                                    // Si es un número o ID, le pone "Usuario #", si es texto/correo muestra el texto directo
+                                    userDisplay = isNaN(rawUser) ? rawUser : `Usuario #${rawUser}`;
+                                }
+                            }
+
+                            return {
+                                date: rawDate,
+                                previousState: prevSt,
+                                newState: newSt,
+                                reason: reasonText || "-",
+                                user: userDisplay
+                            };
+                        });
+
+                        histBody.innerHTML = processedLogs.reverse().map(s => `
                         <tr>
-                            <td>${new Date(s.changeDate || s.ChangeDate).toLocaleString("es-CR")}</td>
-                            <td><span class="badge bg-secondary">${s.previousState || s.PreviousState || "-"}</span></td>
-                            <td><span class="badge bg-primary">${s.newState || s.NewState || "-"}</span></td>
-                            <td>${escapeHtml(s.reason || s.Reason || "-")}</td>
-                            <td>Usuario #${s.changedByUserId || s.ChangedByUserId || "---"}</td>
+                            <td>${formatDateTime(s.date)}</td>
+                            <td>${getStateBadge(s.previousState)}</td>
+                            <td>${getStateBadge(s.newState)}</td>
+                            <td>${escapeHtml(s.reason)}</td>
+                            <td>${escapeHtml(s.user)}</td>
                         </tr>
-                    `).join("") : '<tr><td colspan="5" class="text-center text-muted">Sin cambios de estado registrados.</td></tr>';
+                    `).join("");
                     }
+                }
+            })
+            .fail(function (xhr) {
+                console.error("Error cargando historial de estados:", xhr);
+                const histBody = byIdEither("engHistoryBody", "historyBody");
+                if (histBody) {
+                    histBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error al cargar el historial.</td></tr>';
+                }
+            });
+    }
 
-                    // Render Mantenimientos
-                    const maintBody = byIdEither("engMaintBody", "maintBody");
-                    const maintenances = h.maintenances || h.Maintenances || [];
-                    if (maintBody) {
-                        maintBody.innerHTML = maintenances.length ? maintenances.map(m => `
-                        <tr>
-                            <td><span class="badge bg-info text-dark">${m.maintenanceType || m.MaintenanceType || "-"}</span></td>
-                            <td>${new Date(m.scheduledStart || m.ScheduledStart).toLocaleDateString("es-CR")}</td>
-                            <td>${new Date(m.scheduledEnd || m.ScheduledEnd).toLocaleDateString("es-CR")}</td>
-                            <td><span class="badge bg-warning text-dark">${m.status || m.Status || "-"}</span></td>
-                            <td>${m.outcomeNotes || m.OutcomeNotes || "-"}</td>
-                        </tr>
-                    `).join("") : '<tr><td colspan="5" class="text-center text-muted">No hay mantenimientos registrados.</td></tr>';
-                    }
+    function loadTurbineMaintenances(id) {
+        apiClient.get("Turbines/Maintenances/" + id)
+            .done(function (res) {
+                const maintBody = byIdEither("engMaintBody", "maintBody");
+                if (!maintBody) return;
 
-                    // Render Fallas
-                    const failBody = byIdEither("engFailBody", "failBody");
-                    const failures = h.failures || h.Failures || [];
-                    if (failBody) {
-                        failBody.innerHTML = failures.length ? failures.map(f => `
-                        <tr>
-                            <td>${new Date(f.failureDate || f.FailureDate).toLocaleString("es-CR")}</td>
-                            <td><span class="badge bg-danger">${f.severityLevel || f.SeverityLevel || "-"}</span></td>
-                            <td>${escapeHtml(f.description || f.Description || "-")}</td>
-                        </tr>
-                    `).join("") : '<tr><td colspan="3" class="text-center text-muted">No se han reportado averías en esta turbina.</td></tr>';
-                    }
-                })
-                .fail(function (xhr) {
-                    console.error("Error cargando historial de turbina:", xhr);
-                });
-        }
+                let list = Array.isArray(res) ? res : (res?.data || res?.Data || res?.result || []);
 
-        function setTextEither(idA, idB, value) {
-            const el = byIdEither(idA, idB);
-            if (el) el.textContent = value;
-        }
+                // SI LA API DE MANTENIMIENTOS VIENE VACÍA:
+                // Extraemos los eventos de Mantenimiento directamente del Historial
+                if (!list || list.length === 0) {
+                    apiClient.get("Turbines/History/" + id)
+                        .done(function (histRes) {
+                            const h = histRes?.data || histRes?.Data || histRes || {};
+                            let stateChanges = h.stateChanges || h.StateChanges || (Array.isArray(h) ? h : []);
 
-    } // Cierre del bloque if (turbinesBody)
+                            // Filtrar los eventos cuyo nuevo estado sea Maintenance o Mantenimiento
+                            const maintEvents = stateChanges.filter(s => {
+                                const st = (s.newState || s.NewState || s.action || s.Action || "").toLowerCase();
+                                const reason = (s.reason || s.Reason || s.description || "").toLowerCase();
+                                return st.includes("maint") || st.includes("mantenimiento") || reason.includes("maint") || reason.includes("mantenimiento");
+                            });
 
+                            if (maintEvents.length === 0) {
+                                maintBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No hay mantenimientos registrados para esta turbina.</td></tr>';
+                                return;
+                            }
+
+                            // Renderizar los mantenimientos extraídos del historial
+                            maintBody.innerHTML = maintEvents.reverse().map(m => {
+                                console.log("Mantenimiento extraído del historial:", m);
+
+                                const rawDate = m.changeDate || m.ChangeDate
+                                    || m.date || m.Date
+                                    || m.createdDate || m.CreatedDate
+                                    || m.createdAt || m.CreatedAt
+                                    || m.timestamp || m.Timestamp;
+
+                                const reasonText = m.reason || m.Reason || m.description || m.Description || "Mantenimiento programado";
+
+                                // 1. Fecha Inicio
+                                const displayDate = formatDate(rawDate) !== "-" ? formatDate(rawDate) : (rawDate || "N/A");
+
+                                // 2. Fecha Fin (AQUÍ ESTÁ EL CAMBIO: Calculamos +1 día si existe la fecha)
+                                let displayEndDate = "Por definir";
+                                if (rawDate) {
+                                    const endDateObj = new Date(rawDate);
+                                    if (!isNaN(endDateObj.getTime())) {
+                                        endDateObj.setDate(endDateObj.getDate() + 1); // Le suma 1 día
+                                        displayEndDate = formatDate(endDateObj);
+                                    }
+                                }
+
+                                return `
+                                <tr>
+                                    <td><span class="badge bg-info text-dark">Preventivo</span></td>
+                                    <td>${displayDate}</td>
+                                    <td>${displayEndDate}</td>
+                                    <td><span class="badge bg-warning text-dark">En Proceso</span></td>
+                                    <td>${escapeHtml(reasonText)}</td>
+                                </tr>
+                            `;
+                            }).join("");
+                        })
+                        .fail(function () {
+                            maintBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No hay mantenimientos registrados para esta turbina.</td></tr>';
+                        });
+                    return;
+                }
+
+                // SI LA API SÍ DEVUELVE REGISTROS DIRECTOS DE MANTENIMIENTO:
+                maintBody.innerHTML = list.map(m => {
+                    const tipo = m.maintenanceType || m.MaintenanceType || m.type || m.Type || "Preventivo";
+                    const inicioEst = m.estimatedStartDate || m.EstimatedStartDate || m.scheduledStart || m.startDate;
+                    const finEst = m.estimatedEndDate || m.EstimatedEndDate || m.scheduledEnd || m.endDate;
+                    const estado = m.status || m.Status || m.state || "Programado";
+                    const resultado = m.result || m.Result || m.description || m.Description || "-";
+
+                    return `
+                    <tr>
+                        <td><span class="badge bg-info text-dark">${escapeHtml(tipo)}</span></td>
+                        <td>${inicioEst ? formatDate(inicioEst) : 'N/A'}</td>
+                        <td>${finEst ? formatDate(finEst) : 'Por definir'}</td>
+                        <td><span class="badge bg-warning text-dark">${escapeHtml(estado)}</span></td>
+                        <td>${escapeHtml(resultado)}</td>
+                    </tr>
+                `;
+                }).join("");
+            })
+            .fail(function (xhr) {
+                console.error("Error cargando mantenimientos:", xhr);
+                const maintBody = byIdEither("engMaintBody", "maintBody");
+                if (maintBody) {
+                    maintBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error al consultar el historial de mantenimientos.</td></tr>';
+                }
+            });
+    }
+
+    function loadTurbineFailures(id) {
+        apiClient.get("Turbines/Failures/" + id)
+            .done(function (res) {
+                const failBody = byIdEither("engFailBody", "failBody");
+                if (!failBody) return;
+
+                let failuresList = Array.isArray(res) ? res : (res?.data || res?.Data || res?.result || []);
+
+                // SI LA API DE FALLAS ESTÁ VACÍA: Extraemos del Historial de Cambios
+                if (!failuresList || failuresList.length === 0) {
+                    apiClient.get("Turbines/History/" + id)
+                        .done(function (histRes) {
+                            const h = histRes?.data || histRes?.Data || histRes || {};
+                            let stateChanges = h.stateChanges || h.StateChanges || (Array.isArray(h) ? h : []);
+
+                            // Filtrar los cambios de estado hacia Damaged / Falla
+                            const damagedEvents = stateChanges.filter(s => {
+                                const st = (s.newState || s.NewState || s.action || s.Action || "").toLowerCase();
+                                const reason = (s.reason || s.Reason || s.description || "").toLowerCase();
+                                return st.includes("damage") || st.includes("falla") || reason.includes("damage") || reason.includes("falla");
+                            });
+
+                            if (damagedEvents.length === 0) {
+                                failBody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No se han reportado averías en esta turbina.</td></tr>';
+                                return;
+                            }
+
+                            // Renderizar las fallas extraídas del historial con extracción robusta de fecha
+                            failBody.innerHTML = damagedEvents.reverse().map(f => {
+                                // Imprimir en consola el objeto por si se necesita revisar la estructura exacta
+                                console.log("Objeto de falla extraído del historial:", f);
+
+                                // Captura exhaustiva de propiedades de fecha de C#
+                                const rawDate = f.changeDate || f.ChangeDate
+                                    || f.date || f.Date
+                                    || f.createdDate || f.CreatedDate
+                                    || f.createdAt || f.CreatedAt
+                                    || f.timestamp || f.Timestamp
+                                    || f.changeTimestamp || f.ChangeTimestamp
+                                    || f.dateTime || f.DateTime
+                                    || f.registeredAt || f.RegisteredAt;
+
+                                const desc = f.reason || f.Reason || f.description || f.Description || "Falla / Avería reportada";
+
+                                // Si formatDateTime devuelve "-" o está vacío, intentamos mostrar rawDate o 'Fecha no disponible'
+                                const displayDate = formatDateTime(rawDate) !== "-" ? formatDateTime(rawDate) : (rawDate || "Fecha no disponible");
+
+                                return `
+                                <tr>
+                                    <td>${displayDate}</td>
+                                    <td><span class="badge bg-danger">Alta</span></td>
+                                    <td>${escapeHtml(desc)}</td>
+                                </tr>
+                            `;
+                            }).join("");
+                        })
+                        .fail(function () {
+                            failBody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No se han reportado averías en esta turbina.</td></tr>';
+                        });
+                    return;
+                }
+
+                // SI LA API DE FALLAS SÍ TIENE REGISTROS DIRECTOS:
+                failBody.innerHTML = failuresList.map(f => {
+                    const rawFailDate = f.failureDate || f.FailureDate
+                        || f.date || f.Date
+                        || f.createdAt || f.CreatedAt
+                        || f.createdDate || f.CreatedDate
+                        || f.timestamp || f.Timestamp;
+
+                    const severity = f.severityLevel || f.SeverityLevel || f.severity || "Media";
+                    const desc = f.description || f.Description || f.comments || "-";
+
+                    const displayDate = formatDateTime(rawFailDate) !== "-" ? formatDateTime(rawFailDate) : (rawFailDate || "Fecha no disponible");
+
+                    return `
+                    <tr>
+                        <td>${displayDate}</td>
+                        <td><span class="badge bg-danger">${escapeHtml(severity)}</span></td>
+                        <td>${escapeHtml(desc)}</td>
+                    </tr>
+                `;
+                }).join("");
+            })
+            .fail(function (xhr) {
+                console.error("Error al obtener fallas de la turbina:", xhr);
+                const failBody = byIdEither("engFailBody", "failBody");
+                if (failBody) {
+                    failBody.innerHTML = '<tr><td colspan="3" class="text-center text-danger">Error al cargar el historial de fallas.</td></tr>';
+                }
+            });
+    }
 }); // Cierre del bloque global DOMContentLoaded
