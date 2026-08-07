@@ -22,11 +22,12 @@ namespace DataAccess.CRUD
             var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "CRE_ENERGY_GENERATION_PR";
 
-            //Mapear los parametros requeridos por el SP
-            sqlOperation.AddIntParameter("TubineId", generation.TurbineId);
-            sqlOperation.AddDecimalParameter("GenerateMWh", generation.GenerateMWh);
+            //Mapear los parametros requeridos por el SP (nombres deben coincidir
+            //exactamente con la firma de CRE_ENERGY_GENERATION_PR)
+            sqlOperation.AddIntParameter("TurbineId", generation.TurbineId);
+            sqlOperation.AddDecimalParameter("GeneratedMWh", generation.GenerateMWh);
             sqlOperation.AddDecimalParameter("WindSpeedMs", generation.WindSpeedMs);
-            sqlOperation.AddDateTimeParameter("GenerateAt", generation.GenerateAt);
+            sqlOperation.AddDateTimeParameter("GeneratedAt", generation.GenerateAt);
             sqlOperation.AddDateTimeParameter("CreatedAt", generation.CreateAt);
 
             //Ejecutar el SP
