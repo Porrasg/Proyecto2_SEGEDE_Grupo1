@@ -4576,3 +4576,237 @@ BEGIN
     ORDER BY CreatedAt DESC, AuditId DESC;
 END;
 GO
+
+
+/*==============================================================================
+    PROCEDIMIENTO: RET_BY_TURBINE_ENERGY_GENERATION_PR
+
+    Descripción:
+        Obtiene el historial de generación de energía asociado a una turbina
+        específica, ordenado desde el registro más reciente.
+==============================================================================*/
+
+CREATE OR ALTER PROCEDURE dbo.RET_BY_TURBINE_ENERGY_GENERATION_PR
+(
+    @TurbineId INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        EnergyGenerationId,
+        TurbineId,
+        GeneratedMWh,
+        WindSpeedMs,
+        GeneratedAt,
+        CreatedAt
+    FROM dbo.tblEnergyGenerations
+    WHERE TurbineId = @TurbineId
+    ORDER BY GeneratedAt DESC;
+END;
+GO
+
+/*==============================================================================
+    PROCEDIMIENTO: RET_BY_TURBINE_ENERGY_LOSS_PR
+
+    Descripción:
+        Obtiene el historial de pérdidas de energía asociado a una turbina
+        específica, ordenado desde el registro más reciente.
+==============================================================================*/
+
+CREATE OR ALTER PROCEDURE dbo.RET_BY_TURBINE_ENERGY_LOSS_PR
+(
+    @TurbineId INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        EnergyLossId,
+        TurbineId,
+        BatteryId,
+        LostMWh,
+        Reason,
+        OccurredAt,
+        CreatedAt
+    FROM dbo.tblEnergyLosses
+    WHERE TurbineId = @TurbineId
+    ORDER BY OccurredAt DESC;
+END;
+GO
+
+/*==============================================================================
+    STORED PROCEDURES: tblEnergyGenerations
+==============================================================================*/
+
+
+/*==============================================================================
+    PROCEDIMIENTO: CRE_ENERGY_GENERATION_PR
+
+    Descripción:
+        Registra un evento de generación de energía producido por una turbina.
+
+        Durante la misma transacción, la energía generada se almacena en la
+        batería activa asociada a la turbina hasta alcanzar su capacidad
+        máxima. Si existe energía excedente que no puede almacenarse, esta se
+        registra como una pérdida por saturación.
+==============================================================================*/
+
+CREATE OR ALTER PROCEDURE dbo.CRE_ENERGY_GENERATION_PR
+(
+    @TurbineId INT,
+    @GeneratedMWh DECIMAL(18,4),
+    @WindSpeedMs DECIMAL(18,4),
+    @GeneratedAt DATETIME,
+    @CreatedAt DATETIME
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        DECLARE @BatteryId INT;
+        DECLARE @CurrentEnergyMWh DECIMAL(18,4);
+        DECLARE @MaximumCapacityMWh DECIMAL(18,4);
+        DECLARE @AvailableCapacityMWh DECIMAL(18,4);
+        DECLARE @StoredEnergyMWh DECIMAL(18,4);
+        DECLARE @LostEnergyMWh DECIMAL(18,4);
+        DECLARE @EnergyGenerationId INT;
+
+
+        -- Obtener y bloquear la batería activa asociada a la turbina
+        -- durante el proceso de almacenamiento.
+        SELECT TOP 1
+            @BatteryId = BatteryId,
+            @CurrentEnergyMWh = CurrentEnergyMWh,
+            @MaximumCapacityMWh = MaximumCapacityMWh
+        FROM dbo.tblBatteries WITH (UPDLOCK, HOLDLOCK)
+        WHERE TurbineId = @TurbineId
+          AND Status = 'Active'
+        ORDER BY BatteryId DESC;
+
+
+        -- Protección de integridad:
+        -- la operación no puede continuar si no existe una batería activa.
+        IF @BatteryId IS NULL
+        BEGIN
+            THROW 50001,
+                'No existe una batería activa asociada a la turbina seleccionada',
+                1;
+        END;
+
+
+        -- Calcular el espacio disponible actualmente en la batería.
+        SET @AvailableCapacityMWh =
+            @MaximumCapacityMWh - @CurrentEnergyMWh;
+
+        IF @AvailableCapacityMWh < 0
+        BEGIN
+            SET @AvailableCapacityMWh = 0;
+        END;
+
+
+        -- Determinar cuánto de la energía generada puede almacenarse
+        -- y cuánto se pierde por falta de capacidad.
+        IF @GeneratedMWh <= @AvailableCapacityMWh
+        BEGIN
+            SET @StoredEnergyMWh = @GeneratedMWh;
+            SET @LostEnergyMWh = 0;
+        END
+        ELSE
+        BEGIN
+            SET @StoredEnergyMWh = @AvailableCapacityMWh;
+            SET @LostEnergyMWh =
+                @GeneratedMWh - @AvailableCapacityMWh;
+        END;
+
+
+        -- Registrar el evento completo de generación.
+        INSERT INTO dbo.tblEnergyGenerations
+        (
+            TurbineId,
+            GeneratedMWh,
+            WindSpeedMs,
+            GeneratedAt,
+            CreatedAt
+        )
+        VALUES
+        (
+            @TurbineId,
+            @GeneratedMWh,
+            @WindSpeedMs,
+            @GeneratedAt,
+            @CreatedAt
+        );
+
+
+        -- Guardar inmediatamente el ID del registro de generación.
+        SET @EnergyGenerationId =
+            CAST(SCOPE_IDENTITY() AS INT);
+
+
+        -- Actualizar el estado y los acumulados de la batería.
+        UPDATE dbo.tblBatteries
+        SET
+            CurrentEnergyMWh =
+                CurrentEnergyMWh + @StoredEnergyMWh,
+
+            TotalGeneratedMWh =
+                TotalGeneratedMWh + @GeneratedMWh,
+
+            TotalSaturationLossMWh =
+                TotalSaturationLossMWh + @LostEnergyMWh,
+
+            UpdatedAt = GETDATE()
+        WHERE BatteryId = @BatteryId;
+
+
+        -- Si parte de la energía no pudo almacenarse,
+        -- registrar la pérdida en su historial.
+        IF @LostEnergyMWh > 0
+        BEGIN
+            INSERT INTO dbo.tblEnergyLosses
+            (
+                TurbineId,
+                BatteryId,
+                LostMWh,
+                Reason,
+                OccurredAt,
+                CreatedAt
+            )
+            VALUES
+            (
+                @TurbineId,
+                @BatteryId,
+                @LostEnergyMWh,
+                'Capacidad máxima de batería alcanzada',
+                @GeneratedAt,
+                @CreatedAt
+            );
+        END;
+
+
+        COMMIT TRANSACTION;
+
+
+        -- Retornar el identificador del evento de generación registrado.
+        SELECT @EnergyGenerationId AS EnergyGenerationId;
+
+    END TRY
+    BEGIN CATCH
+
+        IF @@TRANCOUNT > 0
+        BEGIN
+            ROLLBACK TRANSACTION;
+        END;
+
+        THROW;
+
+    END CATCH;
+END;
+GO

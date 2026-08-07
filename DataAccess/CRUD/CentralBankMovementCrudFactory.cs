@@ -114,7 +114,7 @@ namespace DataAccess.CRUD
                 SaturationLossMWh = (decimal)row["SaturationLossMWh"],
                 Description = (string)row["Description"],
                 CreatedAt = (DateTime)row["CreatedAt"],
-                UpdatedAt = (DateTime)row["UpdatedAt"]
+                UpdatedAt = row["UpdatedAt"] != DBNull.Value ? (DateTime?)row["UpdatedAt"] : null // puede ser nulo
             };
         }
     }
