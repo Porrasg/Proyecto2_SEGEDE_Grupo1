@@ -296,22 +296,43 @@ namespace CoreApp
             {
                 throw new Exception("La bateria no tiene suficiente energia");
             }
-            flush.SnapshotEnergyMWh = battery.CurrentEnergyMWh;
+            flush.SnapshotEnergyMWh = battery.CurrentEnergyMWh; // Guardar la energia actual de la bateria antes del vaciado
 
             var centralManager = new CentralBankManager();
-            var flushCrud = new FlushCrudFactory();
 
             decimal loss = centralManager.ReceiveEnergy(flush.CentralBankId, flush.TransferredEnergyMWh);
 
             flush.SaturationLossMWh = loss;
+            // Actualizar la bateria
             battery.CurrentEnergyMWh -= flush.TransferredEnergyMWh;
             battery.TotalTransferredMWh += flush.TransferredEnergyMWh;
-            battery.UpdatedAt = DateTime.Now;
+            battery.UpdatedAt = DateTime.UtcNow;
+
             batteryCrud.Update(battery);
+
+            //consultar el bance central para hacer la actualizacion de la energia y registrar el movimiento
+            var centralBankCrud = new CentralBankCrudFactory();
+            var centralBank = centralBankCrud.RetrieveById<CentralBank>(flush.CentralBankId);
+
+            //registrar el movimiento en el banco central
+            var movementManager = new CentralBankMovementManager();
+
+            movementManager.Create(new CentralBankMovement
+            {
+                CentralBankId = flush.CentralBankId,
+                MovementType = "FLUSH",
+                EnergyMWh = flush.TransferredEnergyMWh,
+                InventoryAfterMovement = centralBank.CurrentInventoryMWh,
+                SaturationLossMWh = flush.SaturationLossMWh,
+                Description = $"Vaciado de {flush.TransferredEnergyMWh} MWh desde la bateria {flush.BatteryId} de la turbina {flush.TurbineId}"
+
+            });
+            //registrar el vaciado 
             flush.ExecutedAt = DateTime.UtcNow;
             flush.CreatedAt = DateTime.UtcNow;
 
             flush.Status="Completed";
+            var flushCrud = new FlushCrudFactory();
             flushCrud.Create(flush);
         }
     }

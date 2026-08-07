@@ -22,11 +22,11 @@ namespace DataAccess.DAO
 
         private string connectionString; // Cadena de conexion a la base de datos
 
-        // Paso 2: Redefinir el constructor default de la clase
-        private SqlDao(){
+       //  Paso 2: Redefinir el constructor default de la clase
+          private SqlDao(){
             connectionString = Environment.GetEnvironmentVariable("SGDE_SQL_CONNECTION")
-                ?? @"Data Source=proyecto2grupo1.database.windows.net;Initial Catalog=Proyecto2_SEGEDE_Grupo1;Persist Security Info=True;User ID=sgderootg1;Password=sgde123!.!";
-        }
+          ?? @"Data Source=proyecto2grupo1.database.windows.net;Initial Catalog=Proyecto2_SEGEDE_Grupo1;Persist Security Info=True;User ID=sgderootg1;Password=sgde123!.!";
+         }
 
         // Paso 3: Definir un metodo estatico que expone la instancia
         public static SqlDao GetInstance() {

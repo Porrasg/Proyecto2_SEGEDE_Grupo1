@@ -171,8 +171,6 @@ namespace CoreApp
             // Actualizar el banco central
             centralBankCrud.Update(centralBank);
         }
-
-
         public void Delete(CentralBank centralBank)
         {
             if (centralBank == null)
@@ -307,6 +305,17 @@ namespace CoreApp
             centralBank.UpdatedAt = DateTime.UtcNow;
             centralBankCrud.Update(centralBank);
 
+
+            var movementManager = new CentralBankMovementManager();
+            movementManager.Create(new CentralBankMovement
+            {
+                CentralBankId = centralBankId,
+                MovementType = "RECEIVE",
+                EnergyMWh = mwhToreceive,
+                InventoryAfterMovement = centralBank.CurrentInventoryMWh,
+                SaturationLossMWh = overflow,
+                Description = "Entrada de energia al banco central"
+            });
             return overflow;
         }
         //salida de energia
@@ -334,8 +343,17 @@ namespace CoreApp
 
             centralBank.UpdatedAt = DateTime.UtcNow;
             centralBankCrud.Update(centralBank);   
+
+            var movementManager = new CentralBankMovementManager();
+            movementManager.Create(new CentralBankMovement
+            {
+                CentralBankId = centralBankId,
+                MovementType = "DISTRIBUTE",
+                EnergyMWh = mwhToDistribute,
+                InventoryAfterMovement = centralBank.CurrentInventoryMWh,
+                SaturationLossMWh = 0,
+                Description = "Salida de energia del banco central"
+            });
         }
     }
 }
-
-
