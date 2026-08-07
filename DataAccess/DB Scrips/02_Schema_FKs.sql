@@ -190,3 +190,4 @@ GO
 
 ALTER TABLE [dbo].[tblEnergyLosses] CHECK CONSTRAINT [FK_tblEnergyLosses_tblTurbines]
 GO
+GO

@@ -408,13 +408,13 @@ CREATE TABLE dbo.tblAudit
 GO
 
 /*==============================================================================
-    TABLA: tblEnergyGenerations  (Generación de energía) 
+    TABLA: tblEnergyGenerations  (Generación de energía)
 
     Descripción:
         Almacena el historial de generación de energía de las turbinas dentro
         del sistema SGDE. Cada registro representa un evento de generación,
         incluyendo la energía generada, la velocidad del viento y la fecha
-        y hora en que ocurrió la generación.       
+        y hora en que ocurrió la generación.
 
 ==============================================================================*/
 
@@ -449,7 +449,7 @@ CREATE TABLE [dbo].[tblEnergyLosses](
 	[OccurredAt] [datetime] NOT NULL,
 	[CreatedAt] [datetime] NOT NULL,
 	[BatteryId] [int] NULL,
- CONSTRAINT [PK_tblEnergyLosses] PRIMARY KEY CLUSTERED 
+ CONSTRAINT [PK_tblEnergyLosses] PRIMARY KEY CLUSTERED
 (
 	[EnergyLossId] ASC
 )WITH (STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
