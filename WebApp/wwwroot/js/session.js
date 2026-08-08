@@ -27,7 +27,7 @@ const session = (function () {
     // Devuelve el identificador único del usuario (userId)
     function getUserId() { 
         const s = get(); 
-        return s?.userId ?? s?.UserId ?? null; 
+        return s?.userId ?? s?.UserId ?? s?.id ?? s?.Id ?? null;
     }
 
     // Devuelve el correo electrónico asociado a la sesión
