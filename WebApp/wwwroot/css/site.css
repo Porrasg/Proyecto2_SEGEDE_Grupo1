@@ -1041,6 +1041,10 @@ main[role="main"] {
     z-index: 1020;
 }
 
+.sgde-sidebar.role-menu-pending [data-roles] {
+    display: none;
+}
+
 .sgde-sidebar-menu {
   min-height: 0;
   overflow-y: auto;

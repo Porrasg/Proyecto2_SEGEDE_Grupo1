@@ -305,6 +305,7 @@ class RoleAccessController {
             }
         });
 
+        document.querySelector(".sgde-sidebar")?.classList.remove("role-menu-pending");
         this.updateSidebarUserProfile(activeRoles);
     }
 
