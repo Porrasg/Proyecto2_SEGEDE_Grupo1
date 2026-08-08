@@ -121,6 +121,12 @@
                         </a>
                     </li>
                     <li class="nav-item" data-roles="superadmin,administrator,admin">
+                        <a href="/Admin/Flush" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-water"></i>
+                            <span>Control y Ejecución de Flush</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="superadmin,administrator,admin">
                         <a href="/Admin/Maintenances" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
                             <i class="bi bi-tools"></i>
                             <span>Mantenimientos</span>
@@ -176,32 +182,20 @@
                     </li>
 
                     <!-- Módulos Ingeniero -->
-                    <li class="nav-item" data-roles="superadmin,administrator,admin,engineer">
+                    <li class="nav-item" data-roles="engineer">
                         <a href="/Engineer/Dashboard" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
                             <i class="bi bi-cpu-fill"></i>
                             <span>Control Operativo</span>
                         </a>
                     </li>
-                    <li class="nav-item" data-roles="superadmin,administrator,admin,engineer">
+                    <li class="nav-item" data-roles="superadmin,administrator,admin,engineer"> <!-- esta la puede ver admin tambien -->
                         <a href="/Engineer/Simulator" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
                             <i class="bi bi-sliders"></i>
                             <span>Simulador SCADA</span>
                         </a>
                     </li>
-                    <li class="nav-item" data-roles="superadmin,administrator,admin">
-                        <a href="/Admin/Reports" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
-                            <i class="bi bi-bar-chart-fill"></i>
-                            <span>Centro de Reportes</span>
-                        </a>
-                    </li>
-                    <li class="nav-item" data-roles="superadmin,administrator,admin">
-                        <a href="/Admin/Audit" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
-                            <i class="bi bi-journal-check"></i>
-                            <span>Bitácora de Auditoría</span>
-                        </a>
-                    </li>
 
-                   
+
                     <!-- Módulos Comprador / Distribuidor -->
                     <li class="nav-item" data-roles="buyer,customer,distributor">
                         <a href="/Buyer/Dashboard" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
@@ -240,7 +234,7 @@
                     <div class="d-flex align-items-center gap-2 overflow-hidden">
                         <!-- Foto de perfil del usuario -->
                         <div class="sgde-avatar rounded-circle d-flex align-items-center justify-content-center fw-bold fs-sm">
-                            <img id="sidebarAvatarImg" src="/images/default-avatar.png" alt="Avatar" class="rounded-circle d-none" style="width:36px;height:36px;object-fit:cover;" />
+                            <img id="sidebarAvatarImg" src="/images/default-avatar.svg" alt="Avatar" class="rounded-circle d-none" style="width:36px;height:36px;object-fit:cover;" />
                             <i id="sidebarAvatarFallbackIcon" class="bi bi-person-fill"></i>
                         </div>
                         <!-- Nombre y Rol de usuario -->

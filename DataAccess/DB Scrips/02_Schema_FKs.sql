@@ -156,12 +156,3 @@ ADD CONSTRAINT FK_tblAudit_tblUsers
 FOREIGN KEY (UserId)
 REFERENCES dbo.tblUsers (UserId);
 GO
-
-
--- Clave foránea para la tabla tblCentralBankMovements
-/* Relaciona el movimiento con el banco central. */
-ALTER TABLE dbo.tblCentralBankMovements WITH CHECK
-ADD CONSTRAINT FK_tblCentralBankMovements_tblCentralBank
-FOREIGN KEY (CentralBankId)
-REFERENCES dbo.tblCentralBank (CentralBankId);
-GO
