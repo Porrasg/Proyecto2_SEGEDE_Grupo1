@@ -1035,11 +1035,15 @@ main[role="main"] {
 
 /* ── 1. Contenedor del Sidebar Fijo ───────────────────────────────────────── */
 .sgde-sidebar {
-    width: 265px;
     background-color: var(--sgde-surface-card);
     border-color: var(--sgde-border) !important;
     transition: width var(--sgde-transition-default, 0.25s ease);
     z-index: 1020;
+}
+
+.sgde-sidebar-menu {
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .sgde-brand-icon {
