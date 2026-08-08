@@ -31,13 +31,13 @@
     {
         <!-- PUBLIC / LANDING FULL-WIDTH LAYOUT (SIN SIDEBAR) -->
         <div class="d-flex flex-column min-vh-100 bg-app-surface">
-            <header class="sgde-public-topbar border-bottom bg-white sticky-top shadow-sm">
+            <header class="sgde-public-topbar border-bottom sticky-top shadow-sm" style="background-color: var(--sgde-surface-card);">
                 <div class="container py-3 d-flex align-items-center justify-content-between">
                     <a asp-page="/Index" class="d-flex align-items-center text-decoration-none gap-2">
                         <span class="sgde-brand-icon d-flex align-items-center justify-content-center">
                             <i class="bi bi-lightning-charge-fill fs-5"></i>
                         </span>
-                        <span class="fs-5 fw-bold tracking-tight text-dark">SGDE <span class="text-primary">Enterprise</span></span>
+                        <span class="fs-5 fw-bold tracking-tight" style="color: var(--sgde-heading);">SGDE <span class="text-primary">Enterprise</span></span>
                     </a>
                     <div class="d-flex align-items-center gap-3">
                         <a asp-page="/Login" class="btn btn-outline-primary btn-sm fw-semibold px-3">
@@ -46,6 +46,9 @@
                         <a asp-page="/Register" class="btn btn-primary btn-sm fw-semibold px-3">
                             Registrarse
                         </a>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnPublicThemeToggle" title="Alternar tema">
+                            <i class="bi bi-moon-stars-fill fs-6"></i>
+                        </button>
                     </div>
                 </div>
             </header>

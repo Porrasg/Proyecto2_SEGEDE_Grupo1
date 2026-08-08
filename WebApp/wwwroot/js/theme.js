@@ -1,30 +1,30 @@
 // theme.js (§29.4) - Gestión de modo oscuro / claro (monochrome alto contraste)
 document.addEventListener("DOMContentLoaded", function () {
-    const btnToggle = document.getElementById("btnThemeToggle");
+    const themeButtons = document.querySelectorAll("#btnThemeToggle, #btnPublicThemeToggle");
     
     // Cargar tema persistido en localStorage o preferido por sistema
     let currentTheme = localStorage.getItem("sgde_theme") || "light";
     applyTheme(currentTheme);
 
-    if (btnToggle) {
-        btnToggle.addEventListener("click", function () {
+    themeButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
             currentTheme = currentTheme === "light" ? "dark" : "light";
             applyTheme(currentTheme);
             localStorage.setItem("sgde_theme", currentTheme);
         });
-    }
+    });
 
     function applyTheme(theme) {
         document.documentElement.setAttribute("data-bs-theme", theme);
-        if (btnToggle) {
-            const icon = btnToggle.querySelector("i");
+        themeButtons.forEach(function (button) {
+            const icon = button.querySelector("i");
             if (icon) {
                 icon.className = theme === "dark"
                     ? "bi bi-sun-fill fs-6"
                     : "bi bi-moon-stars-fill fs-6";
             }
-            btnToggle.title = theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro";
-        }
+            button.title = theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro";
+        });
         applyChartJsTheme(theme);
     }
 
