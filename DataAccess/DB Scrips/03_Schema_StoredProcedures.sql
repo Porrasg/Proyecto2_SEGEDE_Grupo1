@@ -4576,3 +4576,131 @@ BEGIN
     ORDER BY CreatedAt DESC, AuditId DESC;
 END;
 GO
+
+
+--sp de centralbankmovement
+CREATE OR ALTER PROCEDURE CRE_CENTRALBANKMOVEMENT_PR
+(
+    @CentralBankId INT,
+    @MovementType NVARCHAR(50),
+    @EnergyMWh DECIMAL(18,4),
+    @InventoryAfterMovement DECIMAL(18,4),
+    @SaturationLossMWh DECIMAL(18,4),
+    @Description NVARCHAR(500),
+    @CreatedAt DATETIME,
+    @UpdatedAt DATETIME = NULL
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO dbo.tblCentralBankMovements
+    (
+        CentralBankId,
+        MovementType,
+        EnergyMWh,
+        InventoryAfterMovement,
+        SaturationLossMWh,
+        Description,
+        CreatedAt,
+        UpdatedAt
+    )
+    VALUES
+    (
+        @CentralBankId,
+        @MovementType,
+        @EnergyMWh,
+        @InventoryAfterMovement,
+        @SaturationLossMWh,
+        @Description,
+        @CreatedAt,
+        @UpdatedAt
+    );
+END;
+GO
+
+CREATE OR ALTER PROCEDURE UPD_CENTRALBANKMOVEMENT_PR
+(
+    @MovementId INT,
+    @CentralBankId INT,
+    @MovementType NVARCHAR(50),
+    @EnergyMWh DECIMAL(18,4),
+    @InventoryAfterMovement DECIMAL(18,4),
+    @SaturationLossMWh DECIMAL(18,4),
+    @Description NVARCHAR(500),
+    @UpdatedAt DATETIME = NULL
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE dbo.tblCentralBankMovements
+    SET
+        CentralBankId = @CentralBankId,
+        MovementType = @MovementType,
+        EnergyMWh = @EnergyMWh,
+        InventoryAfterMovement = @InventoryAfterMovement,
+        SaturationLossMWh = @SaturationLossMWh,
+        Description = @Description,
+        UpdatedAt = @UpdatedAt
+    WHERE MovementId = @MovementId;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE DEL_CENTRALBANKMOVEMENT_PR
+(
+    @MovementId INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DELETE
+    FROM dbo.tblCentralBankMovements
+    WHERE MovementId = @MovementId;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE RET_ALL_CENTRALBANKMOVEMENT_PR
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        MovementId,
+        CentralBankId,
+        MovementType,
+        EnergyMWh,
+        InventoryAfterMovement,
+        SaturationLossMWh,
+        Description,
+        CreatedAt,
+        UpdatedAt
+    FROM dbo.tblCentralBankMovements
+    ORDER BY CreatedAt DESC;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE RET_BY_ID_CENTRALBANKMOVEMENT_PR
+(
+    @MovementId INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        MovementId,
+        CentralBankId,
+        MovementType,
+        EnergyMWh,
+        InventoryAfterMovement,
+        SaturationLossMWh,
+        Description,
+        CreatedAt,
+        UpdatedAt
+    FROM dbo.tblCentralBankMovements
+    WHERE MovementId = @MovementId;
+END;
+GO
+
