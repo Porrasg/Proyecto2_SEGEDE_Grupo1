@@ -81,7 +81,7 @@ namespace WebAPI.Controllers
                     activeTurbines = turbines.Count(t => (t.Status ?? string.Empty) == "Active"),
                     turbinesUnderMaintenance = turbines.Count(t => (t.Status ?? string.Empty) == "Maintenance"),
                     damagedTurbines = turbines.Count(t => (t.Status ?? string.Empty) == "Damaged"),
-                    suspendedTurbines = turbines.Count(t => (t.Status ?? string.Empty) == "Inactive"),
+                    suspendedTurbines = turbines.Count(t => (t.Status ?? string.Empty) == "Inactive" || (t.Status ?? string.Empty) == "Suspended"),
                     centralBankInventory = centralBanks.Sum(c => c.CurrentInventoryMWh),
                     overdueMaintenanceAlerts = maintenances.Count(m => (m.Status ?? string.Empty) == "Scheduled" && m.EstimatedEndDate < DateTime.Now),
                     lastFlushEnergy = flushes.OrderByDescending(f => f.ExecutedAt).FirstOrDefault()?.TransferredEnergyMWh ?? 0,
@@ -122,6 +122,8 @@ namespace WebAPI.Controllers
                 var currentMonthForecasts = forecasts.Where(f => f.ForecastMonth == currentMonth && f.ForecastYear == currentYear).ToList();
                 var currentMonthDistributions = distributions.Where(d => d.DistributionDate.Month == currentMonth && d.DistributionDate.Year == currentYear).ToList();
                 var currentMonthInvoices = invoices.Where(i => i.IssueDate.Month == currentMonth && i.IssueDate.Year == currentYear).ToList();
+                var pendingInvoices = invoices.Where(i => (i.PaymentStatus ?? string.Empty) == "Pending").OrderBy(i => i.DueDate).ToList();
+                var paidInvoices = invoices.Where(i => (i.PaymentStatus ?? string.Empty) == "Paid").ToList();
 
                 var result = new
                 {
@@ -131,7 +133,11 @@ namespace WebAPI.Controllers
                     activeForecasts = forecasts.Count(f => (f.Status ?? string.Empty) == "Pending"),
                     lastStatementDate = currentMonthInvoices.OrderByDescending(i => i.IssueDate).FirstOrDefault()?.IssueDate,
                     totalDistributions = distributions.Count,
-                    currentMonthBilled = currentMonthInvoices.Sum(i => i.TotalAmount)
+                    currentMonthBilled = currentMonthInvoices.Sum(i => i.TotalAmount),
+                    paidAmount = paidInvoices.Sum(i => i.TotalAmount),
+                    pendingAmount = pendingInvoices.Sum(i => i.TotalAmount),
+                    nextDueAmount = pendingInvoices.FirstOrDefault()?.TotalAmount ?? 0,
+                    nextDueDate = pendingInvoices.FirstOrDefault()?.DueDate
                 };
 
                 return Ok(new { data = result });
