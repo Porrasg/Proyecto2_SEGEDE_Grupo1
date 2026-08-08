@@ -9,11 +9,11 @@
         <h2>@ViewData["Title"]</h2>
     </div>
         <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-7">
+        <div class="col-md-10 col-lg-9 col-xl-8">
             <div class="card shadow-sm">
-                <div class="card-body p-4">
+                <div class="card-body p-4 p-md-5">
                     <form id="registerForm">
-                        <div class="row mb-3">
+                        <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label" for="regId">Identificación (Cédula/RUC)</label>
                                 <input type="text" class="form-control" id="regId" required>
@@ -23,23 +23,23 @@
                                 <input type="email" class="form-control" id="regEmail" required>
                             </div>
                         </div>
-                        <div class="row mb-3">
+                        <div class="row g-3 mb-3">
                             <div class="col-12">
                                 <label class="form-label" for="regFirstName"><i class="bi bi-person-fill text-primary"></i> Nombre</label>
                                 <input type="text" class="form-control" id="regFirstName" required placeholder="Ej. Juan Carlos">
                             </div>
                         </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
+                        <div class="row g-3 mb-3">
+                            <div class="col-12">
                                 <label class="form-label" for="regLastName1"><i class="bi bi-person-vcard-fill text-primary"></i> Primer Apellido</label>
                                 <input type="text" class="form-control" id="regLastName1" required placeholder="Ej. Pérez">
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-12">
                                 <label class="form-label" for="regLastName2"><i class="bi bi-person-vcard text-primary"></i> Segundo Apellido <span class="text-muted small">(Opcional)</span></label>
                                 <input type="text" class="form-control" id="regLastName2" placeholder="Ej. Rodríguez">
                             </div>
                         </div>
-                        <div class="row mb-3">
+                        <div class="row g-3 mb-3">
                             <div class="col-md-4">
                                 <label class="form-label" for="regPhone">Teléfono</label>
                                 <input type="tel" class="form-control" id="regPhone" required>
@@ -53,7 +53,7 @@
                                 <input type="text" class="form-control" id="regAge" readonly aria-live="polite" placeholder="—">
                             </div>
                         </div>
-                        <div class="row mb-3 align-items-center">
+                        <div class="row g-3 mb-3 align-items-center">
                             <div class="col-md-8">
                                 <label class="form-label" for="regPhoto"><i class="bi bi-camera-fill text-primary" aria-hidden="true"></i> Fotografía de Perfil <span class="text-muted small">(Opcional, JPG/PNG)</span></label>
                                 <input type="file" class="form-control" id="regPhoto" accept="image/jpeg,image/png,image/webp">
@@ -67,7 +67,7 @@
                             <li>Mínimo 8 caracteres</li>
                             <li>Al menos una mayúscula, una minúscula, un número y un carácter especial</li>
                         </ul>
-                        <div class="row mb-3">
+                        <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label" for="regPassword">Contraseña</label>
                                 <input type="password" class="form-control" id="regPassword" required>
@@ -77,6 +77,7 @@
                                 <input type="password" class="form-control" id="regConfirmPassword" required>
                             </div>
                         </div>
+
                         <div class="d-grid mt-4">
                             <button type="submit" class="btn btn-primary">Registrar Cuenta</button>
                         </div>
