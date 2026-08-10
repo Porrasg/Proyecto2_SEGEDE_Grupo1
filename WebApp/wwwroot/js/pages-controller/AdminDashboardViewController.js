@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    // ==========================================
+ 
     // 1. PANEL PRINCIPAL (/Admin/Dashboard)
     // Funciones principales: carga métricas y gráficos del administrador.
     if (document.getElementById("kpiTotalTurbines")) {
@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", function () {
         let editingUserSnapshot = null;
         let editPhotoDataUrl = null;
 
-        // Robust modal initialization
+        // Inicialización robusta del modal
         const userModalEl = document.getElementById("userModal");
         const editUserModalEl = document.getElementById("editUserModal");
         let userModal = null;
@@ -209,7 +209,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (searchInput) searchInput.addEventListener("input", filterAndRenderUsers);
         if (filterSelect) filterSelect.addEventListener("change", filterAndRenderUsers);
 
-        // "Nuevo Usuario" button — manual open (no data-bs-toggle to avoid conflicts)
+        // Botón "Nuevo Usuario" — apertura manual (sin data-bs-toggle para evitar conflictos)
         const btnNewUser = document.getElementById("btnOpenNewUser");
         if (btnNewUser) {
             btnNewUser.addEventListener("click", function () {
@@ -220,7 +220,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 const modalTitle = userModalEl?.querySelector(".modal-title");
                 if (modalTitle) modalTitle.innerHTML = '<i class="bi bi-person-plus-fill me-2"></i>Nuevo Usuario Interno';
 
-                // Enable all fields for creation
+                
+                // Habilitar todos los campos para la creación
                 setFieldState("uId", true, false);
                 setFieldState("uEmail", true, false);
                 setFieldState("uPhone", true, false);
@@ -433,7 +434,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 `;
             }).join("");
 
-            // Bind action events
+            // Vincular eventos de acción
             tableBody.querySelectorAll(".btn-edit").forEach(btn => {
                 btn.addEventListener("click", () => openEditModal(btn.getAttribute("data-id")));
             });
@@ -475,7 +476,8 @@ document.addEventListener("DOMContentLoaded", function () {
             return `<span class="badge bg-warning text-dark">${status || "-"}</span>`;
         }
 
-        // Edit modal
+       
+        // Ventana para editar
         function openEditModal(id) {
             const u = allUsers.find(item => String(item.id) === String(id));
             if (!u) {
@@ -548,7 +550,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
         }
 
-        // Save button
+        // Botón de guardar
         const saveBtn = document.getElementById("saveUserBtn");
         if (saveBtn) {
             saveBtn.addEventListener("click", function () {
