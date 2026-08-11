@@ -54,7 +54,7 @@ function initNavigation() {
                 navUserName.innerHTML = `<i class="bi bi-lightning-charge-fill"></i> ${email} [Ingeniero]`;
                 navUserName.className = "badge bg-info border border-dark text-dark px-3 py-2 fw-bold shadow-sm";
             }
-        } else if (role === "Distributor") {
+        } else if (role === "Distributor" || role === "Buyer" || role === "Customer") {
             if (navLiBuyer) navLiBuyer.classList.remove("d-none");
             if (navUserName) {
                 navUserName.innerHTML = `<i class="bi bi-building"></i> ${email} [Comprador]`;
@@ -104,7 +104,7 @@ function initLandingLogin() {
     if (!form) return;
 
     // Datos estaticos para probar el sistema
-    const staticLoginEmails = ["admin@segede.local", "engineer@segede.local", "buyer@segede.local"];
+    const staticLoginEmails = ["admin@segede.local", "engineer@segede.local"];
 
     form.addEventListener("submit", function (e) {
         e.preventDefault();
@@ -196,7 +196,7 @@ function checkRouteSecurity() {
         window.location.href = "/AccessDenied";
         return;
     }
-    if (path.startsWith("/buyer/") && role !== "Distributor" && role !== "Administrator" && role !== "Admin") {
+    if (path.startsWith("/buyer/") && !["buyer", "customer", "distributor", "administrator", "admin"].includes(String(role || "").toLowerCase())) {
         window.location.href = "/AccessDenied";
         return;
     }

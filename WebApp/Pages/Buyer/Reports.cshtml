@@ -19,9 +19,17 @@
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span><i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>Asignación Mensual de Energía</span>
-            <button class="btn btn-sm btn-outline-primary" id="btnExportAlloc" disabled>
-                <i class="bi bi-download me-1" aria-hidden="true"></i>Exportar CSV
-            </button>
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-secondary" id="btnSeedBuyerData" type="button">
+                    <i class="bi bi-lightning-charge me-1" aria-hidden="true"></i>Generar datos
+                </button>
+                <button class="btn btn-outline-primary" id="btnExportAllocPdf" disabled type="button">
+                    <i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>PDF
+                </button>
+                <button class="btn btn-outline-primary" id="btnExportAlloc" disabled type="button">
+                    <i class="bi bi-download me-1" aria-hidden="true"></i>CSV
+                </button>
+            </div>
         </div>
         <div class="card-body">
             <div class="row g-4 mb-4" id="allocSummaryCards">

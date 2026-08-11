@@ -8,10 +8,8 @@ namespace WebAPI.Controllers
     [ApiController]
     public class DistributionsController : ControllerBase
     {
-        // Cierre mensual: distribuye la energía disponible entre las solicitudes pendientes
-        // del periodo (prorrateo si no alcanza), genera factura por cada asignación y
-        // descuenta el total del Banco Central. Si no se indica centralBankId, usa el
-        // primero registrado (el sistema opera con un único Banco Central).
+        // Ejecuta el cierre mensual: reparte la energía disponible, crea las facturas y
+        // descuenta lo asignado del Banco Central. Si no mandan banco, usa el primero.
         [HttpPost]
         [Route("ExecuteMonthly")]
         public ActionResult ExecuteMonthly([FromQuery] int year, [FromQuery] int month, [FromQuery] int? centralBankId, [FromQuery] int? callerUserId)
@@ -32,6 +30,7 @@ namespace WebAPI.Controllers
                 var dm = new DistributionManager();
                 var results = dm.ExecuteMonthlyDistribution(year, month, cbId.Value);
 
+                // Dejo registro de que se hizo el cierre mensual.
                 AuditHelper.TryAudit(callerUserId, "Execute", "Distributions", null,
                     $"Distribución mensual ejecutada para {month}/{year}: {results.Count} comprador(es)");
 
@@ -93,7 +92,7 @@ namespace WebAPI.Controllers
 
         [HttpGet]
         [Route("RetrieveByBuyerId/{buyerId}")]
-        [Route("ByBuyer/{buyerId}")] // alias que usa ReportsViewController.js (mismo patrón que ForecastsController)
+        // Alias que usa la pantalla de reportes para consultar por comprador.
         public ActionResult RetrieveByBuyerId(int buyerId)
         {
             try
@@ -132,6 +131,7 @@ namespace WebAPI.Controllers
             {
                 var dm = new DistributionManager();
                 dm.Create(distribution);
+                // Registro simple para auditoría.
                 AuditHelper.TryAudit(callerUserId, "Create", "Distributions", distribution.Id, "Distribución de energía creada");
                 return Ok(distribution);
             }
