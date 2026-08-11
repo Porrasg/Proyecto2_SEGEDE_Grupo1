@@ -3,9 +3,10 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Inicializando BuyerManagementViewController...");
 
     const role = session.getRole();
-    const userId = session.getUserId() || 1;
+    const userId = session.getUserId();
 
-    if (role !== "Distributor" && role !== "Administrator" && role !== "Admin") {
+    // Aquí dejo pasar el rol real del comprador.
+    if (!["buyer", "customer", "distributor", "administrator", "admin"].includes(String(role || "").toLowerCase())) {
         notify.error("Acceso denegado. Requiere privilegios de Comprador.");
         setTimeout(() => {
             window.location.href = "/Login";
@@ -13,7 +14,30 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
+    // Sin id real de sesión no se deben cargar datos de la base.
+    if (!userId) {
+        notify.warning("No se pudo obtener el usuario de la sesión.");
+        return;
+    }
+
     const monthsEs = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    function readListResponse(res) {
+        if (Array.isArray(res)) {
+            return res;
+        }
+
+        return res?.data || res?.Data || res?.items || res?.Items || [];
+    }
+
+    function getBuyerScopeId() {
+        return parseInt(session.getUserId() || userId || 0);
+    }
+
+    function resolveBuyerScopeId() {
+        return Promise.resolve(getBuyerScopeId());
+    }
+
+    const buyerScopeReady = resolveBuyerScopeId();
 
     // ==========================================
     // 1. MIS PRONÓSTICOS (/Buyer/Forecasts)
@@ -23,7 +47,9 @@ document.addEventListener("DOMContentLoaded", function () {
         let allForecasts = [];
         let editingForecastId = null;
 
-        loadForecasts();
+        buyerScopeReady.then(function (buyerScopeId) {
+            loadForecasts(buyerScopeId);
+        });
 
         const yearSelect = document.getElementById("buyForecastYear");
         if (yearSelect) yearSelect.addEventListener("change", filterAndRenderForecasts);
@@ -48,11 +74,11 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
-        function loadForecasts() {
+        function loadForecasts(buyerScopeId) {
             forecastsBody.innerHTML = '<tr><td colspan="5" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando pronósticos...</td></tr>';
-            apiClient.get("Forecasts/ByBuyer/" + userId)
+            apiClient.get("Forecasts/ByBuyer/" + buyerScopeId)
                 .done(function (res) {
-                    allForecasts = res?.data || res?.Data || [];
+                    allForecasts = readListResponse(res);
                     filterAndRenderForecasts();
                 })
                 .fail(function (xhr) {
@@ -121,7 +147,7 @@ document.addEventListener("DOMContentLoaded", function () {
             new bootstrap.Modal(document.getElementById("forecastModal")).show();
         }
 
-        function saveForecast() {
+        function saveForecast(buyerScopeId) {
             const m = parseInt(document.getElementById("fMonth")?.value || 1);
             const y = parseInt(document.getElementById("fYear")?.value || 2026);
             const amt = parseFloat(document.getElementById("fAmount")?.value || 0);
@@ -142,7 +168,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }).done(function () {
                     notify.success("Pronóstico de demanda actualizado exitosamente.");
                     bootstrap.Modal.getInstance(document.getElementById("forecastModal"))?.hide();
-                    loadForecasts();
+                    loadForecasts(buyerScopeId);
                 }).fail(function (xhr) {
                     handleApiError(xhr);
                 }).always(function () {
@@ -151,14 +177,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             } else {
                 apiClient.post("Forecasts/Register?callerUserId=" + userId + "&callerRole=" + role, {
-                    buyerId: parseInt(userId), // ForecastManager exige el comprador del pronóstico
+                    buyerId: parseInt(buyerScopeId), // ForecastManager exige el comprador del pronóstico
                     forecastMonth: m,
                     forecastYear: y,
                     requestedEnergyMWh: amt
                 }).done(function () {
                     notify.success("Nuevo pronóstico registrado y sujeto a distribución.");
                     bootstrap.Modal.getInstance(document.getElementById("forecastModal"))?.hide();
-                    loadForecasts();
+                    loadForecasts(buyerScopeId);
                 }).fail(function (xhr) {
                     handleApiError(xhr);
                 }).always(function () {
@@ -168,17 +194,26 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
 
+        const refreshBtn = document.getElementById("refreshForecastsBtn");
+        if (refreshBtn) {
+            refreshBtn.addEventListener("click", function () {
+                loadForecasts();
+            });
+        }
+
         function cancelForecast(id) {
             notify.confirm("¿Está seguro que desea cancelar este pronóstico de demanda?", { dangerous: true, confirmText: "Cancelar pronóstico" }).then(function (ok) {
                 if (!ok) return;
-                apiClient.post("Forecasts/Cancel/" + id + "?callerUserId=" + userId + "&callerRole=" + role)
+                buyerScopeReady.then(function (buyerScopeId) {
+                    apiClient.post("Forecasts/Cancel/" + id + "?callerUserId=" + userId + "&callerRole=" + role)
                     .done(function () {
                         notify.info("Pronóstico cancelado.");
-                        loadForecasts();
+                        loadForecasts(buyerScopeId);
                     })
                     .fail(function (xhr) {
                         handleApiError(xhr);
                     });
+                });
             });
         }
     }
@@ -189,16 +224,34 @@ document.addEventListener("DOMContentLoaded", function () {
     const stmtsBody = document.getElementById("buyStmtsBody");
     if (stmtsBody) {
         let allStatements = [];
-        loadStatements();
+        buyerScopeReady.then(function (buyerScopeId) {
+            loadStatements(buyerScopeId);
+        });
 
         const stmtYear = document.getElementById("buyStmtYear");
         if (stmtYear) stmtYear.addEventListener("change", filterAndRenderStatements);
 
-        function loadStatements() {
+        function loadStatements(buyerScopeId) {
             stmtsBody.innerHTML = '<tr><td colspan="7" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando estados de cuenta...</td></tr>';
-            apiClient.get("Billing/Statements?buyerId=" + userId)
+            apiClient.get("Invoices/Statements?buyerId=" + buyerScopeId)
                 .done(function (res) {
-                    allStatements = res?.data || res?.Data || [];
+                    allStatements = readListResponse(res);
+
+                    const years = [...new Set(allStatements
+                        .map(s => new Date(s.issueDate ?? s.IssueDate))
+                        .filter(d => !isNaN(d))
+                        .map(d => d.getFullYear()))].sort((a, b) => b - a);
+                    const yearSelect = document.getElementById("buyStmtYear");
+                    if (yearSelect && years.length) {
+                        const current = yearSelect.value;
+                        yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join("");
+                        if (years.includes(parseInt(current))) {
+                            yearSelect.value = current;
+                        } else {
+                            yearSelect.value = String(years[0]);
+                        }
+                    }
+
                     filterAndRenderStatements();
                 })
                 .fail(function (xhr) {
@@ -251,8 +304,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         <td>
                             <div class="btn-group btn-group-sm">
                                 <button class="btn btn-outline-primary btn-view-stmt" data-idx="${list.indexOf(s)}" title="Ver Detalle"><i class="bi bi-eye"></i></button>
-                                <button class="btn btn-outline-danger btn-export" data-id="${id}" data-fmt="PDF" title="Descargar PDF/HTML">PDF</button>
-                                <button class="btn btn-outline-success btn-export" data-id="${id}" data-fmt="Excel" title="Descargar Excel">XLSX</button>
+                                ${st === "Pending" || st === "Overdue" ? `<button class="btn btn-outline-success btn-pay-stmt" data-id="${id}" title="Marcar como Pagado"><i class="bi bi-check2-circle"></i></button>` : ""}
+                                <button class="btn btn-outline-danger btn-export" data-id="${id}" data-fmt="PDF" title="Ver o descargar PDF/HTML">PDF</button>
                                 <button class="btn btn-outline-secondary btn-export" data-id="${id}" data-fmt="CSV" title="Descargar CSV">CSV</button>
                             </div>
                         </td>
@@ -265,6 +318,9 @@ document.addEventListener("DOMContentLoaded", function () {
             });
             stmtsBody.querySelectorAll(".btn-view-stmt").forEach(btn => {
                 btn.addEventListener("click", () => showStatementDetail(list[parseInt(btn.getAttribute("data-idx"))]));
+            });
+            stmtsBody.querySelectorAll(".btn-pay-stmt").forEach(btn => {
+                btn.addEventListener("click", () => markInvoiceAsPaid(btn.getAttribute("data-id")));
             });
         }
 
@@ -291,20 +347,47 @@ document.addEventListener("DOMContentLoaded", function () {
             viewModal?.show();
         }
 
+        function markInvoiceAsPaid(id) {
+            notify.confirm("¿Marcar este estado de cuenta como pagado?", { dangerous: false, confirmText: "Sí, pagado" }).then(function (ok) {
+                if (!ok) return;
+                fetch(apiClient.url("Invoices/MarkAsPaid/" + id + "?callerUserId=" + userId), {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" }
+                })
+                    .then(function (response) {
+                        if (!response.ok) {
+                            return response.text().then(function (text) {
+                                throw new Error(text || "No se pudo marcar como pagada.");
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(function () {
+                        notify.success("Estado de cuenta marcado como pagado.");
+                        loadStatements(parseInt(userId));
+                    })
+                    .catch(function (err) {
+                        notify.error(err.message || "No se pudo marcar como pagada.");
+                    });
+            });
+        }
+
         function downloadStatement(id, format, btn) {
             const origText = btn.textContent;
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
-            fetch(apiClient.url("Billing/Export?callerUserId=" + userId + "&callerRole=Buyer"), {
+            const upperFormat = String(format || "CSV").toUpperCase();
+
+            fetch(apiClient.url("Invoices/Export"), {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ statementId: parseInt(id), format: format })
+                body: JSON.stringify({ statementId: parseInt(id), format: upperFormat })
             }).then(response => {
                 if (!response.ok) {
-                    console.warn('[SGDE apiClient] POST Billing/Export → HTTP ' + response.status);
+                    console.warn('[SGDE apiClient] POST Invoices/Export → HTTP ' + response.status);
                     throw new Error(response.status === 404 || response.status === 501
                         ? "Este módulo está en construcción: la exportación aún no está disponible en el servidor."
                         : "Error al exportar documento.");
@@ -315,12 +398,28 @@ document.addEventListener("DOMContentLoaded", function () {
                 const a = document.createElement("a");
                 a.style.display = "none";
                 a.href = url;
-                const ext = format.toUpperCase() === "EXCEL" ? "xlsx" : format.toLowerCase();
-                a.download = `EstadoCuenta_${id}_${format}.${ext}`;
-                document.body.appendChild(a);
-                a.click();
+
+                if (upperFormat === "PDF") {
+                    // PDF real no existe en el backend; se muestra como HTML imprimible.
+                    a.target = "_blank";
+                    a.rel = "noopener";
+                    a.download = "";
+                    const w = window.open(url, "_blank");
+                    if (!w) {
+                        a.download = `EstadoCuenta_${id}.html`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    }
+                } else {
+                    a.download = `EstadoCuenta_${id}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }
+
                 window.URL.revokeObjectURL(url);
-                notify.success(`Estado de cuenta #${id} descargado en formato ${format}.`);
+                notify.success(`Estado de cuenta #${id} descargado en formato ${upperFormat}.`);
             }).catch(err => {
                 notify.error("No se pudo descargar el archivo: " + err.message);
             }).finally(() => {
@@ -335,13 +434,15 @@ document.addEventListener("DOMContentLoaded", function () {
     // ==========================================
     const distBody = document.getElementById("buyDistBody");
     if (distBody) {
-        loadDistributions();
+        buyerScopeReady.then(function (buyerScopeId) {
+            loadDistributions(buyerScopeId);
+        });
 
-        function loadDistributions() {
+        function loadDistributions(buyerScopeId) {
             distBody.innerHTML = '<tr><td colspan="5" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando distribuciones...</td></tr>';
-            apiClient.get("Distributions/ByBuyer/" + userId)
+            apiClient.get("Distributions/ByBuyer/" + buyerScopeId)
                 .done(function (res) {
-                    const list = res?.data || res?.Data || [];
+                    const list = readListResponse(res);
                     renderDistTable(list);
                 })
                 .fail(function (xhr) {

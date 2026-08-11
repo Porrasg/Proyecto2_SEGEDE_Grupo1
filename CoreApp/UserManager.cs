@@ -8,15 +8,14 @@ using System.Text;
 
 namespace CoreApp
 {
-    // Lógica de negocio de los usuarios
+    // Lógica de negocio de usuarios: registro, acceso y mantenimiento.
     public class UserManager
     {
-        // Datos estaticos para probar funcionalidades dentro de la app
+        // Cuentas estáticas para pruebas rápidas dentro de la app.
         private static readonly Dictionary<string, (string Password, string Role, string FirstName, string LastName, int Id)> StaticLoginAccounts = new(StringComparer.OrdinalIgnoreCase)
         {
             ["admin@segede.local"] = ("Admin123!", "Admin", "Administrador", "Sistema", -1001),
             ["engineer@segede.local"] = ("Eng123!", "Engineer", "Ingeniero", "Sistema", -1002),
-            ["buyer@segede.local"] = ("Buyer123!", "Buyer", "Comprador", "Sistema", -1003)
         };
 
         public List<User> RetrieveAllUsers()
@@ -32,11 +31,11 @@ namespace CoreApp
                 throw new Exception("El usuario no puede ser nulo");
             }
 
-            ValidateUser(user); // Validación de campos obligatorios y formatos
+            ValidateUser(user); // Reviso datos obligatorios y formatos antes de guardar.
 
             var uCrud = new UserCrudFactory();
 
-            // Verifica si ya existe un usuario con el mismo correo electrónico
+            // Evito que se repita el correo.
             var userByEmail = uCrud.RetrieveByEmail(user.Email);
 
             if (userByEmail != null)
@@ -44,7 +43,7 @@ namespace CoreApp
                 throw new Exception("Ya existe un usuario registrado con ese correo electrónico");
             }
 
-            // Verifica si ya existe un usuario con la misma identificación
+            // Evito que se repita la identificación.
             var userByIdentification = uCrud.RetrieveByIdentification(user.Identification);
 
             if (userByIdentification != null)
@@ -52,13 +51,13 @@ namespace CoreApp
                 throw new Exception("Ya existe un usuario registrado con esa identificación");
             }
 
-            // La edad se calcula a partir de la fecha de nacimiento
+            // La edad se calcula desde la fecha de nacimiento.
             user.Age = CalculateAge(user.BirthDate);
 
-            // La contraseña se guarda cifrada para cumplir con la rúbrica de seguridad
+            // La contraseña se guarda cifrada por seguridad.
             user.Password = HashPassword(user.Password);
 
-            // Valores iniciales del usuario
+            // Dejo valores iniciales para que la cuenta quede lista.
             user.Status = "Pending";
             user.FailedLoginAttempts = 0;
             user.LockoutEndAt = null;
@@ -68,7 +67,7 @@ namespace CoreApp
 
             uCrud.Create(user);
 
-            // Después de crear el usuario, se genera y envía un OTP para la activación de la cuenta
+            // Luego de guardar, genero el OTP para activar la cuenta.
             var otpManager = new OtpManager();
 
             otpManager.GenerateAndSendOtp(user.Email, user.FirstName, "ACCOUNT_ACTIVATION");
@@ -111,27 +110,27 @@ namespace CoreApp
                 throw new Exception("Ya existe otro usuario registrado con esa identificación");
             }
 
-            // Guarda el valor original para evitar rehash accidental cuando se conserva la contraseña actual.
+            // Conservo la contraseña original para no volver a cifrarla por accidente.
             var originalPassword = user.Password;
 
-            // Si no se envía una nueva contraseña, se conserva la actual para evitar fallos de validación.
+            // Si no mandan una nueva contraseña, dejo la actual.
             user.Password = string.IsNullOrWhiteSpace(originalPassword)
                 ? currentUser.Password
                 : originalPassword;
 
             ValidateUserForUpdate(user, currentUser);
 
-            // Se vuelve a calcular la edad
+            // Recalculo la edad por si cambió la fecha de nacimiento.
             user.Age = CalculateAge(user.BirthDate);
 
-            // Si la contraseña viene vacía, se conserva la actual; si viene informada, se re-hashea una sola vez.
+            // Si llega una nueva contraseña, la vuelvo a cifrar solo una vez.
             user.Password = string.IsNullOrWhiteSpace(originalPassword)
                 ? currentUser.Password
                 : (IsHashedPassword(originalPassword) ? originalPassword : HashPassword(originalPassword));
 
-            // Se conserva la fecha original de creación
+            // Mantengo la fecha original de creación.
             user.CreatedAt = currentUser.CreatedAt;
-            // Se actualiza la fecha de modificación
+            // Actualizo la fecha de modificación.
             user.UpdatedAt = DateTime.Now;
 
             uCrud.Update(user);
@@ -479,7 +478,7 @@ namespace CoreApp
             return true;
         }
 
-        // Completa el inicio de sesión después de validar el OTP
+        // Termina el inicio de sesión cuando el OTP ya fue validado.
         public User ValidateLoginOtp(string email, string tokenCode)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -545,7 +544,7 @@ namespace CoreApp
             return user;
         }
 
-        // Cambio de contraseña sin sesión: valida correo + contraseña actual y envía OTP
+        // Pide cambio de contraseña sin sesión y manda el OTP al correo.
         public void ChangePassword(string email, string currentPassword, string newPassword, string confirmPassword)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -611,10 +610,7 @@ namespace CoreApp
             otpManager.GenerateAndSendOtp(user.Email, user.FirstName, "CHANGE_PASSWORD");
         }
 
-        // Cambio de contraseña CON sesión activa: el usuario ya está autenticado,
-        // así que se verifica identidad con la contraseña actual (no con OTP) y se
-        // aplica el cambio de inmediato. Distinto de ChangePassword/ConfirmChangePassword
-        // (email + OTP), que es exclusivamente para "olvidé mi contraseña" sin sesión.
+        // Cambio de contraseña con sesión activa. Aquí solo se valida la contraseña actual.
         public void ChangePasswordAuthenticated(int userId, string currentPassword, string newPassword, string confirmPassword)
         {
             if (userId <= 0)
@@ -676,7 +672,7 @@ namespace CoreApp
             uCrud.UpdatePassword(user);
         }
 
-        // Cambio de contraseña sin sesión: valida correo + OTP y actualiza la clave
+        // Confirma el cambio de contraseña con OTP y actualiza la clave.
         public void ConfirmChangePassword(string email, string tokenCode, string newPassword, string confirmPassword)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -741,7 +737,7 @@ namespace CoreApp
             uCrud.UpdatePassword(user);
         }
 
-        // Solicita el restablecimiento de contraseña y envía un OTP
+        // Solicita el restablecimiento de contraseña y envía el código OTP.
         public void ResetPassword(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -782,7 +778,7 @@ namespace CoreApp
             otpManager.GenerateAndSendOtp(user.Email, user.FirstName, "RESET_PASSWORD");
         }
 
-        // Confirma el restablecimiento después de validar el OTP
+        // Confirma el restablecimiento después de revisar el OTP.
         public void ConfirmResetPassword(string email, string tokenCode, string newPassword, string confirmPassword)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -856,11 +852,7 @@ namespace CoreApp
             uCrud.UpdatePassword(user);
         }
 
-        // Activa la cuenta después de validar el código OTP y establece la contraseña
-        // definitiva elegida por el usuario. Es el único momento en que un usuario
-        // creado por un administrador (que nunca recibe una contraseña real utilizable
-        // de manos del admin) define su propia contraseña; para el auto-registro de
-        // compradores esto simplemente confirma/reemplaza la que ya eligió al registrarse.
+        // Activa la cuenta con OTP y deja la contraseña definida por el usuario.
         public void ActivateAccount(string email, string tokenCode, string newPassword, string confirmPassword)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -931,7 +923,7 @@ namespace CoreApp
             uCrud.UpdatePassword(user);
         }
 
-        // Encripta la contraseña utilizando PBKDF2 con SHA256 y un salt aleatorio
+        // Guarda la contraseña con PBKDF2, SHA256 y un salt aleatorio.
         private string HashPassword(string password)
         {
             if (string.IsNullOrWhiteSpace(password))
@@ -948,6 +940,7 @@ namespace CoreApp
             return $"{iterations}.{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
         }
 
+        // Compara la contraseña guardada con la que escribe el usuario.
         private bool VerifyPassword(string storedPassword, string enteredPassword)
         {
             if (string.IsNullOrWhiteSpace(storedPassword) || string.IsNullOrWhiteSpace(enteredPassword))
@@ -974,7 +967,7 @@ namespace CoreApp
             return storedPassword == enteredPassword;
         }
 
-        // VALIDACIONES 
+        // Validaciones internas del usuario.
 
         private void ValidateUser(User user)
         {
@@ -1037,7 +1030,7 @@ namespace CoreApp
                    string.IsNullOrWhiteSpace(user.Status);
         }
 
-        // Validación de fecha de nacimiento: no puede ser una fecha futura
+        // La fecha de nacimiento no puede ser futura.
         private bool IsValidBirthDate(DateTime birthDate)
         {
             return birthDate.Date <= DateTime.Today;

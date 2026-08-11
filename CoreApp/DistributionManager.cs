@@ -7,21 +7,18 @@ using System.Text;
 
 namespace CoreApp
 {
+    // Lógica de negocio para repartir energía y generar facturas.
     public class DistributionManager
     {
+        // Devuelve todas las distribuciones guardadas.
         public List<Distribution> RetrieveAllDistributions()
         {
             var crud = new DistributionCrudFactory();
             return crud.RetrieveAll<Distribution>();
         }
 
-        // Cierre mensual: distribuye la energía disponible en el Banco Central entre todas
-        // las solicitudes de compra (Forecast) Pendientes del periodo. Si el inventario
-        // disponible alcanza para toda la demanda, cada comprador recibe el 100% de lo
-        // solicitado. Si no alcanza, se aplica un prorrateo uniforme (la misma fracción del
-        // inventario disponible para todos) - matemáticamente reproduce los ejemplos de la
-        // rúbrica (90%/80%/70%...) cuando el disponible es exactamente esa fracción de la
-        // demanda total, sin inventar quiebres discrecionales.
+        // Hace el cierre mensual y reparte la energía entre los forecasts pendientes.
+        // Si alcanza para todos, asigna completo; si no, reparte proporcionalmente.
         public List<Distribution> ExecuteMonthlyDistribution(int year, int month, int centralBankId)
         {
             var forecastManager = new ForecastManager();
@@ -116,6 +113,7 @@ namespace CoreApp
             return createdDistributions;
         }
 
+        // Crea una distribución manual o desde el cierre mensual.
         public void Create(Distribution distribution)
         {
             // Validar que la distribución no sea nula
@@ -268,6 +266,7 @@ namespace CoreApp
         }
 
 
+        // Actualiza una distribución ya registrada.
         public void Update(Distribution distribution)
         {
             // Validar que la distribución no sea nula
@@ -323,6 +322,7 @@ namespace CoreApp
         }
 
 
+        // Cancela una distribución sin borrarla físicamente.
         public void Delete(Distribution distribution)
         {
             // Validar que la distribución no sea nula
@@ -362,6 +362,7 @@ namespace CoreApp
             crud.Delete(distribution);
         }
 
+        // Busca una distribución por su identificador.
         public Distribution RetrieveById(int id)
         {
             // Validar el identificador de la distribución
@@ -385,6 +386,7 @@ namespace CoreApp
         }
 
 
+        // Devuelve todas las distribuciones de un mismo lote.
         public List<Distribution> RetrieveByBatchId(int distributionBatchId)
         {
             // Validar el identificador del lote
@@ -399,6 +401,7 @@ namespace CoreApp
         }
 
 
+        // Devuelve las distribuciones asociadas a un forecast.
         public List<Distribution> RetrieveByForecastId(int forecastId)
         {
             // Validar el identificador del forecast
@@ -413,6 +416,7 @@ namespace CoreApp
         }
 
 
+        // Devuelve las distribuciones de un comprador.
         public List<Distribution> RetrieveByBuyerId(int buyerId)
         {
             // Validar el identificador del comprador
@@ -427,6 +431,7 @@ namespace CoreApp
         }
 
 
+        // Devuelve las distribuciones de un banco central.
         public List<Distribution> RetrieveByCentralBankId(int centralBankId)
         {
             // Validar el identificador del banco central
@@ -441,6 +446,7 @@ namespace CoreApp
         }
 
 
+        // Devuelve las distribuciones que tengan un estado específico.
         public List<Distribution> RetrieveByStatus(string status)
         {
             // Validar el estado
@@ -455,6 +461,7 @@ namespace CoreApp
         }
 
 
+        // Devuelve las distribuciones dentro de un rango de fechas.
         public List<Distribution> RetrieveByDateRange(DateTime startDate, DateTime endDate)
         {
             // Validar las fechas

@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Inicializando LoginViewController...");
 
     //datos estaticos
-    const staticLoginEmails = ["admin@segede.local", "engineer@segede.local", "buyer@segede.local"];
+    const staticLoginEmails = ["admin@segede.local", "engineer@segede.local"];
     function isStaticLoginEmail(email) {
         return !!email && staticLoginEmails.includes(String(email).trim().toLowerCase());
     }

@@ -23,12 +23,50 @@ document.addEventListener("DOMContentLoaded", function () {
         return isNaN(dt) ? "—" : dt.toLocaleString("es-CR", { dateStyle: "short", timeStyle: "short" });
     }
 
+    function formatPeriodForExport(label) {
+        const text = String(label ?? "").trim();
+        const shortMatch = text.match(/^([a-z]{3})-(\d{2})$/i);
+        if (shortMatch) {
+            const monthMap = {
+                ene: "Enero", feb: "Febrero", mar: "Marzo", abr: "Abril", may: "Mayo", jun: "Junio",
+                jul: "Julio", ago: "Agosto", sep: "Septiembre", oct: "Octubre", nov: "Noviembre", dic: "Diciembre"
+            };
+            const monthName = monthMap[shortMatch[1].toLowerCase()] || shortMatch[1];
+            const year = `20${shortMatch[2]}`;
+            return `${monthName} ${year}`;
+        }
+
+        return text;
+    }
+
+    function readListResponse(res) {
+        if (Array.isArray(res)) {
+            return res;
+        }
+
+        return res?.data || res?.Data || res?.items || res?.Items || [];
+    }
+
+    function getSessionBuyerId() {
+        const rawUserId = session.getUserId();
+        const rawRole = String(session.getRole() || "").toLowerCase();
+
+        if (rawRole === "buyer" || rawRole === "customer") {
+            return parseInt(rawUserId);
+        }
+        return parseInt(rawUserId);
+    }
+
     // Descarga CSV en el cliente (BOM UTF-8 para que Excel muestre acentos correctamente).
     function downloadCsv(filename, headers, rows) {
-        const lines = [headers.join(";")].concat(rows.map(r => r.map(v => {
+        const csvCell = function (v) {
             const s = String(v ?? "");
-            return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-        }).join(";")));
+            return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+        };
+
+        const lines = ["sep=,"]
+            .concat([headers.map(csvCell).join(",")])
+            .concat(rows.map(r => r.map(csvCell).join(",")));
         const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
@@ -116,7 +154,7 @@ document.addEventListener("DOMContentLoaded", function () {
         let lastRows = [];
 
         loadTurbinesInto(sel, true).done(function (res) {
-            (res?.data || res?.Data || []).forEach(t => { turbineNames[t.id ?? t.Id] = `${t.code ?? t.Code} — ${t.name ?? t.Name}`; });
+            readListResponse(res).forEach(t => { turbineNames[t.id ?? t.Id] = `${t.code ?? t.Code} — ${t.name ?? t.Name}`; });
         });
 
         btnRun?.addEventListener("click", function () {
@@ -124,7 +162,7 @@ document.addEventListener("DOMContentLoaded", function () {
             maintBody.innerHTML = '<tr><td colspan="8" class="text-center py-4"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generando reporte...</td></tr>';
             const req = tid ? apiClient.get("Maintenances/ByTurbine/" + tid) : apiClient.get("Maintenances/All");
             req.done(function (res) {
-                const list = res?.data || res?.Data || [];
+                const list = readListResponse(res);
                 if (!list.length) {
                     maintBody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No hay mantenimientos registrados para el criterio seleccionado.</td></tr>';
                     btnExport.disabled = true;
@@ -210,7 +248,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         btnExport?.addEventListener("click", function () {
             downloadCsv("reporte_generacion_turbina.csv",
-                ["Período", "Registros", "Energía Generada (MWh)"],
+                ["Periodo", "Registros", "Energía Generada (MWh)"],
                 lastRows.map(g => [g.label, g.count, g.total.toFixed(4)]));
         });
     }
@@ -323,19 +361,29 @@ document.addEventListener("DOMContentLoaded", function () {
     const allocBody = document.getElementById("allocReportBody");
     if (allocBody) {
         const btnExport = document.getElementById("btnExportAlloc");
-        const userId = session.getUserId();
+        const btnExportPdf = document.getElementById("btnExportAllocPdf");
+        const btnSeed = document.getElementById("btnSeedBuyerData");
+        const userId = getSessionBuyerId();
         let lastRows = [];
+
+        // Si no hay usuario en sesión, no hay forma de consultar sus datos reales.
+        if (!userId) {
+            allocBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">No se pudo obtener el usuario de la sesión.</td></tr>';
+            return;
+        }
 
         // Join cliente: DistributionDetail.forecastId → Forecast(mes/año) para etiquetar cada período.
         Promise.all([apiClient.get("Distributions/ByBuyer/" + userId), apiClient.get("Forecasts/ByBuyer/" + userId)])
             .then(function ([distRes, fcRes]) {
-                const details = distRes?.data || distRes?.Data || [];
-                const forecasts = fcRes?.data || fcRes?.Data || [];
+                const details = readListResponse(distRes);
+                const forecasts = readListResponse(fcRes);
                 const fcById = {};
                 forecasts.forEach(f => { fcById[f.id ?? f.Id] = f; });
 
                 if (!details.length) {
                     allocBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Aún no participas en cierres de distribución comercial.</td></tr>';
+                    btnExport.disabled = true;
+                    if (btnExportPdf) btnExportPdf.disabled = true;
                     return;
                 }
 
@@ -362,7 +410,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     <td>${fmt(r.uns, 2)}</td>
                     <td><span class="badge ${r.pct >= 100 ? "bg-success" : "bg-warning text-dark"}"><i class="bi ${r.pct >= 100 ? "bi-check-circle" : "bi-exclamation-triangle"} me-1" aria-hidden="true"></i>${r.pct.toFixed(1)} %</span></td>
                 </tr>`).join("");
-                btnExport.disabled = false;
+                btnExport.disabled = !lastRows.length;
+                if (btnExportPdf) btnExportPdf.disabled = !lastRows.length;
 
                 const tail = lastRows.slice(-12);
                 renderChart("allocReportChart", "bar",
@@ -377,10 +426,37 @@ document.addEventListener("DOMContentLoaded", function () {
                 handleApiError(xhr);
             });
 
+        btnSeed?.addEventListener("click", function () {
+            notify.info("Ese botón solo genera datos demo si el backend lo soporta; por ahora carga el comprador real y sus registros.");
+        });
+
         btnExport?.addEventListener("click", function () {
+            if (!lastRows.length) {
+                notify.warning("No hay datos para exportar.");
+                return;
+            }
             downloadCsv("reporte_asignacion_mensual.csv",
-                ["Período", "Solicitado (MWh)", "Asignado (MWh)", "No Suplido (MWh)", "% Cumplimiento"],
-                lastRows.map(r => [r.label, r.req.toFixed(2), r.asg.toFixed(2), r.uns.toFixed(2), r.pct.toFixed(1)]));
+                ["Periodo", "Solicitado (MWh)", "Asignado (MWh)", "No Suplido (MWh)", "% Cumplimiento"],
+                lastRows.map(r => [formatPeriodForExport(r.label), r.req.toFixed(2), r.asg.toFixed(2), r.uns.toFixed(2), r.pct.toFixed(1)]));
+        });
+
+        btnExportPdf?.addEventListener("click", function () {
+            if (!lastRows.length) {
+                notify.warning("No hay datos para exportar.");
+                return;
+            }
+
+            const rowsHtml = lastRows.map(r => `<tr><td>${esc(formatPeriodForExport(r.label))}</td><td>${fmt(r.req, 2)}</td><td>${fmt(r.asg, 2)}</td><td>${fmt(r.uns, 2)}</td><td>${r.pct.toFixed(1)} %</td></tr>`).join("");
+            const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Reporte de Asignación Mensual</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#222}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:8px;text-align:left}th{background:#f2f2f2}</style></head><body><h2>Reporte de Asignación Mensual</h2><table><thead><tr><th>Distribución</th><th>Solicitado (MWh)</th><th>Asignado (MWh)</th><th>No Suplido (MWh)</th><th>% Cumplimiento</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
+            const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "reporte_asignacion_mensual.html";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         });
     }
 });

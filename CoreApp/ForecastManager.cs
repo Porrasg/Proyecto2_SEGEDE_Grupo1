@@ -196,6 +196,7 @@ namespace CoreApp
         }
 
 
+        // Cancela un forecast sin borrarlo físicamente.
         public void Delete(Forecast forecast)
         {
             if (forecast == null)
@@ -244,6 +245,7 @@ namespace CoreApp
             forecastCrud.Delete(forecast);
         }
 
+        // Devuelve todos los forecasts de un comprador.
         public List<Forecast> RetrieveByBuyerId(int buyerId)
         {
             // Validar el identificador del comprador
@@ -257,7 +259,7 @@ namespace CoreApp
             return forecastCrud.RetrieveByBuyerId(buyerId);
         }
 
-        // Metodo que permite obtener todos los forecasts de un periodo especifico (año y mes)
+        // Devuelve los forecasts de un mes y año específicos.
         public List<Forecast> RetrieveByPeriod(int forecastYear, int forecastMonth)
         {
             // Validar el mes
@@ -277,7 +279,7 @@ namespace CoreApp
             return forecastCrud.RetrieveByPeriod(forecastYear, forecastMonth);
         }
 
-        // Metodo que permite obtener un forecast de un comprador especifico en un periodo especifico (año y mes)
+        // Busca un forecast de un comprador en un periodo específico.
         public Forecast RetrieveByBuyerPeriod(int buyerId, int forecastYear, int forecastMonth)
         {
             // Validar el comprador
@@ -303,7 +305,7 @@ namespace CoreApp
             return forecastCrud.RetrieveByBuyerPeriod(buyerId, forecastYear, forecastMonth);
         }
 
-        // Metodo que permite obtener todos los forecasts con un estado especifico
+        // Devuelve los forecasts que tengan un estado específico.
         public List<Forecast> RetrieveByStatus(string status)
         {
             // Validar el estado
@@ -318,11 +320,7 @@ namespace CoreApp
         }
 
 
-        // Transición interna de estado disparada por el sistema (ejecución de distribución
-        // mensual), no por una edición de usuario - por eso no pasa por Update(), que
-        // bloquea cualquier cambio una vez iniciado el periodo del forecast (correcto para
-        // ediciones de usuario, pero la propia ejecución del cierre del mes ocurre
-        // precisamente durante ese periodo).
+        // Marca el forecast como procesado cuando el sistema hace la distribución mensual.
         public void MarkAsProcessed(int forecastId)
         {
             var crud = new ForecastCrudFactory();
