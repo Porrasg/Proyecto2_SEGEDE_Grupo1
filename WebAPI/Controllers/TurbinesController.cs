@@ -161,12 +161,16 @@ namespace WebAPI.Controllers
 
         [HttpPut]
         [Route("Update")]
-        public ActionResult Update(Turbine turbine)
+        public ActionResult Update(Turbine turbine, [FromQuery] int? callerUserId)
         {
             try
             {
                 var tm = new TurbineManager();
                 tm.Update(turbine);
+
+                //Registrar la actualizacion de la turbina en la bitacora
+                AuditHelper.TryAudit(callerUserId,"Update", "Turbine", turbine.Id, "Información de la turbina {turbine.Code} actualizada");
+
                 return Ok(turbine);
             }
             catch (Exception ex)
