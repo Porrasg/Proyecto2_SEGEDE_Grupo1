@@ -115,25 +115,10 @@ namespace WebAPI.Controllers
             {
                 var tm = new TurbineManager();
                 tm.ChangeState(request.TurbineId, request.NewState);
-
-                // El motivo del cambio queda en la bitácora de auditoría (la tabla
-                // de turbinas no guarda un historial de estados propio).
-                try
-                {
-                    var am = new AuditManager();
-                    am.Create(new Audit
-                    {
-                        UserId = callerUserId,
-                        Action = "Update",
-                        EntityName = "Turbines",
-                        EntityId = request.TurbineId,
-                        Description = $"Cambio de estado a {request.NewState}. Motivo: {request.Reason ?? "No indicado"}"
-                    });
-                }
-                catch
-                {
-                    // La auditoría no debe impedir el cambio de estado ya aplicado
-                }
+                
+                //Registrar el cambio de estado de la turbina
+                AuditHelper.TryAudit(callerUserId, "ChangeState", "Turbines", request.TurbineId, 
+                    $"Cambio de estado a {request.NewState}. Motivo: {request.Reason ?? "No indicado"}");
 
                 return Ok(new { message = "Estado de la turbina actualizado." });
             }
