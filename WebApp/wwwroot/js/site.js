@@ -30,6 +30,7 @@ function initNavigation() {
     const navLiBuyer = document.getElementById("navLiBuyer");
     const navLiPublicLogin = document.getElementById("navLiPublicLogin");
     const navLiPublicRegister = document.getElementById("navLiPublicRegister");
+    const btnPublicThemeToggle = document.getElementById("btnPublicThemeToggle");
     const navUserName = document.getElementById("navUserName");
     const linkProfile = document.getElementById("linkProfile");
     const btnSignOut = document.getElementById("btnSignOut");
@@ -39,6 +40,7 @@ function initNavigation() {
         if (linkProfile) linkProfile.classList.remove("d-none");
         if (navLiPublicLogin) navLiPublicLogin.classList.add("d-none");
         if (navLiPublicRegister) navLiPublicRegister.classList.add("d-none");
+        if (btnPublicThemeToggle) btnPublicThemeToggle.classList.add("d-none");
 
         if (role === "Administrator" || role === "Admin") {
             if (navLiAdmin) navLiAdmin.classList.remove("d-none");
@@ -52,7 +54,7 @@ function initNavigation() {
                 navUserName.innerHTML = `<i class="bi bi-lightning-charge-fill"></i> ${email} [Ingeniero]`;
                 navUserName.className = "badge bg-info border border-dark text-dark px-3 py-2 fw-bold shadow-sm";
             }
-        } else if (role === "Distributor") {
+        } else if (role === "Distributor" || role === "Buyer" || role === "Customer") {
             if (navLiBuyer) navLiBuyer.classList.remove("d-none");
             if (navUserName) {
                 navUserName.innerHTML = `<i class="bi bi-building"></i> ${email} [Comprador]`;
@@ -73,6 +75,7 @@ function initNavigation() {
         if (linkProfile) linkProfile.classList.add("d-none");
         if (navLiPublicLogin) navLiPublicLogin.classList.remove("d-none");
         if (navLiPublicRegister) navLiPublicRegister.classList.remove("d-none");
+        if (btnPublicThemeToggle) btnPublicThemeToggle.classList.remove("d-none");
         if (navUserName) {
             navUserName.innerHTML = `No Autenticado`;
             navUserName.className = "badge bg-secondary border border-dark text-dark px-3 py-2 fw-bold";
@@ -91,7 +94,7 @@ function initSignOut() {
             notify.info("Has cerrado sesión exitosamente.");
         }
         setTimeout(() => {
-            window.location.href = "/Login";
+            window.location.href = "/";
         }, 300);
     });
 }
@@ -99,6 +102,9 @@ function initSignOut() {
 function initLandingLogin() {
     const form = document.getElementById("landingLoginForm");
     if (!form) return;
+
+    // Datos estaticos para probar el sistema
+    const staticLoginEmails = ["admin@segede.local", "engineer@segede.local"];
 
     form.addEventListener("submit", function (e) {
         e.preventDefault();
@@ -119,6 +125,17 @@ function initLandingLogin() {
 
         apiClient.post("Users/Login", { email: ident, password: pass })
             .done(function (res) {
+                // Los usuarios estáticos entran directamente para facilitar las pruebas.
+                if (staticLoginEmails.includes(ident.toLowerCase())) {
+                    sessionStorage.removeItem("sgde_login_email");
+                    session.save(res);
+                    if (typeof notify !== "undefined") notify.success("Inicio de sesión exitoso.");
+                    setTimeout(function () {
+                        window.location.href = dashboardUrlForRole(session.getRole()) || "/";
+                    }, 1000);
+                    return;
+                }
+
                 sessionStorage.setItem("sgde_login_email", ident);
                 if (typeof notify !== "undefined") notify.success(res?.message || res?.Message || "Código OTP enviado a su correo.");
                 setTimeout(function () {
@@ -139,7 +156,7 @@ function initLandingLogin() {
 function dashboardUrlForRole(role) {
     if (role === "Administrator" || role === "Admin") return "/Admin/Dashboard";
     if (role === "Engineer") return "/Engineer/Dashboard";
-    if (role === "Distributor") return "/Buyer/Dashboard";
+    if (role === "Distributor" || role === "Buyer" || role === "Customer") return "/Buyer/Dashboard";
     return null;
 }
 
@@ -179,7 +196,7 @@ function checkRouteSecurity() {
         window.location.href = "/AccessDenied";
         return;
     }
-    if (path.startsWith("/buyer/") && role !== "Distributor" && role !== "Administrator" && role !== "Admin") {
+    if (path.startsWith("/buyer/") && !["buyer", "customer", "distributor", "administrator", "admin"].includes(String(role || "").toLowerCase())) {
         window.location.href = "/AccessDenied";
         return;
     }
@@ -286,6 +303,7 @@ class RoleAccessController {
             }
         });
 
+        document.querySelector(".sgde-sidebar")?.classList.remove("role-menu-pending");
         this.updateSidebarUserProfile(activeRoles);
     }
 

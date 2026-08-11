@@ -31,13 +31,13 @@
     {
         <!-- PUBLIC / LANDING FULL-WIDTH LAYOUT (SIN SIDEBAR) -->
         <div class="d-flex flex-column min-vh-100 bg-app-surface">
-            <header class="sgde-public-topbar border-bottom bg-white sticky-top shadow-sm">
+            <header class="sgde-public-topbar border-bottom sticky-top shadow-sm" style="background-color: var(--sgde-surface-card);">
                 <div class="container py-3 d-flex align-items-center justify-content-between">
                     <a asp-page="/Index" class="d-flex align-items-center text-decoration-none gap-2">
                         <span class="sgde-brand-icon d-flex align-items-center justify-content-center">
                             <i class="bi bi-lightning-charge-fill fs-5"></i>
                         </span>
-                        <span class="fs-5 fw-bold tracking-tight text-dark">SGDE <span class="text-primary">Enterprise</span></span>
+                        <span class="fs-5 fw-bold tracking-tight" style="color: var(--sgde-heading);">SGDE <span class="text-primary">Enterprise</span></span>
                     </a>
                     <div class="d-flex align-items-center gap-3">
                         <a asp-page="/Login" class="btn btn-outline-primary btn-sm fw-semibold px-3">
@@ -46,6 +46,9 @@
                         <a asp-page="/Register" class="btn btn-primary btn-sm fw-semibold px-3">
                             Registrarse
                         </a>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnPublicThemeToggle" title="Alternar tema">
+                            <i class="bi bi-moon-stars-fill fs-6"></i>
+                        </button>
                     </div>
                 </div>
             </header>
@@ -75,7 +78,7 @@
         <div class="d-flex vh-100 overflow-hidden">
 
             <!-- SIDEBAR LATERAL IZQUIERDO FIJO -->
-            <aside class="sgde-sidebar d-flex flex-column flex-shrink-0 p-3 border-end">
+            <aside class="sgde-sidebar d-flex flex-column flex-shrink-0 p-3 border-end role-menu-pending">
                 <!-- Header Institucional -->
                 <a asp-page="/Index" class="d-flex align-items-center mb-3 me-md-auto text-decoration-none px-2">
                     <span class="sgde-brand-icon d-flex align-items-center justify-content-center me-2">
@@ -87,7 +90,7 @@
                 <hr class="my-2 opacity-25" />
 
                 <!-- Menú Navegación Modular por Rol -->
-                <ul class="nav nav-pills flex-column mb-auto gap-1">
+                <ul class="nav nav-pills flex-column flex-grow-1 gap-1 sgde-sidebar-menu">
                     <li class="nav-item" data-roles="superadmin,administrator,admin,engineer,buyer,customer">
                         <a asp-page="/Dashboard" class="nav-link d-flex align-items-center gap-3 px-3 py-2" data-nav="/dashboard">
                             <i class="bi bi-grid-1x2-fill"></i>
@@ -180,6 +183,30 @@
                             <span>Estado de Cuentas</span>
                         </a>
                     </li>
+                    <li class="nav-item" data-roles="superadmin,administrator,admin">
+                        <a href="/Admin/Reports" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-file-bar-graph"></i>
+                            <span>Reportes</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="superadmin,administrator,admin">
+                        <a href="/Admin/Audit" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-journal-check"></i>
+                            <span>Bitácora de Auditoría</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="superadmin,administrator,admin">
+                        <a href="/Admin/Exports" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-download"></i>
+                            <span>Exportación de Datos</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="superadmin,administrator,admin">
+                        <a href="/Admin/Simulator" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-cpu"></i>
+                            <span>Panel de Simulación</span>
+                        </a>
+                    </li>
 
                     <!-- Módulos Ingeniero -->
                     <li class="nav-item" data-roles="engineer">
@@ -188,10 +215,58 @@
                             <span>Control Operativo</span>
                         </a>
                     </li>
-                    <li class="nav-item" data-roles="superadmin,administrator,admin,engineer"> <!-- esta la puede ver admin tambien -->
+                    <li class="nav-item" data-roles="engineer">
                         <a href="/Engineer/Simulator" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
                             <i class="bi bi-sliders"></i>
                             <span>Simulador SCADA</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="engineer">
+                        <a href="/Engineer/Turbines" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-gear"></i>
+                            <span>Turbinas</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="engineer">
+                        <a href="/Engineer/Maintenances" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-tools"></i>
+                            <span>Mantenimientos</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="engineer">
+                        <a href="/Engineer/Failures" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <span>Fallas del Sistema</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="engineer">
+                        <a href="/Engineer/Energy" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-battery-charging"></i>
+                            <span>Energía y Pérdidas</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="engineer">
+                        <a href="/Engineer/CentralBank" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-bank"></i>
+                            <span>Banco Central</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="engineer">
+                        <a href="/Engineer/FlushHistory" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-clock-history"></i>
+                            <span>Historial de Flush</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="engineer">
+                        <a href="/Engineer/Reports" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-file-bar-graph"></i>
+                            <span>Reportes Operativos</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-roles="engineer">
+                        <a href="/Engineer/Audit" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-journal-check"></i>
+                            <span>Auditoría Técnica</span>
                         </a>
                     </li>
 
@@ -224,6 +299,12 @@
                             <span>Consultar Distribuciones</span>
                         </a>
                     </li>
+                    <li class="nav-item" data-roles="buyer,customer,distributor">
+                        <a href="/Buyer/Reports" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
+                            <i class="bi bi-file-bar-graph"></i>
+                            <span>Reportes</span>
+                        </a>
+                    </li>
 
                 </ul>
 
@@ -243,14 +324,14 @@
                             <span class="badge bg-secondary text-white border border-dark px-2 py-1 fs-xs" id="sidebarUserRoleBadge">INVITADO</span>
                         </div>
                     </div>
-                    <div class="d-flex align-items-center gap-1">
+                    <div class="d-flex align-items-center gap-1 ms-4">
                         <!-- Tema (oscuro/claro) -->
                         <button type="button" class="btn btn-sm btn-link text-muted p-1" id="btnThemeToggle" title="Alternar tema">
-                            <i class="bi bi-moon-stars-fill fs-6"></i>
+                            <i class="bi bi-moon-stars-fill fs-5"></i>
                         </button>
                         <!-- Cerrar sesión -->
                         <button type="button" class="btn btn-sm btn-link text-muted p-1 d-none" id="btnSignOut" title="Cerrar sesión">
-                            <i class="bi bi-box-arrow-right fs-5 text-danger"></i>
+                            <i class="bi bi-box-arrow-right fs-6 text-danger"></i>
                         </button>
                     </div>
                 </div>

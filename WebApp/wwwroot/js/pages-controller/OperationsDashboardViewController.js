@@ -1,8 +1,7 @@
-// OperationsDashboardViewController.js (§22.1, §27) - Controlador JS para el Panel de Operaciones / Ingeniero
+// OperationsDashboardViewController.js - Controlador JS para el Panel de Operaciones / Ingeniero
 document.addEventListener("DOMContentLoaded", function () {
     console.log("Inicializando OperationsDashboardViewController...");
 
-    // Verificación de seguridad en el cliente (RBAC §24.2)
     const role = session.getRole();
     if (role !== "Engineer" && role !== "Administrator" && role !== "Admin") {
         notify.error("Acceso denegado. Requiere privilegios de Ingeniero u Operaciones.");
@@ -12,6 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
+    // Cargo los datos reales del panel
     if (document.getElementById("opTotalTurbines")) {
         let opTurbinesChartInst = null;
         let opEnergyChartInst = null;
@@ -20,45 +20,36 @@ document.addEventListener("DOMContentLoaded", function () {
         setInterval(loadOperationsDashboard, 15000);
 
         function loadOperationsDashboard() {
-            Promise.all([
-                apiClient.get("Turbines/RetrieveAll"),
-                apiClient.get("CentralBanks/RetrieveAll"),
-                apiClient.get("Maintenances/RetrieveAll"),
-                apiClient.get("Failures/RetrieveAll"),
-                apiClient.get("Flushs/RetrieveAll")
-            ]).then(function (responses) {
-                const turbines = responses[0]?.[0]?.data || responses[0]?.data || responses[0]?.Data || [];
-                const centralBanks = responses[1]?.[0]?.data || responses[1]?.data || responses[1]?.Data || [];
-                const maints = responses[2]?.[0]?.data || responses[2]?.data || responses[2]?.Data || [];
-                const failures = responses[3]?.[0]?.data || responses[3]?.data || responses[3]?.Data || [];
-                const flushes = responses[4]?.[0]?.data || responses[4]?.data || responses[4]?.Data || [];
+            apiClient.get("Dashboard/Engineer")
+                .done(function (res) {
+                    const data = res?.data || res?.Data || res || {};
 
-                const totalT = turbines.length;
-                const activeT = turbines.filter(function (t) { return (t.status || t.Status) === "Active"; }).length;
-                const maintT = turbines.filter(function (t) { return (t.status || t.Status) === "Maintenance"; }).length;
-                const damagedT = turbines.filter(function (t) { return (t.status || t.Status) === "Damaged"; }).length;
-                const suspendedT = turbines.filter(function (t) { return (t.status || t.Status) === "Suspended"; }).length;
-                const cbInv = Number((centralBanks[0]?.currentInventoryMWh ?? centralBanks[0]?.CurrentInventoryMWh) || 0);
-                const alerts = maints.filter(function (m) { return (m.status || m.Status) !== "Completed"; }).length;
-                const lastFlush = flushes[0] || {};
-                const flushEnergy = Number(lastFlush.transferredEnergyMWh ?? lastFlush.TransferredEnergyMWh ?? 0);
+                    const totalT = Number(data.totalTurbines ?? data.TotalTurbines ?? 0);
+                    const activeT = Number(data.activeTurbines ?? data.ActiveTurbines ?? 0);
+                    const maintT = Number(data.turbinesUnderMaintenance ?? data.TurbinesUnderMaintenance ?? 0);
+                    const damagedT = Number(data.damagedTurbines ?? data.DamagedTurbines ?? 0);
+                    const suspendedT = Number(data.suspendedTurbines ?? data.SuspendedTurbines ?? 0);
+                    const cbInv = Number(data.centralBankInventory ?? data.CentralBankInventory ?? 0);
+                    const alerts = Number(data.overdueMaintenanceAlerts ?? data.OverdueMaintenanceAlerts ?? 0);
+                    const flushEnergy = Number(data.lastFlushEnergy ?? data.LastFlushEnergy ?? 0);
 
-                setText("opTotalTurbines", totalT);
-                setText("opActiveTurbines", activeT);
-                setText("opMaintTurbines", maintT);
-                setText("opDamagedTurbines", damagedT);
-                setText("opSuspendedTurbines", suspendedT);
-                setText("opCbInventory", formatNumber(cbInv) + " MWh");
-                setText("opOverdueAlerts", alerts);
+                    setText("opTotalTurbines", totalT);
+                    setText("opActiveTurbines", activeT);
+                    setText("opMaintTurbines", maintT);
+                    setText("opDamagedTurbines", damagedT);
+                    setText("opSuspendedTurbines", suspendedT);
+                    setText("opCbInventory", formatNumber(cbInv) + " MWh");
+                    setText("opOverdueAlerts", alerts);
 
-                const flushDate = lastFlush.executedAt || lastFlush.ExecutedAt;
-                setText("opFlushDate", flushDate ? new Date(flushDate).toLocaleDateString("es-CR", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "Sin registros");
-                setText("opFlushEnergy", formatNumber(flushEnergy) + " MWh");
+                    const flushDate = data.lastFlushDate || data.LastFlushDate;
+                    setText("opFlushDate", flushDate ? new Date(flushDate).toLocaleDateString("es-CR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Sin registros");
+                    setText("opFlushEnergy", formatNumber(flushEnergy) + " MWh");
 
-                renderOpCharts(activeT, maintT, damagedT, suspendedT, cbInv, flushEnergy);
-            }).catch(function (xhr) {
-                handleApiError(xhr);
-            });
+                    renderOpCharts(activeT, maintT, damagedT, suspendedT, cbInv, flushEnergy);
+                })
+                .fail(function (xhr) {
+                    handleApiError(xhr);
+                });
         }
 
         function renderOpCharts(activeT, maintT, damagedT, suspendedT, cbInv, flushEnergy) {

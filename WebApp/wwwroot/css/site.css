@@ -1035,11 +1035,29 @@ main[role="main"] {
 
 /* ── 1. Contenedor del Sidebar Fijo ───────────────────────────────────────── */
 .sgde-sidebar {
-    width: 265px;
     background-color: var(--sgde-surface-card);
     border-color: var(--sgde-border) !important;
     transition: width var(--sgde-transition-default, 0.25s ease);
     z-index: 1020;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+}
+
+.sgde-sidebar.role-menu-pending [data-roles] {
+    display: none;
+}
+
+.sgde-sidebar-menu {
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: calc(100vh - 8.5rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
 }
 
 .sgde-brand-icon {

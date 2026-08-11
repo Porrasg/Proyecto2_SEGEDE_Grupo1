@@ -3,6 +3,8 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Inicializando TurbineManagementViewController...");
 
     const role = session.getRole();
+    const currrenUserId = session.getUserId(); 
+
     if (role !== "Engineer" && role !== "Administrator" && role !== "Admin") {
         notify.error("Acceso denegado. Requiere privilegios de Ingeniero u Operaciones.");
         setTimeout(() => {
@@ -176,7 +178,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 confirmStateBtn.disabled = true;
                 confirmStateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cambiando...';
 
-                apiClient.post("Turbines/ChangeState", {
+                apiClient.post(`Turbines/ChangeState?callerUserId=${currentUserId}`, {
                     turbineId: parseInt(selectedTurbineId),
                     newState: newState,
                     reason: reason
@@ -315,8 +317,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 // 5. Determinar la acción y enviar el payload completo homologado
                 const request = isEdit
-                    ? apiClient.put("Turbines/Update", turbinePayload)
-                    : apiClient.post("Turbines/Register", turbinePayload);
+                    ? apiClient.put(`Turbines/Update?callerUserId=${currentUserId}`, turbinePayload)
+                    : apiClient.post(`Turbines/Register?callerUserId=${currentUserId}}`, turbinePayload);
 
                 request.done(function () {
                     notify.success(isEdit ? "Turbina actualizada exitosamente." : "Turbina registrada exitosamente.");
