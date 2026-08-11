@@ -136,8 +136,7 @@
             console.log("FLUSH res.data =", res.data);
 
 
-            //if (!res || !res.data) return;
-
+           
             // El listado de flushes puede venir directo en un arreglo o anidado en .items
             //const rows = res.data?.items || res.data?.Data || res.data || [];
 
