@@ -407,7 +407,8 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                // El frontend lee este mensaje para mostrar el bloqueo o error real
+                return BadRequest(new { message = ex.Message });
             }
         }
 

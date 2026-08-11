@@ -384,7 +384,8 @@ namespace CoreApp
             // Verifica si el bloqueo temporal continúa activo
             if (user.LockoutEndAt != null && user.LockoutEndAt > DateTime.Now)
             {
-                throw new Exception("La cuenta se encuentra bloqueada temporalmente");
+                var remainingMinutes = (int)Math.Ceiling((user.LockoutEndAt.Value - DateTime.Now).TotalMinutes);
+                throw new Exception($"La cuenta se encuentra bloqueada temporalmente. Intente nuevamente en {remainingMinutes} minutos.");
             }
 
             // Si el tiempo de bloqueo terminó, reinicia los intentos
@@ -404,17 +405,18 @@ namespace CoreApp
 
                 user.UpdatedAt = DateTime.Now;
 
-                // Después de tres intentos, bloquea temporalmente
+                // Regla de seguridad: se cuentan los intentos y al 3er fallo se bloquea 15 minutos
                 if (user.FailedLoginAttempts >= 3)
                 {
                     user.LockoutEndAt = DateTime.Now.AddMinutes(15);
                     uCrud.UpdateLoginAttempts(user);
-                    throw new Exception("3 intentos agotados. Reintente en 15 minutos");
+                    throw new Exception("3 intentos agotados. La cuenta se bloqueó por 15 minutos.");
                 }
 
                 uCrud.UpdateLoginAttempts(user);
 
-                throw new Exception("El correo electrónico o la contraseña son incorrectos");
+                var remainingAttempts = 3 - user.FailedLoginAttempts;
+                throw new Exception($"La contraseña es incorrecta. Le quedan {remainingAttempts} intento{(remainingAttempts == 1 ? string.Empty : "s")}. ");
             }
 
             // Las credenciales son correctas, se reinician los intentos fallidos
@@ -442,6 +444,7 @@ namespace CoreApp
                 return false;
             }
 
+            // Las cuentas estáticas de demostración no aplican bloqueo temporal por intentos.
             if (!string.Equals(account.Password, password, StringComparison.Ordinal))
             {
                 return false;
