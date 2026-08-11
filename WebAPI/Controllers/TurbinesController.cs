@@ -76,7 +76,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Register")]
-        public ActionResult Register(TurbineRegisterRequest request)
+        public ActionResult Register(TurbineRegisterRequest request, [FromQuery] int? callerUserId)
         {
             try
             {
@@ -94,6 +94,11 @@ namespace WebAPI.Controllers
                 };
 
                 tm.Create(turbine);
+
+                //Registrar la creacion de la turbina en la bitacora 
+                AuditHelper.TryAudit(callerUserId, "Create", "Turbines", turbine.Id, $"Turbina {turbine.Code} registrada con estado Active");
+
+
                 return Ok(new { message = "Turbina registrada con éxito.", data = turbine });
             }
             catch (Exception ex)
