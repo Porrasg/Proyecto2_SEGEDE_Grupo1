@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const MONTHS = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
     let charts = {};
 
-    // ── Helpers compartidos ─────────────────────────────────────────────
+    // Helpers compartidos
 
     function esc(s) {
         return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return page(1, []);
     }
 
-    // ── Reporte compartido Admin/Engineer: mantenimientos por turbina ──
+    //  Reporte compartido Admin/Engineer: mantenimientos por turbina 
 
     const maintBody = document.getElementById("maintReportBody");
     if (maintBody) {
@@ -161,7 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ── Admin: energía generada por turbina (día/mes/año) ──────────────
+    // Admin: energía generada por turbina (día/mes/año)
 
     const genBody = document.getElementById("generationReportBody");
     if (genBody) {
@@ -215,7 +215,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ── Admin: energía suplida por proveedor ────────────────────────────
+    // Admin: energía suplida por proveedor 
 
     const supBody = document.getElementById("suppliersReportBody");
     if (supBody) {
@@ -266,7 +266,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ── Engineer: estado actual y alertas de turbinas ───────────────────
+    //Engineer: estado actual y alertas de turbinas
 
     const statusBody = document.getElementById("statusReportBody");
     if (statusBody) {
@@ -318,7 +318,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ── Buyer: asignación mensual de energía ────────────────────────────
+    //  Buyer: asignación mensual de energía 
 
     const allocBody = document.getElementById("allocReportBody");
     if (allocBody) {

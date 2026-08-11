@@ -185,7 +185,7 @@ function checkRouteSecurity() {
     }
 }
 
-// ── Interactive Filter Chips Helper ────────────────────────────────────
+// ── Ayudante para Filtros Interactivos (Chips) ──
 function initInteractiveFilterChips() {
     const chips = document.querySelectorAll(".filter-chip");
     chips.forEach(chip => {
@@ -204,7 +204,7 @@ function initInteractiveFilterChips() {
                 selectEl.value = statusValue || "";
                 selectEl.dispatchEvent(new Event("change"));
             } else {
-                // If no select element, check if there is an input search or custom filter callback
+                // Si no existe un elemento select, verifica si hay un input de búsqueda o filtro personalizado
                 const searchInput = document.querySelector("#searchTurbine, #opSearchTurbine, #searchInput");
                 if (searchInput) {
                     searchInput.dispatchEvent(new Event("input"));
@@ -213,7 +213,7 @@ function initInteractiveFilterChips() {
         });
     });
 
-    // Helper for "Limpiar Filtros" button
+    // Ayudante para el botón "Limpiar Filtros"
     const clearBtn = document.querySelector("#btnClearFilters, .btn-clear-filters");
     if (clearBtn) {
         clearBtn.addEventListener("click", function () {
@@ -228,12 +228,12 @@ function initInteractiveFilterChips() {
     }
 }
 
-// ── Interactive KPI Card Links Helper ──────────────────────────────────
+// ── Ayudante para Enlaces en Tarjetas KPI Interactivas 
 function initInteractiveCardLinks() {
     const interactiveCards = document.querySelectorAll(".kpi-card[data-navigate], .card-interactive[data-navigate], [data-href]");
     interactiveCards.forEach(card => {
         card.addEventListener("click", function (e) {
-            // Prevent navigating if user clicked a button or link inside the card
+            // Evita la navegación si el usuario hizo clic en un botón o enlace dentro de la tarjeta
             if (e.target.tagName === "A" || e.target.tagName === "BUTTON" || e.target.closest("button") || e.target.closest("a")) {
                 return;
             }
@@ -245,11 +245,9 @@ function initInteractiveCardLinks() {
     });
 }
 
-/**
- * ============================================================================
- * SGDE Core — Role-Based UI Access Controller (Vanilla JavaScript)
- * ============================================================================
- */
+
+  //SGDE Core — Role-Based UI Access Controller (Vanilla JavaScript)
+
 class RoleAccessController {
     constructor() {
         this.storageKey = 'userRole';

@@ -16,9 +16,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const roleBase = window.location.pathname.toLowerCase().startsWith("/admin") ? "/Admin" : "/Engineer";
     const isAdmin = role === "Administrator" || role === "Admin";
 
-    // ==========================================
+    
     // 1. LISTADO Y OPERACIÓN (/Engineer/Turbines)
-    // ==========================================
     const turbinesBody = document.getElementById("opTurbinesBody") || document.getElementById("turbinesTableBody");
     if (turbinesBody) {
         let allTurbines = [];
@@ -447,9 +446,9 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
 
-    // ==========================================
+    
     // 1. CÁLCULO Y RENDERIZADO DE MÉTRICAS (DO, IO, MTBF, MTTR)
-    // ==========================================
+  
     function loadTurbineMetrics(id) {
         apiClient.get("Turbines/History/" + id)
             .done(function (res) {

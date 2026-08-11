@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (response.Message) return response.Message;
             if (response.responseText && response.responseText.trim()) return response.responseText;
         } catch (e) {
-            // ignore parsing errors
+            // Ignorar errores de procesamiento
         }
         return fallback;
     }
@@ -103,9 +103,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if (saved && resEmailInput && !resEmailInput.value) resEmailInput.value = saved;
     if (saved && otpTimerElement && resendButton) startOtpTimer();
 
-    // --------------------
+    
     // Recover: solicitar código
-    // --------------------
     if (recoverForm) {
         recoverForm.addEventListener('submit', function (e) {
             e.preventDefault();
@@ -127,14 +126,13 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // --------------------
+    
     // Resend: reenviar código
-    // --------------------
-    // Use event delegation so the handler works even if the button is recreated
+    // Usar delegación de eventos para que el manejador funcione aunque el botón se vuelva a crear
     document.addEventListener('click', function (ev) {
         const btn = ev.target && (ev.target.id === 'btnResendOtp' ? ev.target : ev.target.closest && ev.target.closest('#btnResendOtp'));
         if (!btn) return;
-        // ensure controls are present
+        // Asegurar que los controles estén presentes
         ensureOtpControls();
         const email = (resEmailInput?.value || sessionStorage.getItem(STORAGE_EMAIL_KEY) || '').trim();
         if (!email) { notify.warning('Ingrese el correo asociado.'); return; }
@@ -154,9 +152,8 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     });
 
-    // --------------------
+  
     // Reset: enviar nueva contraseña
-    // --------------------
     if (resetForm) {
         resetForm.addEventListener('submit', function (e) {
             e.preventDefault();

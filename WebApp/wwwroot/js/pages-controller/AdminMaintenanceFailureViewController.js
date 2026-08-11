@@ -1,8 +1,8 @@
 // AdminMaintenanceFailureViewController.js (§85, tras enlazar Admin/Maintenances y Admin/Failures en el navbar) - Vistas generales de solo lectura
 document.addEventListener("DOMContentLoaded", function () {
-    // ==========================================
+    
     // 1. VISIÓN GENERAL DE MANTENIMIENTOS (/Admin/Maintenances)
-    // ==========================================
+    
     const maintBody = document.getElementById("maintsOverviewBody");
     if (maintBody) {
         let allMaintenances = [];
@@ -82,9 +82,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // ==========================================
+   
     // 2. INFORMES DE FALLAS (/Admin/Failures)
-    // ==========================================
+  
     const failBody = document.getElementById("failsOverviewBody");
     if (failBody) {
         let allFailures = [];

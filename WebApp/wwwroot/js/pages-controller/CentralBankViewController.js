@@ -12,9 +12,8 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    // ==========================================
+
     // 1. BANCO CENTRAL DE ENERGÍA (/Engineer/CentralBank)
-    // ==========================================
     if (document.getElementById("cbInv")) {
         loadCentralBankStatus();
     }
@@ -87,9 +86,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }).join("");
     }
 
-    // ==========================================
+  
     // 2. HISTORIAL DE FLUSHES (/Engineer/FlushHistory)
-    // ==========================================
     if (document.getElementById("flushesBody")) {
         loadFlushHistory();
         loadFlushConfig();

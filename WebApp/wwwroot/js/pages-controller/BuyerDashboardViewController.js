@@ -13,9 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    // ==========================================
     // 1. PANEL PRINCIPAL (/Buyer/Dashboard)
-    // ==========================================
     if (document.getElementById("buyActiveForecasts")) {
         let buyDemandChartInst = null;
         let buyBillingChartInst = null;
