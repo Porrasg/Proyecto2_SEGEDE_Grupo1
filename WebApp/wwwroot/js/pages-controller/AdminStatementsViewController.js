@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function loadStatements() {
         statementsBody.innerHTML = '<tr><td colspan="9" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando estados de cuenta...</td></tr>';
-        apiClient.get("Billing/Statements")
+        apiClient.get("Invoices/Statements")
             .done(function (res) {
                 allStatements = res?.data || res?.Data || [];
                 renderFiltered();
@@ -158,7 +158,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // Descarga binaria (blob): apiClient solo maneja JSON, así que aquí se usa
             // fetch() directo en vez de $.ajax, igual de "manual" que el resto del cliente.
-            fetch(apiClient.url("Billing/Export"), {
+            fetch(apiClient.url("Invoices/Export"), {
                 method: "POST",
                 headers: Object.assign({ "Content-Type": "application/json" }, apiClient.authHeader()),
                 body: JSON.stringify({ statementId: parseInt(selectedStatementId), format: format })
@@ -172,7 +172,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     return response.blob();
                 })
                 .then(function (blob) {
-                    const ext = format === "EXCEL" ? "xlsx" : format.toLowerCase();
+                    // PDF se guarda como HTML simple para que la descarga funcione sin dependencias extra.
+                    const ext = format === "EXCEL" ? "xlsx" : format === "PDF" ? "html" : "csv";
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement("a");
                     a.href = url;

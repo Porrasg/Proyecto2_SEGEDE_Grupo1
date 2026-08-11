@@ -76,7 +76,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Register")]
-        public ActionResult Register(TurbineRegisterRequest request)
+        public ActionResult Register(TurbineRegisterRequest request, [FromQuery] int? callerUserId)
         {
             try
             {
@@ -94,6 +94,11 @@ namespace WebAPI.Controllers
                 };
 
                 tm.Create(turbine);
+
+                //Registrar la creacion de la turbina en la bitacora 
+                AuditHelper.TryAudit(callerUserId, "Create", "Turbines", turbine.Id, $"Turbina {turbine.Code} registrada con estado Active");
+
+
                 return Ok(new { message = "Turbina registrada con éxito.", data = turbine });
             }
             catch (Exception ex)
@@ -110,25 +115,10 @@ namespace WebAPI.Controllers
             {
                 var tm = new TurbineManager();
                 tm.ChangeState(request.TurbineId, request.NewState);
-
-                // El motivo del cambio queda en la bitácora de auditoría (la tabla
-                // de turbinas no guarda un historial de estados propio).
-                try
-                {
-                    var am = new AuditManager();
-                    am.Create(new Audit
-                    {
-                        UserId = callerUserId,
-                        Action = "Update",
-                        EntityName = "Turbines",
-                        EntityId = request.TurbineId,
-                        Description = $"Cambio de estado a {request.NewState}. Motivo: {request.Reason ?? "No indicado"}"
-                    });
-                }
-                catch
-                {
-                    // La auditoría no debe impedir el cambio de estado ya aplicado
-                }
+                
+                //Registrar el cambio de estado de la turbina
+                AuditHelper.TryAudit(callerUserId, "ChangeState", "Turbines", request.TurbineId, 
+                    $"Cambio de estado a {request.NewState}. Motivo: {request.Reason ?? "No indicado"}");
 
                 return Ok(new { message = "Estado de la turbina actualizado." });
             }
@@ -156,12 +146,16 @@ namespace WebAPI.Controllers
 
         [HttpPut]
         [Route("Update")]
-        public ActionResult Update(Turbine turbine)
+        public ActionResult Update(Turbine turbine, [FromQuery] int? callerUserId)
         {
             try
             {
                 var tm = new TurbineManager();
                 tm.Update(turbine);
+
+                //Registrar la actualizacion de la turbina en la bitacora
+                AuditHelper.TryAudit(callerUserId,"Update", "Turbine", turbine.Id, "Información de la turbina {turbine.Code} actualizada");
+
                 return Ok(turbine);
             }
             catch (Exception ex)

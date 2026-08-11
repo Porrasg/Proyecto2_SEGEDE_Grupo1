@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Inicializando LoginViewController...");
 
     //datos estaticos
-    const staticLoginEmails = ["admin@segede.local", "engineer@segede.local", "buyer@segede.local"];
+    const staticLoginEmails = ["admin@segede.local", "engineer@segede.local"];
     function isStaticLoginEmail(email) {
         return !!email && staticLoginEmails.includes(String(email).trim().toLowerCase());
     }
@@ -13,6 +13,17 @@ document.addEventListener("DOMContentLoaded", function () {
     // ==========================================
     const loginForm = document.getElementById("loginForm");
     if (loginForm) {
+        const loginMessage = document.getElementById("loginMessage");
+
+        // Pinta el mensaje en pantalla para que se note el bloqueo despues de 3 intentos fallidos 
+        function showLoginMessage(message, type) {
+            if (!loginMessage) return;
+
+            loginMessage.textContent = message;
+            loginMessage.classList.remove("d-none", "alert-success", "alert-warning", "alert-danger", "alert-info");
+            loginMessage.classList.add(type === "success" ? "alert-success" : type === "warning" ? "alert-warning" : type === "info" ? "alert-info" : "alert-danger");
+        }
+
         loginForm.addEventListener("submit", function (e) {
             e.preventDefault();
             const email = document.getElementById("identification")?.value.trim();
@@ -32,6 +43,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
             apiClient.post("Users/Login", { email: email, password: password })
                 .done(function (res) {
+                    if (loginMessage) loginMessage.classList.add("d-none");
+
                     if (isStaticLoginEmail(email)) {
                         sessionStorage.removeItem("sgde_login_email");
                         sessionStorage.removeItem("sgde_login_userId");
@@ -56,6 +69,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (btnSubmit) {
                         btnSubmit.disabled = false;
                         btnSubmit.innerHTML = originalText;
+                    }
+                    // Si la API responde con error, lo mostramos en el login
+                    const apiMessage = xhr?.responseJSON?.message || xhr?.responseJSON?.Message || xhr?.responseText?.trim();
+                    if (apiMessage) {
+                        showLoginMessage(apiMessage, "danger");
                     }
                     handleApiError(xhr);
                 });
