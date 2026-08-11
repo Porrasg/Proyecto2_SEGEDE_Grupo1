@@ -12,6 +12,13 @@ namespace WebAPI
         {
             try
             {
+
+                // Los usuarios estáticos del sistema usan IDs negativos. Como no existen en tblUsers, no se registran como UserId real.
+                int? validUserId =
+                    callerUserId.HasValue && callerUserId.Value > 0
+                        ? callerUserId
+                        : null;
+
                 new AuditManager().Create(new Audit
                 {
                     UserId = callerUserId,
