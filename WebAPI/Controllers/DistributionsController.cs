@@ -92,6 +92,7 @@ namespace WebAPI.Controllers
 
         [HttpGet]
         [Route("RetrieveByBuyerId/{buyerId}")]
+        [Route("ByBuyer/{buyerId}")] 
         // Alias que usa la pantalla de reportes para consultar por comprador.
         public ActionResult RetrieveByBuyerId(int buyerId)
         {
