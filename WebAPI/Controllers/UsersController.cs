@@ -23,6 +23,19 @@ namespace WebAPI.Controllers
             return users;
         }
 
+        // Agrega el JWT de sesion (login ya completo, post-OTP) al objeto de usuario
+        // ya serializado, sin romper la forma plana que session.save() del frontend
+        // ya espera (role/userId/email al nivel raiz, no anidados bajo "user").
+        private static object WithToken(User user)
+        {
+            var node = System.Text.Json.JsonSerializer.SerializeToNode(user, new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            })!.AsObject();
+            node["token"] = JwtTokenHelper.GenerateToken(user);
+            return node;
+        }
+
         public class UserRegisterRequest
         {
             public string Identification { get; set; } = string.Empty;
@@ -419,7 +432,7 @@ namespace WebAPI.Controllers
             {
                 var um = new UserManager();
                 var user = um.ValidateLoginOtp(request.Email, request.OtpCode);
-                return Ok(Sanitize(user));
+                return Ok(WithToken(Sanitize(user)));
             }
             catch (Exception ex)
             {
