@@ -172,7 +172,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     return response.blob();
                 })
                 .then(function (blob) {
-                    const ext = format === "EXCEL" ? "xlsx" : format.toLowerCase();
+                    const ext = format.toLowerCase();
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement("a");
                     a.href = url;
