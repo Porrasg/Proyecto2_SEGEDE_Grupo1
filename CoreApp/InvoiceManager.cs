@@ -18,8 +18,6 @@ namespace CoreApp
             return crud.RetrieveAll<Invoice>();
         }
 
-
-
         // Busca una factura por su identificador.
         public Invoice RetrieveById(int id)
         {

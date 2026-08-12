@@ -12,7 +12,6 @@ namespace DataAccess.CRUD
         {
             sqlDao = SqlDao.GetInstance();
         }
-
         public override void Create(BaseDTO baseDTO)
         {
             var movement = baseDTO as CentralBankMovement;
