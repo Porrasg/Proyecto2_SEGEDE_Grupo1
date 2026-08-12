@@ -172,6 +172,22 @@ document.addEventListener("DOMContentLoaded", function () {
         return Number(num).toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
+    // La API devuelve arreglos JSON planos (sin envoltura {data:[...]}) en la mayoría
+    // de los endpoints RetrieveAll; esta función acepta ambos formatos igual que ya
+    // se hace en loadUsers()/loadUserStats() de este mismo archivo.
+    function normalizeResponse(res) {
+        return Array.isArray(res) ? res : (res?.data || res?.Data || res?.items || res?.Items || []);
+    }
+
+    // Busca la primera clave presente en el objeto (soporta camelCase/PascalCase).
+    function getField(obj, keys) {
+        if (!obj) return undefined;
+        for (const key of keys) {
+            if (obj[key] !== undefined && obj[key] !== null) return obj[key];
+        }
+        return undefined;
+    }
+
     // 2. GESTIÓN DE USUARIOS (/Admin/Users)
     const tableBody = document.getElementById("usersTableBody");
     if (tableBody) {
