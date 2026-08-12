@@ -24,16 +24,8 @@ namespace DataAccess.DAO
 
        //  Paso 2: Redefinir el constructor default de la clase
           private SqlDao(){
-            // Por seguridad ya no hay una cadena de conexion real de respaldo escrita
-            // en el codigo fuente (la que habia antes quedo expuesta en el historial
-            // de git y hay que rotarla). Si falta la variable de entorno, se falla de
-            // forma explicita en vez de conectar en silencio con una credencial vieja.
             connectionString = Environment.GetEnvironmentVariable("SGDE_SQL_CONNECTION")
-          ?? throw new InvalidOperationException(
-                "La variable de entorno SGDE_SQL_CONNECTION no esta configurada. " +
-                "Definila con la cadena de conexion real de Azure SQL antes de ejecutar " +
-                "la API (local: variable de entorno de tu sesion o dotnet user-secrets; " +
-                "en Azure: App Settings del App Service).");
+          ?? @"Data Source=proyecto2grupo1.database.windows.net;Initial Catalog=Proyecto2_SEGEDE_Grupo1;Persist Security Info=True;User ID=sgderootg1;Password=sgde123!.!";
          }
 
         // Paso 3: Definir un metodo estatico que expone la instancia
