@@ -250,6 +250,7 @@ namespace WebAPI.Controllers
                 user.Status = string.IsNullOrWhiteSpace(user.Status) ? "Pending" : user.Status;
 
                 um.Create(user);
+                AuditHelper.TryAudit(null, "Create", "Users", user.Id, $"Autorregistro de comprador: {user.Email}");
                 return Ok(new { message = "Comprador registrado con éxito. Active su cuenta con el código enviado a su correo." });
             }
             catch (Exception ex)
@@ -267,6 +268,7 @@ namespace WebAPI.Controllers
             {
                 var um = new UserManager();
                 um.ConfirmChangePassword(request.Email, tokenCode, request.NewPassword, request.ConfirmPassword);
+                AuditHelper.TryAudit(null, "Update", "Users", null, $"Cambio de contraseña confirmado por correo: {request.Email}");
                 return Ok(new { message = "Contraseña actualizada correctamente." });
             }
             catch (Exception ex)
@@ -464,6 +466,7 @@ namespace WebAPI.Controllers
                 }
 
                 um.ConfirmResetPassword(request.Email, request.OtpCode, request.NewPassword, request.ConfirmPassword);
+                AuditHelper.TryAudit(null, "Update", "Users", null, $"Contraseña restablecida vía recuperación: {request.Email}");
                 return Ok("Contraseña restablecida correctamente.");
             }
             catch (Exception ex)
@@ -498,6 +501,7 @@ namespace WebAPI.Controllers
             {
                 var um = new UserManager();
                 um.ConfirmResetPassword(request.Email, request.OtpCode, request.NewPassword, request.ConfirmPassword);
+                AuditHelper.TryAudit(null, "Update", "Users", null, $"Contraseña restablecida vía recuperación: {request.Email}");
                 return Ok("Contraseña restablecida correctamente.");
             }
             catch (Exception ex)
@@ -522,6 +526,7 @@ namespace WebAPI.Controllers
                 // Endpoint legado sin campos de contraseña; el flujo real de activación
                 // es la acción Activate (abajo), que sí exige establecer la contraseña.
                 um.ActivateAccount(request.Email?.Trim(), request.OtpCode?.Trim(), null, null);
+                AuditHelper.TryAudit(null, "Update", "Users", null, $"Cuenta activada (endpoint legado): {request.Email}");
                 return Ok(new { message = "Cuenta activada correctamente." });
             }
             catch (Exception ex)
@@ -549,6 +554,7 @@ namespace WebAPI.Controllers
 
                 var um = new UserManager();
                 um.ActivateAccount(request.Email?.Trim(), request.TokenCode?.Trim(), request.NewPassword, request.ConfirmPassword);
+                AuditHelper.TryAudit(null, "Update", "Users", null, $"Cuenta activada: {request.Email}");
                 return Ok(new { message = "Cuenta activada con éxito." });
             }
             catch (Exception ex)

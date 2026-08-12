@@ -55,6 +55,8 @@ namespace WebAPI.Controllers
 
                 fm.Create(failure);
 
+                AuditHelper.TryAudit(callerUserId, "Create", "Failures", failure.Id, $"Falla reportada en turbina #{request.TurbineId} (severidad: {request.Severity})");
+
                 // Lógica cruzada: una falla crítica deja la turbina fuera de operación
                 if (request.Severity == "Critical")
                 {

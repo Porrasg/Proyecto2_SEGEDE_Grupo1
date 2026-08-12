@@ -96,6 +96,7 @@ namespace WebAPI.Controllers
                 };
 
                 mm.Create(maintenance);
+                AuditHelper.TryAudit(callerUserId, "Create", "Maintenances", maintenance.Id, $"Mantenimiento {request.MaintenanceType} programado para turbina #{request.TurbineId}");
                 return Ok(new { message = "Mantenimiento programado con éxito.", data = maintenance });
             }
             catch (Exception ex)
@@ -130,6 +131,7 @@ namespace WebAPI.Controllers
                 maintenance.Status = "Completed";
 
                 mm.Update(maintenance);
+                AuditHelper.TryAudit(callerUserId, "Update", "Maintenances", maintenance.Id, "Mantenimiento marcado como completado");
 
                 // Lógica cruzada: al completar el mantenimiento la turbina vuelve a operar
                 var tm = new TurbineManager();
@@ -150,7 +152,7 @@ namespace WebAPI.Controllers
         // Cancela un mantenimiento programado (baja lógica vía el manager)
         [HttpPost]
         [Route("Cancel/{id}")]
-        public ActionResult Cancel(int id)
+        public ActionResult Cancel(int id, [FromQuery] int? callerUserId)
         {
             try
             {
@@ -158,6 +160,7 @@ namespace WebAPI.Controllers
                 var maintenance = mm.RetrieveById(id);
 
                 mm.Delete(maintenance);
+                AuditHelper.TryAudit(callerUserId, "Cancel", "Maintenances", id, "Mantenimiento cancelado.");
                 return Ok(new { message = "Mantenimiento cancelado." });
             }
             catch (Exception ex)
@@ -184,12 +187,13 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Create")]
-        public ActionResult Create(Maintenance maintenance)
+        public ActionResult Create(Maintenance maintenance, [FromQuery] int? callerUserId)
         {
             try
             {
                 var mm = new MaintenanceManager();
                 mm.Create(maintenance);
+                AuditHelper.TryAudit(callerUserId, "Create", "Maintenances", maintenance.Id, "Mantenimiento creado (endpoint directo)");
                 return Ok(maintenance);
             }
             catch (Exception ex)
@@ -200,12 +204,13 @@ namespace WebAPI.Controllers
 
         [HttpPut]
         [Route("Update")]
-        public ActionResult Update(Maintenance maintenance)
+        public ActionResult Update(Maintenance maintenance, [FromQuery] int? callerUserId)
         {
             try
             {
                 var mm = new MaintenanceManager();
                 mm.Update(maintenance);
+                AuditHelper.TryAudit(callerUserId, "Update", "Maintenances", maintenance.Id, "Mantenimiento actualizado (endpoint directo)");
                 return Ok(maintenance);
             }
             catch (Exception ex)
@@ -216,12 +221,13 @@ namespace WebAPI.Controllers
 
         [HttpDelete]
         [Route("Delete")]
-        public ActionResult Delete(Maintenance maintenance)
+        public ActionResult Delete(Maintenance maintenance, [FromQuery] int? callerUserId)
         {
             try
             {
                 var mm = new MaintenanceManager();
                 mm.Delete(maintenance);
+                AuditHelper.TryAudit(callerUserId, "Delete", "Maintenances", maintenance.Id, "Mantenimiento eliminado (endpoint directo)");
                 return Ok(maintenance);
             }
             catch (Exception ex)
