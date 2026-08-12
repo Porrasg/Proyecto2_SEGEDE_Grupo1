@@ -13,7 +13,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if (yearInput) yearInput.value = String(now.getFullYear());
 
     apiClient.get("Users/RetrieveAll").done(function (res) {
-        (res?.data || res?.Data || []).forEach(function (u) {
+        const users = Array.isArray(res) ? res : (res?.data || res?.Data || []);
+        users.forEach(function (u) {
             const id = u.id || u.Id;
             userNames[id] = `${u.firstName || u.FirstName || ""} ${u.firstLastName || u.FirstLastName || ""}`.trim() || `Usuario #${id}`;
         });
@@ -34,7 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         apiClient.get(`Forecasts/ByMonth?month=${month}&year=${year}`)
             .done(function (res) {
-                const items = res?.data || res?.Data || [];
+                const items = Array.isArray(res) ? res : (res?.data || res?.Data || []);
                 if (!items.length) {
                     body.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Sin pronósticos registrados para este período.</td></tr>';
                     return;
