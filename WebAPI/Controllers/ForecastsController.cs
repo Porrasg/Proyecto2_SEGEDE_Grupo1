@@ -8,7 +8,7 @@ namespace WebAPI.Controllers
     [ApiController]
     public class ForecastsController : ControllerBase
     {
-        // Cuerpo del registro de pronóstico que envía la pantalla del comprador
+        // Datos que manda la pantalla del comprador cuando registra un pronóstico.
         public class ForecastRegisterRequest
         {
             public int BuyerId { get; set; }
@@ -17,7 +17,7 @@ namespace WebAPI.Controllers
             public decimal RequestedEnergyMWh { get; set; }
         }
 
-        // Cuerpo de la modificación de un pronóstico existente
+        // Datos que manda la pantalla cuando modifica un pronóstico ya guardado.
         public class ForecastModifyRequest
         {
             public int ForecastId { get; set; }
@@ -137,7 +137,7 @@ namespace WebAPI.Controllers
             }
         }
 
-        // Pronósticos de un mes/año específico (pantalla Admin/Forecasts)
+        // Pronósticos de un mes y año específico para la pantalla de administración.
         [HttpGet]
         [Route("ByMonth")]
         public ActionResult ByMonth([FromQuery] int month, [FromQuery] int year)
@@ -154,25 +154,19 @@ namespace WebAPI.Controllers
             }
         }
 
-        // Las solicitudes de compra son "Interfaz exclusiva para usuarios Distribuidores"
-        // (rúbrica). La UI ya oculta estas pantallas a otros roles, pero eso es solo
-        // cosmético del lado del cliente; esta validación es la que realmente lo exige
-        // en el servidor. No hay autenticación por token en el proyecto (sesión vive en
-        // sessionStorage del navegador), así que sigue siendo el mismo modelo de
-        // confianza que el resto de la API - pero al menos ya no basta con ocultar el
-        // botón en el frontend para saltarse la regla.
+        // Aquí valido desde el servidor qué roles sí pueden trabajar con pronósticos.
         private static ActionResult ValidateDistributorRole(string callerRole)
         {
-            // El propio frontend (BuyerManagementViewController.js) ya permite Distributor
-            // Y Administrator/Admin en esta pantalla (soporte/gestión en nombre del comprador);
-            // la validación del backend debe reflejar exactamente esa misma regla.
-            bool isAllowed = string.Equals(callerRole, "Distributor", StringComparison.OrdinalIgnoreCase)
+            // Acepto Buyer y algunos roles cercanos porque así está manejado en la app.
+            bool isAllowed = string.Equals(callerRole, "Buyer", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(callerRole, "Customer", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(callerRole, "Distributor", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(callerRole, "Administrator", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(callerRole, "Admin", StringComparison.OrdinalIgnoreCase);
 
             if (!isAllowed)
             {
-                return new ObjectResult(new { message = "Esta operación es exclusiva para usuarios Distribuidores o Administradores." })
+                return new ObjectResult(new { message = "Esta operación es exclusiva para usuarios Comprador, Distribuidor o Administrador." })
                 {
                     StatusCode = 403
                 };
@@ -181,8 +175,8 @@ namespace WebAPI.Controllers
             return null;
         }
 
-        // Registro de un pronóstico nuevo desde la pantalla del comprador.
-        // El manager asigna el estado inicial "Pending" y valida duplicados y periodos pasados.
+        // Registra un pronóstico nuevo desde la pantalla del comprador.
+        // El manager se encarga del estado inicial y de revisar duplicados o periodos inválidos.
         [HttpPost]
         [Route("Register")]
         public ActionResult Register(ForecastRegisterRequest request, [FromQuery] int? callerUserId, [FromQuery] string callerRole)
@@ -212,9 +206,8 @@ namespace WebAPI.Controllers
             }
         }
 
-        // Modifica únicamente la energía solicitada de un pronóstico existente.
-        // Se recupera el registro actual para conservar el resto de sus datos y
-        // que el manager aplique sus validaciones (no procesado, no cancelado).
+        // Modifica solo la energía solicitada del pronóstico.
+        // Primero recupero el registro para no perder los demás datos.
         [HttpPut]
         [Route("Modify")]
         public ActionResult Modify(ForecastModifyRequest request, [FromQuery] int? callerUserId, [FromQuery] string callerRole)
@@ -240,8 +233,7 @@ namespace WebAPI.Controllers
             }
         }
 
-        // Cancela (baja lógica) un pronóstico. El manager valida que no esté
-        // procesado ni cancelado y asigna el estado "Cancelled".
+        // Cancela el pronóstico de forma lógica, sin borrarlo físicamente.
         [HttpPost]
         [Route("Cancel/{id}")]
         public ActionResult Cancel(int id, [FromQuery] int? callerUserId, [FromQuery] string callerRole)

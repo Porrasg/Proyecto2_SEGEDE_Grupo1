@@ -25,77 +25,37 @@ document.addEventListener("DOMContentLoaded", function () {
         setInterval(loadAdminDashboard, 15000);
         setInterval(loadUserStats, 30000);
 
-        // Carga y procesa los datos que alimentan los KPI del panel administrador.
-        // Usa normalizeResponse() para aceptar distintos formatos de respuesta.
         function loadAdminDashboard() {
-            Promise.all([
-                apiClient.get("Turbines/RetrieveAll"),
-                apiClient.get("CentralBanks/RetrieveAll"),
-                apiClient.get("Forecasts/RetrieveAll"),
-                apiClient.get("Distributions/RetrieveAll"),
-                apiClient.get("Invoices/RetrieveAll"),
-                apiClient.get("Flushs/RetrieveAll")
-            ]).then(function (responses) {
-                // Guardo cada respuesta en una variable con un nombre más fácil de entender.
-                const turbines = normalizeResponse(responses[0]);
-                const centralBanks = normalizeResponse(responses[1]);
-                const forecasts = normalizeResponse(responses[2]);
-                const distributions = normalizeResponse(responses[3]);
-                const invoices = normalizeResponse(responses[4]);
-                const flushes = normalizeResponse(responses[5]);
+            apiClient.get("Dashboard/Admin")
+                .done(function (res) {
+                    const data = res?.data || res?.Data || res || {};
 
+                    const totalTurbines = Number(data.totalTurbines ?? data.TotalTurbines ?? 0);
+                    const activeTurbines = Number(data.activeTurbines ?? data.ActiveTurbines ?? 0);
+                    const centralBankInventoryMWh = Number(data.centralBankInventory ?? data.CentralBankInventory ?? 0);
+                    const effectiveCapacityMWh = Number(data.effectiveCapacity ?? data.EffectiveCapacity ?? 0);
+                    const monthForecasts = Number(data.monthForecasts ?? data.MonthForecasts ?? 0);
+                    const totalDemandMWh = Number(data.monthTotalDemand ?? data.MonthTotalDemand ?? 0);
+                    const totalBilledAmount = Number(data.monthTotalBilled ?? data.MonthTotalBilled ?? 0);
+                    const periodProductionMWh = Number(data.monthTotalDistributed ?? data.MonthTotalDistributed ?? 0);
+                    const flushDate = data.lastFlush || data.LastFlush;
 
-                const totalTurbines = (turbines || []).length;
-                const activeTurbines = (turbines || []).filter(function (t) { return ((getField(t, ["status", "Status"]) || "")) === "Active"; }).length;
-                const turbinesInMaintenance = (turbines || []).filter(function (t) { return ((getField(t, ["status", "Status"]) || "")) === "Maintenance"; }).length;
-                const centralBankInventoryMWh = Number((centralBanks[0]?.currentInventoryMWh ?? centralBanks[0]?.CurrentInventoryMWh) || 0);
-                const effectiveCapacityMWh = Number((centralBanks[0]?.maximumCapacityMWh ?? centralBanks[0]?.MaximumCapacityMWh) || 0);
-                const monthForecasts = (forecasts || []).length;
-                const totalDemandMWh = (forecasts || []).reduce(function (sum, f) { return sum + Number(f.requestedEnergyMWh ?? f.RequestedEnergyMWh ?? 0); }, 0);
-                const totalBilledAmount = (invoices || []).reduce(function (sum, i) { return sum + Number(i.totalAmount ?? i.TotalAmount ?? i.amount ?? i.Amount ?? 0); }, 0);
-                const flushDate = (flushes && flushes[0]) ? (flushes[0].executedAt || flushes[0].ExecutedAt) : null;
-
-                setText("kpiTotalTurbines", totalTurbines);
-                setText("kpiActiveTurbines", activeTurbines);
-                setText("kpiTurbinesInMaintenance", turbinesInMaintenance);
-                setText("kpiCbInventory", formatNumber(centralBankInventoryMWh) + " MWh");
-                setText("kpiEffectiveCap", formatNumber(effectiveCapacityMWh) + " MWh");
-                setText("kpiMonthForecasts", monthForecasts);
-                setText("kpiTotalDemand", formatNumber(totalDemandMWh) + " MWh");
-                setText("kpiTotalBilled", "₡ " + formatNumber(totalBilledAmount));
-                setText("kpiLastFlush", flushDate ? new Date(flushDate).toLocaleDateString("es-CR", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "Sin registros");
-
-                renderAdminCharts(totalTurbines, activeTurbines, centralBankInventoryMWh, effectiveCapacityMWh, totalDemandMWh);
-
-                // Y5: "Producción del periodo" ya NO es un proxy de Flush (energía trasladada
-                // al Banco Central) sino la suma real de EnergyProduction/GenerationHistory
-                // (el mismo endpoint que ya usa el reporte "Energía Generada por Turbina" en
-                // Admin/Reports), filtrando cortes cuyo EventDate cae en el mes/año actuales.
-                // Es un fetch aparte porque depende de conocer primero los IDs de turbina.
-                const now = new Date();
-                Promise.all((turbines || []).map(function (t) {
-                    const id = t.id ?? t.Id;
-                    return id ? apiClient.get("EnergyProduction/GenerationHistory/" + id).then(function (res) {
-                        return res?.data?.items || res?.Data?.Items || [];
-                    }).catch(function () { return []; }) : Promise.resolve([]);
-                })).then(function (histories) {
-                    const periodProductionMWh = histories
-                        .reduce(function (all, h) { return all.concat(h); }, [])
-                        .filter(function (p) {
-                            const eventDate = p.eventDate || p.EventDate;
-                            if (!eventDate) return false;
-                            const d = new Date(eventDate);
-                            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-                        })
-                        .reduce(function (sum, p) { return sum + Number(p.generatedEnergy ?? p.GeneratedEnergy ?? 0); }, 0);
-
+                    setText("kpiTotalTurbines", totalTurbines);
+                    setText("kpiActiveTurbines", activeTurbines);
+                    setText("kpiTurbinesInMaintenance", Number(totalTurbines - activeTurbines > 0 ? totalTurbines - activeTurbines : 0));
+                    setText("kpiCbInventory", formatNumber(centralBankInventoryMWh) + " MWh");
+                    setText("kpiEffectiveCap", formatNumber(effectiveCapacityMWh) + " MWh");
                     setText("kpiPeriodProduction", formatNumber(periodProductionMWh) + " MWh");
-                }).catch(function () {
-                    setText("kpiPeriodProduction", "-");
+                    setText("kpiMonthForecasts", monthForecasts);
+                    setText("kpiTotalDemand", formatNumber(totalDemandMWh) + " MWh");
+                    setText("kpiTotalBilled", "₡ " + formatNumber(totalBilledAmount));
+                    setText("kpiLastFlush", flushDate ? new Date(flushDate).toLocaleDateString("es-CR", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "Sin registros");
+
+                    renderAdminCharts(totalTurbines, activeTurbines, centralBankInventoryMWh, effectiveCapacityMWh, totalDemandMWh);
+                })
+                .fail(function (xhr) {
+                    handleApiError(xhr);
                 });
-            }).catch(function (xhr) {
-                handleApiError(xhr);
-            });
         }
 
         // Traigo todos los usuarios y cuento cuántos tienen estado activo.
@@ -183,22 +143,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function formatNumber(num) {
         return Number(num).toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-
-    // La API devuelve arreglos JSON planos (sin envoltura {data:[...]}) en la mayoría
-    // de los endpoints RetrieveAll; esta función acepta ambos formatos igual que ya
-    // se hace en loadUsers()/loadUserStats() de este mismo archivo.
-    function normalizeResponse(res) {
-        return Array.isArray(res) ? res : (res?.data || res?.Data || res?.items || res?.Items || []);
-    }
-
-    // Busca la primera clave presente en el objeto (soporta camelCase/PascalCase).
-    function getField(obj, keys) {
-        if (!obj) return undefined;
-        for (const key of keys) {
-            if (obj[key] !== undefined && obj[key] !== null) return obj[key];
-        }
-        return undefined;
     }
 
     // 2. GESTIÓN DE USUARIOS (/Admin/Users)

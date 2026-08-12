@@ -1,6 +1,12 @@
 using CoreApp;
+using Entities_DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Text;
 
 namespace WebAPI.Controllers
 {
@@ -8,6 +14,13 @@ namespace WebAPI.Controllers
     [ApiController]
     public class BillingController : ControllerBase
     {
+        // Cuerpo simple para exportar un estado de cuenta sin meter librerías extra.
+        public class ExportStatementRequest
+        {
+            public int StatementId { get; set; }
+            public string Format { get; set; } = string.Empty;
+        }
+
         public class SetPriceRequest
         {
             public decimal PriceCRCPerMWh { get; set; }

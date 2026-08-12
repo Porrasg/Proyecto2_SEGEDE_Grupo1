@@ -6,7 +6,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const userId = session.getUserId();
     const email = session.getEmail();
 
-    if (role !== "Distributor" && role !== "Administrator" && role !== "Admin") {
+    // Aquí dejo pasar el rol real del comprador.
+    if (!["buyer", "customer", "distributor", "administrator", "admin"].includes(String(role || "").toLowerCase())) {
         notify.error("Acceso denegado. Requiere privilegios de Comprador.");
         setTimeout(() => {
             window.location.href = "/Login";

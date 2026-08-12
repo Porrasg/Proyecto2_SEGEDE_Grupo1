@@ -9,9 +9,8 @@ namespace WebAPI.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        // Nunca exponer el hash de la contraseña en las respuestas de la API:
-        // se limpia el campo justo antes de serializar (defensa en profundidad
-        // mientras no exista un DTO de respuesta dedicado sin ese campo).
+        // Nunca devuelvo el hash de la contraseña en la API.
+        // Lo limpio antes de responder para evitar mostrar esa información.
         private static User Sanitize(User user)
         {
             if (user != null) user.Password = string.Empty;
@@ -78,7 +77,7 @@ namespace WebAPI.Controllers
             public string ConfirmPassword { get; set; } = string.Empty;
         }
 
-        // Cuerpo del cambio de contraseña CON sesión activa (usuario ya autenticado)
+        // Datos para cambiar contraseña cuando el usuario ya tiene sesión abierta.
         public class ChangePasswordAuthenticatedRequest
         {
             public int UserId { get; set; }
@@ -430,7 +429,8 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                // El frontend lee este mensaje para mostrar el bloqueo o error real
+                return BadRequest(new { message = ex.Message });
             }
         }
 

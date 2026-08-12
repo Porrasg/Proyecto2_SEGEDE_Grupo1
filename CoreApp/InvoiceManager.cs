@@ -6,9 +6,11 @@ using System.Text;
 
 namespace CoreApp
 {
+    // Lógica principal de facturas y estados de cuenta.
     public class InvoiceManager
     {
 
+        // Devuelve todas las facturas registradas.
         public List<Invoice> RetrieveAllInvoices()
         {
             var crud = new InvoiceCrudFactory();
@@ -18,6 +20,7 @@ namespace CoreApp
 
 
 
+        // Busca una factura por su identificador.
         public Invoice RetrieveById(int id)
         {
             // Validar el identificador de la factura
@@ -42,6 +45,7 @@ namespace CoreApp
 
 
 
+        // Crea una nueva factura a partir de una distribución.
         public void Create(Invoice invoice)
         {
             // Validar que la factura no sea nula
@@ -145,6 +149,7 @@ namespace CoreApp
             crud.Create(invoice);
         }
 
+        // Actualiza solo el estado de pago u otros datos permitidos.
         public void Update(Invoice invoice)
         {
             // Validar que la factura no sea nula
@@ -212,6 +217,7 @@ namespace CoreApp
             crud.Update(invoice);
         }
 
+        // Cancela la factura de forma lógica.
         public void Delete(Invoice invoice)
         {
             // Validar que la factura no sea nula
@@ -254,6 +260,7 @@ namespace CoreApp
         }
 
 
+        // Revisa si faltan campos obligatorios.
         private bool HasEmptyFields(Invoice i)
         {
             return i.DistributionId <= 0 ||
@@ -261,6 +268,7 @@ namespace CoreApp
         }
 
         // Valida que los montos calculados de la factura sean correctos
+        // Revisa si los montos calculados tienen sentido.
         private bool HasInvalidAmounts(Invoice i)
         {
             return i.EnergyMWh <= 0 ||
@@ -271,6 +279,7 @@ namespace CoreApp
         }
 
         // Valida que el estado de pago sea uno de los permitidos
+        // Valida los estados de pago que sí acepta el sistema.
         private bool IsValidPaymentStatus(string status)
         {
             return status == "Pending" ||
@@ -280,6 +289,7 @@ namespace CoreApp
         }
 
         // Genera un número de factura único basado en la fecha y hora actual
+        // Crea un número de factura único y fácil de leer.
         private string GenerateInvoiceNumber()
         {
             return "INV-" +DateTime.Now.ToString("yyyyMMddHHmmssfff");
