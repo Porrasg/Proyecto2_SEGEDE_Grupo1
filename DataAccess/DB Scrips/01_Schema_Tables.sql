@@ -407,7 +407,7 @@ CREATE TABLE dbo.tblAudit
 );
 GO
 
-<<<<<<< HEAD
+-- HEAD
 
 -- tabla para registrar los movimientos de energía hacia y desde el banco central, incluyendo pérdidas por saturación y descripción de la operación.
 CREATE TABLE dbo.tblCentralBankMovements
@@ -430,7 +430,7 @@ CREATE TABLE dbo.tblCentralBankMovements
 
     UpdatedAt DATETIME NULL
 );
-=======
+
 /*==============================================================================
     TABLA: tblEnergyGenerations  (Generación de energía)
 
@@ -478,5 +478,5 @@ CREATE TABLE [dbo].[tblEnergyLosses](
 	[EnergyLossId] ASC
 )WITH (STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
->>>>>>> fb282b2f33a94bbb2bd96d296d6a6ce2283974f7
+
 GO

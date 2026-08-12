@@ -246,23 +246,31 @@ namespace CoreApp
         {
             var centralBankCrud = new CentralBankCrudFactory();
 
-            // se obtiene el Banco Central de la BD
-            var centralBank = centralBankCrud.RetrieveAll<CentralBank>().FirstOrDefault();
+            var centralBank = centralBankCrud
+                .RetrieveAll<CentralBank>()
+                .FirstOrDefault();
 
-            //  si existe
-            if (centralBank != null)
+            if (centralBank == null)
             {
-                // Recalcula la capacidad basandonos en las turbinas activas
-                centralBank.MaximumCapacityMWh = CalculateDefaultCapacity();
-                centralBank.UpdatedAt = DateTime.Now;
+                throw new Exception(
+                    "No se encontró el registro del Banco Central."
+                );
+            }
 
-                //  Actualizamos solo si el objeto no es nulo
-                centralBankCrud.Update(centralBank);
-            }
-            else
+            decimal newMaximumCapacity = CalculateDefaultCapacity();
+
+            // La nueva capacidad no puede ser menor que la energia que actualmente posee el banco.
+            if (newMaximumCapacity < centralBank.CurrentInventoryMWh)
             {
-                throw new Exception("No se encontró el registro del Banco Central.");
+                throw new Exception(
+                    "La nueva capacidad calculada es menor que el inventario actual del Banco Central."
+                );
             }
+
+            centralBank.MaximumCapacityMWh = newMaximumCapacity;
+            centralBank.UpdatedAt = DateTime.Now;
+
+            centralBankCrud.Update(centralBank);
         }
 
         // entrada de energia

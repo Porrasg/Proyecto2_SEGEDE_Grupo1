@@ -333,5 +333,60 @@ namespace CoreApp
 
             return overflow;
         }
+
+        public decimal TransferEnergyToCentralBank(
+    int batteryId,
+    int centralBankId)
+        {
+            if (batteryId <= 0)
+            {
+                throw new Exception("El identificador de la batería no es válido");
+            }
+
+            if (centralBankId <= 0)
+            {
+                throw new Exception("El identificador del banco central no es válido");
+            }
+
+            var batteryCrud = new BatteriesCrudFactory();
+
+            var battery = batteryCrud.RetrieveById<Battery>(batteryId);
+
+            if (battery == null)
+            {
+                throw new Exception("La bateria no existe");
+            }
+
+            if (battery.Status != "Active")
+            {
+                throw new Exception("La bateria debe estar activa");
+            }
+
+            if (battery.CurrentEnergyMWh <= 0)
+            {
+                throw new Exception(
+                    "La batería no posee energia disponible para transferir");
+            }
+
+            decimal energyToTransfer = battery.CurrentEnergyMWh;
+
+            // El Banco Central se encarga de validar su capacidad y registrar una posible saturación.
+            decimal overflow = new CentralBankManager()
+                .ReceiveEnergy(
+                    centralBankId,
+                    energyToTransfer);
+
+            // Toda la energía sale físicamente de la batería.
+            battery.CurrentEnergyMWh = 0;
+
+            // Se registra la energía enviada desde la batería.
+            battery.TotalTransferredMWh += energyToTransfer;
+
+            battery.UpdatedAt = DateTime.UtcNow;
+
+            batteryCrud.Update(battery);
+
+            return overflow;
+        }
     }
 }

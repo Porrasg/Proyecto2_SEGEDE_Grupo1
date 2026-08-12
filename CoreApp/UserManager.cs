@@ -1076,6 +1076,7 @@ namespace CoreApp
         {
             return role == "Administrator" ||
                    role == "Engineer" ||
+                   role == "Buyer" ||
                    role == "Distributor";
         }
 
@@ -1136,7 +1137,7 @@ namespace CoreApp
 
             if (!IsValidRole(user.Role))
             {
-                throw new Exception("El rol debe ser Administrator, Engineer o Distributor");
+                throw new Exception("El rol debe ser Administrator, Buyer, Engineer o Distributor");
             }
 
             if (!IsValidStatus(user.Status))
