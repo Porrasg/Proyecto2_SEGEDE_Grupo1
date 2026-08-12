@@ -20,6 +20,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
+                AppLogger.LogError(nameof(InvoicesController), ex);
                 return StatusCode(500, ex.Message);
             }
         }
@@ -36,6 +37,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
+                AppLogger.LogError(nameof(InvoicesController), ex);
                 return StatusCode(500, ex.Message);
             }
         }
@@ -53,6 +55,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
+                AppLogger.LogError(nameof(InvoicesController), ex);
                 return StatusCode(500, ex.Message);
             }
         }
@@ -70,6 +73,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
+                AppLogger.LogError(nameof(InvoicesController), ex);
                 return StatusCode(500, ex.Message);
             }
         }
@@ -87,6 +91,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
+                AppLogger.LogError(nameof(InvoicesController), ex);
                 return StatusCode(500, ex.Message);
             }
         }

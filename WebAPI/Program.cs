@@ -40,6 +40,32 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 var app = builder.Build();
 
+// Y4: reutiliza el pipeline de logging real de ASP.NET Core (en vez de que
+// AppLogger arranque con su propio logger standalone) para que los
+// AppLogger.LogError(...) de los controllers y el manejador global de abajo
+// escriban por el mismo canal.
+AppLogger.Configure(app.Services.GetRequiredService<ILoggerFactory>());
+
+// Y4: red de seguridad para cualquier excepcion que se escape sin pasar por un
+// try/catch de accion (los ~100 catch existentes en los controllers siguen
+// devolviendo su propio mensaje al cliente tal cual; esto solo cubre lo que
+// NO quedo atrapado ahi). Nunca se devuelve el detalle interno/stack trace.
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var feature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        if (feature?.Error != null)
+        {
+            AppLogger.LogError("UnhandledException", feature.Error, context.Request.Path);
+        }
+
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsync("{\"message\":\"Ocurrió un error inesperado en el servidor.\"}");
+    });
+});
+
 app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
 // Configure the HTTP request pipeline.

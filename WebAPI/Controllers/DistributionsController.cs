@@ -39,6 +39,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
+                AppLogger.LogError(nameof(DistributionsController), ex, "ExecuteMonthly");
                 return StatusCode(500, new { message = ex.Message });
             }
         }
@@ -55,6 +56,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
+                AppLogger.LogError(nameof(DistributionsController), ex);
                 return StatusCode(500, ex.Message);
             }
         }
@@ -71,6 +73,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
+                AppLogger.LogError(nameof(DistributionsController), ex);
                 return StatusCode(500, ex.Message);
             }
         }
@@ -87,6 +90,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
+                AppLogger.LogError(nameof(DistributionsController), ex);
                 return StatusCode(500, ex.Message);
             }
         }
@@ -104,6 +108,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
+                AppLogger.LogError(nameof(DistributionsController), ex);
                 return StatusCode(500, ex.Message);
             }
         }
@@ -120,6 +125,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
+                AppLogger.LogError(nameof(DistributionsController), ex);
                 return StatusCode(500, ex.Message);
             }
         }
@@ -137,6 +143,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
+                AppLogger.LogError(nameof(DistributionsController), ex);
                 return StatusCode(500, ex.Message);
             }
         }
@@ -154,6 +161,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
+                AppLogger.LogError(nameof(DistributionsController), ex);
                 return StatusCode(500, ex.Message);
             }
         }
@@ -171,6 +179,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
+                AppLogger.LogError(nameof(DistributionsController), ex);
                 return StatusCode(500, ex.Message);
             }
         }
