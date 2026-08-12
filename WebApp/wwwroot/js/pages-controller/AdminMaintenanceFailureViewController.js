@@ -114,7 +114,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function renderFailFiltered() {
             const sev = severityFilter?.value || "";
-            const filtered = !sev ? allFailures : allFailures.filter(function (f) { return (f.severityLevel || f.SeverityLevel) === sev; });
+            const filtered = !sev ? allFailures : allFailures.filter(function (f) { return (f.severity || f.Severity) === sev; });
             renderFailures(filtered);
         }
 
@@ -124,7 +124,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
             failBody.innerHTML = items.map(function (f) {
-                const sev = f.severityLevel || f.SeverityLevel || "-";
+                const sev = f.severity || f.Severity || "-";
                 const turbineId = f.turbineId ?? f.TurbineId;
                 return `<tr>
                     <td>${f.id ?? f.Id}</td>
