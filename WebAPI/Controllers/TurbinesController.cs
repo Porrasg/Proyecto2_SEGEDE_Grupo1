@@ -59,6 +59,23 @@ namespace WebAPI.Controllers
         }
 
         [HttpGet]
+        [Route("AllowedTransitions/{id}")]
+        public ActionResult AllowedTransitions(int id)
+        {
+            try
+            {
+                var tm = new TurbineManager();
+                var statuses = tm.GetAllowedTransitions(id)
+                    .Select(value => new { value, label = TurbineManager.ValidStatuses[value] });
+                return Ok(statuses);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet]
         [Route("RetrieveById/{id}")]
         public ActionResult RetrieveById(int id)
         {
@@ -96,7 +113,8 @@ namespace WebAPI.Controllers
                 tm.Create(turbine);
 
                 //Registrar la creacion de la turbina en la bitacora 
-                AuditHelper.TryAudit(callerUserId, "Create", "Turbines", turbine.Id, $"Turbina {turbine.Code} registrada con estado Active");
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                AuditHelper.TryAudit(actorUserId, "Create", "Turbines", turbine.Id, $"Turbina {turbine.Code} registrada con estado Active");
 
 
                 return Ok(new { message = "Turbina registrada con éxito.", data = turbine });
@@ -113,12 +131,19 @@ namespace WebAPI.Controllers
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(request.Reason))
+                {
+                    return BadRequest(new { message = "El motivo técnico del cambio de estado es obligatorio." });
+                }
+
                 var tm = new TurbineManager();
+                var previousState = tm.RetrieveTurbineById(request.TurbineId).Status;
                 tm.ChangeState(request.TurbineId, request.NewState);
-                
+
                 //Registrar el cambio de estado de la turbina
-                AuditHelper.TryAudit(callerUserId, "ChangeState", "Turbines", request.TurbineId, 
-                    $"Cambio de estado a {request.NewState}. Motivo: {request.Reason ?? "No indicado"}");
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                AuditHelper.TryAudit(actorUserId, "ChangeState", "Turbines", request.TurbineId,
+                    $"Estado: {previousState} -> {request.NewState}. Motivo: {request.Reason.Trim()}");
 
                 return Ok(new { message = "Estado de la turbina actualizado." });
             }
@@ -154,7 +179,8 @@ namespace WebAPI.Controllers
                 tm.Update(turbine);
 
                 //Registrar la actualizacion de la turbina en la bitacora
-                AuditHelper.TryAudit(callerUserId,"Update", "Turbine", turbine.Id, "Información de la turbina {turbine.Code} actualizada");
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                AuditHelper.TryAudit(actorUserId, "Update", "Turbines", turbine.Id, $"Información de la turbina {turbine.Code} actualizada");
 
                 return Ok(turbine);
             }

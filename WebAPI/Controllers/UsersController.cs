@@ -425,7 +425,15 @@ namespace WebAPI.Controllers
             {
                 var um = new UserManager();
                 var user = um.Login(request.Email, request.Password);
-                return Ok(Sanitize(user));
+                var sanitizedUser = Sanitize(user);
+
+                // Las cuentas estaticas de demostracion no usan OTP. Entregarles el
+                // JWT aqui mantiene operativo su objetivo de pruebas rapidas sin
+                // adelantar la autenticacion de los usuarios reales, que siguen
+                // recibiendo el token solo despues de ValidateLoginOtp.
+                return user.Id < 0
+                    ? Ok(WithToken(sanitizedUser))
+                    : Ok(sanitizedUser);
             }
             catch (Exception ex)
             {

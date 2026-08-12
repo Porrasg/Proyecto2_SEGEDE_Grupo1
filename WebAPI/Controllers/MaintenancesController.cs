@@ -80,15 +80,21 @@ namespace WebAPI.Controllers
         // de una sola turbina en mantenimiento por día y las fechas estimadas.
         [HttpPost]
         [Route("Schedule")]
-        public ActionResult Schedule(ScheduleRequest request, [FromQuery] int callerUserId)
+        public ActionResult Schedule(ScheduleRequest request, [FromQuery] int? callerUserId)
         {
             try
             {
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                if (!actorUserId.HasValue)
+                {
+                    return Unauthorized(new { message = "No se pudo identificar al ingeniero responsable." });
+                }
+
                 var mm = new MaintenanceManager();
                 var maintenance = new Maintenance
                 {
                     TurbineId = request.TurbineId,
-                    EngineerId = callerUserId,
+                    EngineerId = actorUserId.Value,
                     MaintenanceType = request.MaintenanceType,
                     Description = $"Mantenimiento {request.MaintenanceType} programado desde el sistema",
                     EstimatedStartDate = request.EstimatedStartDate,
@@ -96,7 +102,7 @@ namespace WebAPI.Controllers
                 };
 
                 mm.Create(maintenance);
-                AuditHelper.TryAudit(callerUserId, "Create", "Maintenances", maintenance.Id, $"Mantenimiento {request.MaintenanceType} programado para turbina #{request.TurbineId}");
+                AuditHelper.TryAudit(actorUserId, "Create", "Maintenances", maintenance.Id, $"Mantenimiento {request.MaintenanceType} programado para turbina #{request.TurbineId}");
                 return Ok(new { message = "Mantenimiento programado con éxito.", data = maintenance });
             }
             catch (Exception ex)
@@ -131,7 +137,8 @@ namespace WebAPI.Controllers
                 maintenance.Status = "Completed";
 
                 mm.Update(maintenance);
-                AuditHelper.TryAudit(callerUserId, "Update", "Maintenances", maintenance.Id, "Mantenimiento marcado como completado");
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                AuditHelper.TryAudit(actorUserId, "Update", "Maintenances", maintenance.Id, "Mantenimiento marcado como completado");
 
                 // Lógica cruzada: al completar el mantenimiento la turbina vuelve a operar
                 var tm = new TurbineManager();
@@ -139,6 +146,8 @@ namespace WebAPI.Controllers
                 if (turbine.Status == "Maintenance")
                 {
                     tm.ChangeState(turbine.Id, "Active");
+                    AuditHelper.TryAudit(actorUserId, "ChangeState", "Turbines", turbine.Id,
+                        $"Estado: Maintenance -> Active. Motivo: mantenimiento #{maintenance.Id} completado");
                 }
 
                 return Ok(new { message = "Mantenimiento completado con éxito." });
@@ -160,7 +169,8 @@ namespace WebAPI.Controllers
                 var maintenance = mm.RetrieveById(id);
 
                 mm.Delete(maintenance);
-                AuditHelper.TryAudit(callerUserId, "Cancel", "Maintenances", id, "Mantenimiento cancelado.");
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                AuditHelper.TryAudit(actorUserId, "Cancel", "Maintenances", id, "Mantenimiento cancelado.");
                 return Ok(new { message = "Mantenimiento cancelado." });
             }
             catch (Exception ex)

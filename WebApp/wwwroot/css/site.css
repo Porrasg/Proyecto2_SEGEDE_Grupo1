@@ -50,6 +50,95 @@
   --sgde-transition-default: 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Calendario mensual de mantenimientos */
+.maintenance-calendar-title {
+  min-width: 150px;
+}
+
+.maintenance-calendar-weekdays,
+.maintenance-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.maintenance-calendar-weekdays span {
+  padding: 0.5rem;
+  color: var(--bs-secondary-color);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.maintenance-calendar-grid {
+  border-left: 1px solid var(--bs-border-color);
+  border-top: 1px solid var(--bs-border-color);
+}
+
+.maintenance-calendar-day {
+  min-height: 118px;
+  padding: 0.4rem;
+  overflow: hidden;
+  border-right: 1px solid var(--bs-border-color);
+  border-bottom: 1px solid var(--bs-border-color);
+  background: var(--bs-body-bg);
+}
+
+.maintenance-calendar-day.is-outside {
+  background: var(--bs-tertiary-bg);
+  opacity: 0.65;
+}
+
+.maintenance-calendar-day.is-today {
+  box-shadow: inset 0 0 0 2px var(--bs-primary);
+}
+
+.maintenance-calendar-day-number {
+  margin-bottom: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.maintenance-calendar-event {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.2rem;
+  padding: 0.2rem 0.3rem;
+  overflow: hidden;
+  border: 0;
+  border-left: 3px solid var(--bs-primary);
+  border-radius: 0.2rem;
+  background: var(--bs-primary-bg-subtle);
+  color: var(--bs-body-color);
+  font-size: 0.7rem;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.maintenance-calendar-event:hover,
+.maintenance-calendar-event:focus-visible {
+  filter: brightness(0.95);
+  outline: 2px solid var(--bs-primary);
+}
+
+.maintenance-calendar-event.is-inprogress { border-left-color: var(--bs-warning); background: var(--bs-warning-bg-subtle); }
+.maintenance-calendar-event.is-completed { border-left-color: var(--bs-success); background: var(--bs-success-bg-subtle); }
+.maintenance-calendar-event.is-cancelled { border-left-color: var(--bs-secondary); background: var(--bs-secondary-bg-subtle); text-decoration: line-through; }
+.maintenance-calendar-event-time { font-weight: 700; }
+.maintenance-calendar-more { color: var(--bs-secondary-color); font-size: 0.7rem; text-align: center; }
+
+@media (max-width: 767.98px) {
+  .maintenance-calendar-weekdays,
+  .maintenance-calendar-grid {
+    min-width: 760px;
+  }
+
+  #maintenanceCalendar .card-body {
+    overflow-x: auto;
+  }
+}
+
 
 /* ==========================================================================
    LAYER 1 — SEMANTIC TOKENS  (Light Theme: "Enterprise Billing")
@@ -1163,4 +1252,4 @@ main[role="main"] {
 
 .card-module:hover .module-action-indicator {
     gap: 0.5rem !important;
-}
+}

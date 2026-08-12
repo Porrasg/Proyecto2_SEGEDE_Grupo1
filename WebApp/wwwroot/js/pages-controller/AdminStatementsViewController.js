@@ -156,34 +156,9 @@ document.addEventListener("DOMContentLoaded", function () {
             const original = confirmExportBtn.innerHTML;
             confirmExportBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
-            // Descarga binaria (blob): apiClient solo maneja JSON, así que aquí se usa
-            // fetch() directo en vez de $.ajax, igual de "manual" que el resto del cliente.
-            fetch(apiClient.url("Invoices/Export"), {
-                method: "POST",
-                headers: Object.assign({ "Content-Type": "application/json" }, apiClient.authHeader()),
-                body: JSON.stringify({ statementId: parseInt(selectedStatementId), format: format })
-            })
-                .then(function (response) {
-                    if (!response.ok) {
-                        const err = new Error("HTTP " + response.status);
-                        err.status = response.status;
-                        throw err;
-                    }
-                    return response.blob();
-                })
-                .then(function (blob) {
-                    // PDF se guarda como HTML simple para que la descarga funcione sin dependencias extra.
-                    // (Sin opción Excel: se quitó del desplegable a pedido explícito, ver Admin/Statements.cshtml.)
-                    const ext = format === "PDF" ? "html" : "csv";
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `EstadoCuenta_${selectedStatementId}.${ext}`;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    window.URL.revokeObjectURL(url);
-                    notify.success("Estado de cuenta exportado.");
+            fileDownloads.downloadInvoice(selectedStatementId, format)
+                .then(function (fileName) {
+                    notify.success("Estado de cuenta exportado: " + fileName);
                     exportModal?.hide();
                 })
                 .catch(function (xhr) {

@@ -66,7 +66,7 @@ app.UseExceptionHandler(errorApp =>
     });
 });
 
-app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+app.UseCors(cors => cors.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders("Content-Disposition"));
 
 // Configure the HTTP request pipeline.
 //if (app.Environment.IsDevelopment())

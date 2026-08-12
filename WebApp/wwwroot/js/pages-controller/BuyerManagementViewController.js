@@ -302,7 +302,8 @@ document.addEventListener("DOMContentLoaded", function () {
                             <div class="btn-group btn-group-sm">
                                 <button class="btn btn-outline-primary btn-view-stmt" data-idx="${list.indexOf(s)}" title="Ver Detalle"><i class="bi bi-eye"></i></button>
                                 ${st === "Pending" || st === "Overdue" ? `<button class="btn btn-outline-success btn-pay-stmt" data-id="${id}" title="Marcar como Pagado"><i class="bi bi-check2-circle"></i></button>` : ""}
-                                <button class="btn btn-outline-danger btn-export" data-id="${id}" data-fmt="PDF" title="Ver o descargar PDF/HTML">PDF</button>
+                                <button class="btn btn-outline-danger btn-export" data-id="${id}" data-fmt="PDF" title="Descargar PDF">PDF</button>
+                                <button class="btn btn-outline-primary btn-export" data-id="${id}" data-fmt="XLSX" title="Descargar Excel">XLSX</button>
                                 <button class="btn btn-outline-secondary btn-export" data-id="${id}" data-fmt="CSV" title="Descargar CSV">CSV</button>
                             </div>
                         </td>
@@ -376,45 +377,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const upperFormat = String(format || "CSV").toUpperCase();
 
-            fetch(apiClient.url("Invoices/Export"), {
-                method: "POST",
-                headers: Object.assign({ "Content-Type": "application/json" }, apiClient.authHeader()),
-                body: JSON.stringify({ statementId: parseInt(id), format: upperFormat })
-            }).then(response => {
-                if (!response.ok) {
-                    console.warn('[SGDE apiClient] POST Invoices/Export → HTTP ' + response.status);
-                    throw new Error(response.status === 404 || response.status === 501
-                        ? "Este módulo está en construcción: la exportación aún no está disponible en el servidor."
-                        : "Error al exportar documento.");
-                }
-                return response.blob();
-            }).then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.style.display = "none";
-                a.href = url;
-
-                if (upperFormat === "PDF") {
-                    // PDF real no existe en el backend; se muestra como HTML imprimible.
-                    a.target = "_blank";
-                    a.rel = "noopener";
-                    a.download = "";
-                    const w = window.open(url, "_blank");
-                    if (!w) {
-                        a.download = `EstadoCuenta_${id}.html`;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                    }
-                } else {
-                    a.download = `EstadoCuenta_${id}.csv`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                }
-
-                window.URL.revokeObjectURL(url);
-                notify.success(`Estado de cuenta #${id} descargado en formato ${upperFormat}.`);
+            fileDownloads.downloadInvoice(id, upperFormat).then(fileName => {
+                notify.success(`Estado de cuenta #${id} descargado como ${fileName}.`);
             }).catch(err => {
                 notify.error("No se pudo descargar el archivo: " + err.message);
             }).finally(() => {

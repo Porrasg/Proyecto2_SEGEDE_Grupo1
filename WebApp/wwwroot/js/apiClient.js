@@ -92,9 +92,24 @@ const apiClient = (function () {
         return withCallbackShim(promise);
     }
 
+    // Normaliza las formas de lista usadas históricamente por la API:
+    // arreglo directo, { data: [...] }, { Data: [...] } y wrappers paginados.
+    function unwrapList(response) {
+        if (Array.isArray(response)) return response;
+
+        const candidate = response?.data ?? response?.Data ?? response?.items ?? response?.Items;
+        if (Array.isArray(candidate)) return candidate;
+        if (Array.isArray(candidate?.items)) return candidate.items;
+        if (Array.isArray(candidate?.Items)) return candidate.Items;
+        if (Array.isArray(candidate?.data)) return candidate.data;
+        if (Array.isArray(candidate?.Data)) return candidate.Data;
+        return [];
+    }
+
     return {
         url,
         authHeader,
+        unwrapList,
         // Ejecuta petición GET asíncrona para obtener recursos
         get: p => request('GET', p),
         // Ejecuta petición POST asíncrona para crear recursos o procesar acciones

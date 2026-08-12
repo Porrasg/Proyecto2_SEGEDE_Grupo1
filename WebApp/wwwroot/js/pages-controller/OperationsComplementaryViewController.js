@@ -4,6 +4,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const role = session.getRole();
     const userId = session.getUserId() || 1;
+    const readList = function (response) {
+        return apiClient.unwrapList ? apiClient.unwrapList(response) : (Array.isArray(response) ? response : []);
+    };
 
     if (role !== "Engineer" && role !== "Administrator" && role !== "Admin") {
         notify.error("Acceso denegado. Requiere privilegios de Ingeniero u Operaciones.");
@@ -23,13 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("res.data =", res?.data);
 
         // Soporta respuestas que vengan como arreglo directo o dentro de propiedades como data, Data o items
-        const list = Array.isArray(res)
-            ? res
-            : (res?.data?.items ||
-                res?.data?.Data ||
-                res?.data ||
-                res?.Data ||
-                []);
+        const list = readList(res);
 
         console.log("Lista de turbinas =", list);
 
@@ -229,12 +226,13 @@ document.addEventListener("DOMContentLoaded", function () {
             const endpoint = tid ? ("Maintenances/ByTurbine/" + tid) : "Maintenances/All";
 
             apiClient.get(endpoint).done(function (res) {
-                let list = res?.data || res?.Data || [];
+                let list = readList(res);
                 const st = filterStatus?.value;
                 if (st) {
                     list = list.filter(m => (m.status || m.Status) === st);
                 }
                 renderMaintsTable(list);
+                window.maintenanceCalendar?.setData(list, allTurbinesMap);
             }).fail(function (xhr) {
                 maintsBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error al obtener historial de mantenimientos.</td></tr>';
                 handleApiError(xhr);
@@ -367,7 +365,7 @@ document.addEventListener("DOMContentLoaded", function () {
         function cancelMaintenance(id) {
             notify.confirm("¿Está seguro de cancelar este mantenimiento programado?", { dangerous: true, confirmText: "Cancelar mantenimiento" }).then(function (ok) {
                 if (!ok) return;
-                apiClient.post("Maintenances/Cancel/" + id).done(function () {
+                apiClient.post("Maintenances/Cancel/" + id + "?callerUserId=" + userId).done(function () {
                     notify.info("Mantenimiento cancelado.");
                     loadMaintenances();
                 }).fail(function (xhr) {
@@ -384,6 +382,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!failsBody) return;
 
         const filterTurbine = document.getElementById("engFailTurbine");
+        const filterSeverity = document.getElementById("engFailSeverity");
         const modalTurbine = document.getElementById("fTurbine");
 
         populateTurbineSelect(filterTurbine, true);
@@ -392,27 +391,30 @@ document.addEventListener("DOMContentLoaded", function () {
         loadFailures();
 
         if (filterTurbine) filterTurbine.addEventListener("change", loadFailures);
+        if (filterSeverity) filterSeverity.addEventListener("change", loadFailures);
 
         const saveBtn = document.getElementById("saveFailBtn");
         if (saveBtn) saveBtn.addEventListener("click", registerFailure);
 
         function loadFailures() {
-            failsBody.innerHTML = '<tr><td colspan="5" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando averías y alertas...</td></tr>';
+            failsBody.innerHTML = '<tr><td colspan="6" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando averías y alertas...</td></tr>';
             const tid = filterTurbine?.value;
             const endpoint = tid ? ("Failures/ByTurbine/" + tid) : "Failures/All";
 
             apiClient.get(endpoint).done(function (res) {
-                const list = res?.data || res?.Data || [];
+                let list = readList(res);
+                const severity = filterSeverity?.value || "";
+                if (severity) list = list.filter(f => (f.severity || f.Severity) === severity);
                 renderFailsTable(list);
             }).fail(function (xhr) {
-                failsBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error al consultar el registro de fallas.</td></tr>';
+                failsBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al consultar el registro de fallas.</td></tr>';
                 handleApiError(xhr);
             });
         }
 
         function renderFailsTable(list) {
             if (!list.length) {
-                failsBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No se reportan fallas ni incidencias operativas en el parque eólico.</td></tr>';
+                failsBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No se reportan fallas ni incidencias operativas para los filtros seleccionados.</td></tr>';
                 return;
             }
 
@@ -421,7 +423,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 const tid = f.turbineId || f.TurbineId;
                 const tCode = allTurbinesMap[tid] || ("Turbina #" + tid);
                 const sev = f.severity || f.Severity || "Normal";
-                const sevBadge = sev.toLowerCase() === "critical" ? '<span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> CRÍTICA</span>' : '<span class="badge bg-secondary">Normal</span>';
+                const severityMap = {
+                    Low: '<span class="badge bg-info text-dark">Baja</span>',
+                    Medium: '<span class="badge bg-warning text-dark">Media</span>',
+                    High: '<span class="badge bg-danger-subtle text-danger">Alta</span>',
+                    Critical: '<span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> Crítica</span>'
+                };
+                const sevBadge = severityMap[sev] || `<span class="badge bg-secondary">${escapeHtml(sev)}</span>`;
+                const status = f.status || f.Status || "Reported";
+                const statusMap = { Reported: "Reportada", UnderReview: "En revisión", Resolved: "Resuelta", Cancelled: "Cancelada" };
                 const desc = f.description || f.Description || "-";
                 const dateStr = formatDateTime(f.failureDate || f.FailureDate);
 
@@ -430,7 +440,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         <td>#${id}</td>
                         <td class="fw-bold">${tCode}</td>
                         <td>${sevBadge}</td>
-                        <td>${desc}</td>
+                        <td>${escapeHtml(statusMap[status] || status)}</td>
+                        <td>${escapeHtml(desc)}</td>
                         <td>${dateStr}</td>
                     </tr>
                 `;
@@ -442,8 +453,8 @@ document.addEventListener("DOMContentLoaded", function () {
             const sev = document.getElementById("fSeverity")?.value || "Normal";
             const desc = document.getElementById("fDesc")?.value.trim();
 
-            if (!tid || !desc) {
-                notify.warning("Seleccione la turbina e ingrese una descripción detallada de la avería.");
+            if (!tid || !desc || desc.length < 10 || desc.length > 500) {
+                notify.warning("Seleccione la turbina e ingrese una descripción técnica de 10 a 500 caracteres.");
                 return;
             }
 
@@ -458,6 +469,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }).done(function () {
                 notify.success("Falla reportada." + (sev.toLowerCase() === "critical" ? " La turbina ha cambiado a estado DAÑADA por seguridad." : ""));
                 bootstrap.Modal.getInstance(document.getElementById("regFailModal"))?.hide();
+                document.getElementById("regFailForm")?.reset();
                 loadFailures();
             }).fail(function (xhr) {
                 handleApiError(xhr);

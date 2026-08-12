@@ -21,6 +21,15 @@ namespace CoreApp
             { "Decommissioned", "Dada de Baja" }
         };
 
+        public static readonly Dictionary<string, string[]> AllowedTransitions = new Dictionary<string, string[]>
+        {
+            { "Active", new[] { "Inactive", "Maintenance", "Damaged", "Decommissioned" } },
+            { "Inactive", new[] { "Active", "Maintenance", "Damaged", "Decommissioned" } },
+            { "Maintenance", new[] { "Active", "Inactive", "Damaged", "Decommissioned" } },
+            { "Damaged", new[] { "Maintenance", "Decommissioned" } },
+            { "Decommissioned", Array.Empty<string>() }
+        };
+
         private static string InvalidStatusMessage =>
             "El estado debe ser " + string.Join(", ", ValidStatuses.Values);
 
@@ -67,6 +76,17 @@ namespace CoreApp
                 throw new Exception("La turbina que desea actualizar no existe");
             }
 
+            if (string.Equals(currentTurbine.Status, newState, StringComparison.Ordinal))
+            {
+                throw new Exception("La turbina ya se encuentra en el estado solicitado");
+            }
+
+            if (!AllowedTransitions.TryGetValue(currentTurbine.Status, out var allowed) ||
+                !allowed.Contains(newState, StringComparer.Ordinal))
+            {
+                throw new Exception($"La transición de {currentTurbine.Status} a {newState} no está permitida");
+            }
+
             // Se reutiliza la misma validación de estados del resto del manager
             currentTurbine.Status = newState;
 
@@ -81,6 +101,14 @@ namespace CoreApp
             //actualizar en el centralBank
             var centralBankManager = new CentralBankManager();
             centralBankManager.UpdateMaximumCapacity();
+        }
+
+        public IReadOnlyList<string> GetAllowedTransitions(int turbineId)
+        {
+            var turbine = RetrieveTurbineById(turbineId);
+            return AllowedTransitions.TryGetValue(turbine.Status, out var allowed)
+                ? allowed
+                : Array.Empty<string>();
         }
 
         public void Create(Turbine turbine)
