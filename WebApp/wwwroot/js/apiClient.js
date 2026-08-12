@@ -23,9 +23,13 @@ const apiClient = (function () {
         return BASE + cleanPath;
     }
 
-    // No se envía encabezado de autorización porque este proyecto usa sesión por usuario autenticado
+    // Envía el JWT emitido en Users/ValidateLoginOtp (guardado por session.js) como
+    // Bearer token, si existe. Las cuentas estáticas que se saltan el OTP no tienen
+    // token todavía (ver JwtTokenHelper.cs) y por lo tanto no van a poder llamar los
+    // endpoints que exijan [Authorize] una vez que ese backdoor se elimine (K1).
     function authHeader() {
-        return {};
+        const token = (typeof session !== "undefined" && session.getToken) ? session.getToken() : null;
+        return token ? { Authorization: "Bearer " + token } : {};
     }
 
     // Agrega .done()/.fail()/.always() sobre una Promise nativa, replicando la
@@ -88,9 +92,24 @@ const apiClient = (function () {
         return withCallbackShim(promise);
     }
 
+    // Normaliza las formas de lista usadas históricamente por la API:
+    // arreglo directo, { data: [...] }, { Data: [...] } y wrappers paginados.
+    function unwrapList(response) {
+        if (Array.isArray(response)) return response;
+
+        const candidate = response?.data ?? response?.Data ?? response?.items ?? response?.Items;
+        if (Array.isArray(candidate)) return candidate;
+        if (Array.isArray(candidate?.items)) return candidate.items;
+        if (Array.isArray(candidate?.Items)) return candidate.Items;
+        if (Array.isArray(candidate?.data)) return candidate.data;
+        if (Array.isArray(candidate?.Data)) return candidate.Data;
+        return [];
+    }
+
     return {
         url,
         authHeader,
+        unwrapList,
         // Ejecuta petición GET asíncrona para obtener recursos
         get: p => request('GET', p),
         // Ejecuta petición POST asíncrona para crear recursos o procesar acciones

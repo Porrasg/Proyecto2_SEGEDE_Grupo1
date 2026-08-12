@@ -17,101 +17,251 @@ namespace CoreApp
             return crud.RetrieveAll<Distribution>();
         }
 
-        // Hace el cierre mensual y reparte la energía entre los forecasts pendientes.
-        // Si alcanza para todos, asigna completo; si no, reparte proporcionalmente.
-        public List<Distribution> ExecuteMonthlyDistribution(int year, int month, int centralBankId)
+        // Ejecuta el cierre mensual del día 30.
+        // El cierre toma la energia disponible en el Banco Central,
+        // distribuye los forecasts pendientes y genera las facturas correspondientes.
+        public List<Distribution> ExecuteMonthlyClosing(
+            int year,
+            int month,
+            int centralBankId)
         {
+            if (year <= 0)
+            {
+                throw new Exception("El año indicado no es valido");
+            }
+
+            if (month < 1 || month > 12)
+            {
+                throw new Exception("El mes indicado no es valido");
+            }
+
+            var lastDay = DateTime.DaysInMonth(year, month);
+            var closingDate = new DateTime(year, month, lastDay);
+          //  if (DateTime.Now.Date != closingDate.Date)
+          //  {
+          //      throw new Exception(
+          //          "El cierre mensual solo puede ejecutarse el último día del mes");
+         //   }
+           
+            // Ejecutar la distribucion mensual.
+            return ExecuteMonthlyDistribution(
+                year,
+                month,
+                centralBankId
+            );
+        }
+
+        // Hace el cierre mensual y reparte la energía entre los forecasts pendientes.
+        // Si alcanza para todos, asigna completo, si no reparte proporcionalmente.
+        public List<Distribution> ExecuteMonthlyDistribution(
+            int year,
+            int month,
+            int centralBankId)
+            {
             var forecastManager = new ForecastManager();
-            var pendingForecasts = forecastManager.RetrieveByPeriod(year, month)
+
+            // Obtener los forecasts pendientes del periodo.
+            var pendingForecasts = forecastManager
+                .RetrieveByPeriod(year, month)
                 .Where(f => f.Status == "Pending")
                 .ToList();
 
             if (!pendingForecasts.Any())
             {
-                throw new Exception("No hay solicitudes de compra pendientes para distribuir en el periodo indicado");
+                throw new Exception(
+                    "No hay solicitudes de compra pendientes para distribuir en el periodo indicado");
             }
 
+            // Obtener el Banco Central.
             var centralBankCrud = new CentralBankCrudFactory();
-            var centralBank = centralBankCrud.RetrieveById<CentralBank>(centralBankId);
+
+            var centralBank = centralBankCrud
+                .RetrieveById<CentralBank>(centralBankId);
 
             if (centralBank == null)
             {
-                throw new Exception("El banco central indicado no existe");
+                throw new Exception(
+                    "El banco central indicado no existe");
             }
 
+            // Validar que el Banco Central esté activo.
+            if (centralBank.Status != "Active")
+            {
+                throw new Exception(
+                    "El banco central debe encontrarse activo");
+            }
+
+            // Obtener precio vigente.
             var billingManager = new BillingManager();
+
             var activePrice = billingManager.RetrieveActivePrice();
 
             if (activePrice == null)
             {
-                throw new Exception("No hay un precio por MWh vigente configurado. Configure uno en Administración > Precios antes de ejecutar la distribución.");
+                throw new Exception(
+                    "No hay un precio por MWh vigente configurado. " +
+                    "Configure uno en Administración > Precios antes de ejecutar la distribución.");
             }
 
+            // Obtener impuesto vigente.
             var activeTax = billingManager.RetrieveActiveTax();
 
-            var totalDemand = pendingForecasts.Sum(f => f.RequestedEnergyMWh);
-            var available = centralBank.CurrentInventoryMWh;
+            // Calcular la demanda total.
+            decimal totalDemand = pendingForecasts
+                .Sum(f => f.RequestedEnergyMWh);
 
-            // Prorrateo uniforme: 100% si alcanza, o la misma fracción del disponible para todos si no alcanza
-            var ratio = (totalDemand <= 0 || totalDemand <= available) ? 1m : available / totalDemand;
+            // Energía disponible en el Banco Central.
+            decimal availableEnergy =
+                centralBank.CurrentInventoryMWh;
 
+            if (totalDemand <= 0)
+            {
+                throw new Exception(
+                    "La demanda total debe ser mayor a cero");
+            }
+
+            if (availableEnergy < 0)
+            {
+                throw new Exception(
+                    "El inventario del banco central no puede ser negativo");
+            }
+
+            // Calcular el porcentaje de prorrateo
+            // Ejemplos:
+            // 100% -> hay suficiente energía.
+            // 90%  -> solo se puede cubrir el 90%.
+            // 80%  -> solo se puede cubrir el 80%.
+            decimal ratio = CalculateProrationRatio(
+                totalDemand,
+                availableEnergy);
+
+            // Si existe demanda pero no alcanza ni para el 10%, no se ejecuta la distribución.
+            Console.WriteLine($"TOTAL DEMANDA: {totalDemand}");
+            Console.WriteLine($"ENERGIA DISPONIBLE: {availableEnergy}");
+
+
+            if (ratio <= 0)
+            {
+                throw new Exception(
+                    "La energía disponible no permite cubrir ni el 10% de la demanda");
+            }
+
+            // Obtener el siguiente número de lote.
             var crud = new DistributionCrudFactory();
-            var existingBatches = crud.RetrieveAll<Distribution>();
-            var newBatchId = existingBatches.Any() ? existingBatches.Max(d => d.DistributionBatchId) + 1 : 1;
+
+            var existingBatches =
+                crud.RetrieveAll<Distribution>();
+
+            var newBatchId =
+                existingBatches.Any()
+                    ? existingBatches.Max(d => d.DistributionBatchId) + 1
+                    : 1;
 
             decimal totalAssigned = 0;
 
+            // Crear una distribución para cada forecast.
             foreach (var forecast in pendingForecasts)
             {
-                var assigned = Math.Round(forecast.RequestedEnergyMWh * ratio, 4);
+                // Calcular la energía asignada según el porcentaje
+                // de prorrateo seleccionado.
+                decimal assigned =
+                    Math.Round(
+                        forecast.RequestedEnergyMWh * ratio,
+                        4);
+
+                // Calcular la energía que quedó sin asignar.
+                decimal unassigned =
+                    Math.Round(
+                        forecast.RequestedEnergyMWh - assigned,
+                        4);
 
                 var distribution = new Distribution
                 {
                     DistributionBatchId = newBatchId,
+
                     ForecastId = forecast.Id,
+
                     BuyerId = forecast.BuyerId,
+
                     CentralBankId = centralBankId,
-                    RequestedEnergyMWh = forecast.RequestedEnergyMWh,
-                    AssignedEnergyMWh = assigned,
-                    UnitPrice = activePrice.PriceCRCPerMWh
+
+                    RequestedEnergyMWh =
+                        forecast.RequestedEnergyMWh,
+
+                    AssignedEnergyMWh =
+                        assigned,
+
+                    UnassignedEnergyMWh =
+                        unassigned,
+
+                    UnitPrice =
+                        activePrice.PriceCRCPerMWh,
+
+                    DistributionDate =
+                        DateTime.Now,
+
+                    CreatedAt =
+                        DateTime.Now
                 };
 
+                // Create() se encarga de determinar Status = Completed o Partial.
                 Create(distribution);
 
                 totalAssigned += assigned;
 
-                // El forecast pasa a Processed independientemente de si se marca como
-                // "Pending" bloqueado en el futuro - no vuelve a considerarse en otra ejecución.
-                try { forecastManager.MarkAsProcessed(forecast.Id); }
-                catch { /* no revertir la distribución ya creada por un fallo aquí */ }
+                // Marcar el forecast como procesado para que no vuelva a participar en otro cierre.
+                try
+                {
+                    forecastManager.MarkAsProcessed(
+                        forecast.Id);
+                }
+                catch
+                {
+                    // La distribución ya fue creada.
+                }
             }
 
-            // Descontar del banco central el total efectivamente asignado en este lote
+            // Descontar del Banco Central únicamente la energía que realmente fue asignada.
             if (totalAssigned > 0)
             {
-                new CentralBankManager().DistributeEnergy(centralBankId, totalAssigned);
+                new CentralBankManager()
+                    .DistributeEnergy(
+                        centralBankId,
+                        totalAssigned);
             }
 
-            // Recuperar las distribuciones recién creadas (con su Id real generado por el SP,
-            // que Create() no puede devolver) para generar la factura de cada una y notificar.
-            var createdDistributions = crud.RetrieveByBatchId(newBatchId);
+            // Recuperar las distribuciones recién creadas para obtener sus IDs generados por la BD.
+            var createdDistributions =
+                crud.RetrieveByBatchId(newBatchId);
 
+            // Generar una factura para cada distribución.
             foreach (var distribution in createdDistributions)
             {
                 try
                 {
-                    new InvoiceManager().Create(new Invoice
-                    {
-                        DistributionId = distribution.Id,
-                        BuyerId = distribution.BuyerId,
-                        TaxPercentage = (activeTax?.Percentage ?? 0) * 100 // InvoiceManager espera el porcentaje en base 100
-                    });
+                    new InvoiceManager().Create(
+                        new Invoice
+                        {
+                            DistributionId =
+                                distribution.Id,
+
+                            BuyerId =
+                                distribution.BuyerId,
+
+                            TaxPercentage =
+                                (activeTax?.Percentage ?? 0) * 100
+                        });
                 }
-                catch { /* no revertir la distribución ya creada por un fallo al facturar */ }
+                catch
+                {
+                    // La distribución no se revierte
+                    // si ocurre un problema al generar la factura.
+                }
             }
 
             return createdDistributions;
         }
+
 
         // Crea una distribución manual o desde el cierre mensual.
         public void Create(Distribution distribution)
@@ -321,7 +471,6 @@ namespace CoreApp
             crud.Update(distribution);
         }
 
-
         // Cancela una distribución sin borrarla físicamente.
         public void Delete(Distribution distribution)
         {
@@ -481,6 +630,37 @@ namespace CoreApp
             return crud.RetrieveByDateRange(startDate, endDate);
         }
 
+        // Calcula el porcentaje de energía que se puede asignar de forma uniforme.
+        // Si no existe suficiente energía, reduce la demanda en escalones de 10%, 90%, 80%, 70%, etc.
+        private decimal CalculateProrationRatio(
+            decimal totalDemand,
+            decimal availableEnergy)
+        {
+            if (totalDemand <= 0)
+            {
+                return 0m;
+            }
+
+            // Si existe suficiente energía, se asigna el 100%.
+            if (availableEnergy >= totalDemand)
+            {
+                return 1m;
+            }
+
+            // Porcentaje real disponible.
+            decimal availableRatio = availableEnergy / totalDemand;
+
+            // Convertir el porcentaje a un escalón de 10%.
+            decimal ratio = Math.Floor(availableRatio * 10m) / 10m;
+
+            // Nunca permitir un porcentaje menor que 0%.
+            if (ratio < 0m)
+            {
+                ratio = 0m;
+            }
+
+            return ratio;
+        }
         private bool HasEmptyFields(
             Distribution distribution)
         {

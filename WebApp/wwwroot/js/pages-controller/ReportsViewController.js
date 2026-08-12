@@ -57,25 +57,12 @@ document.addEventListener("DOMContentLoaded", function () {
         return parseInt(rawUserId);
     }
 
-    // Descarga CSV en el cliente (BOM UTF-8 para que Excel muestre acentos correctamente).
+    // Todas las descargas pasan por el servicio backend para generar el archivo y auditarlo.
     function downloadCsv(filename, headers, rows) {
-        const csvCell = function (v) {
-            const s = String(v ?? "");
-            return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-        };
-
-        const lines = ["sep=,"]
-            .concat([headers.map(csvCell).join(",")])
-            .concat(rows.map(r => r.map(csvCell).join(",")));
-        const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(a.href);
-        if (typeof notify !== "undefined") notify.success("Reporte exportado: " + filename);
+        const title = filename.replace(/\.[^.]+$/, "").replace(/_/g, " ");
+        return fileDownloads.exportTable({ title, fileName: filename, format: "CSV", headers, rows })
+            .then(function (generatedFileName) { notify.success("Reporte exportado: " + generatedFileName); })
+            .catch(function (error) { notify.error("No se pudo exportar el reporte: " + error.message); });
     }
 
     function renderChart(canvasId, type, labels, datasets) {
@@ -116,7 +103,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function loadTurbinesInto(selectEl, includeAllOption) {
         return apiClient.get("Turbines/All").done(function (res) {
-            const list = res?.data || res?.Data || [];
+            const list = readListResponse(res);
             selectEl.innerHTML = includeAllOption ? '<option value="">Todas las turbinas</option>' : "";
             list.forEach(t => {
                 const opt = document.createElement("option");
@@ -266,7 +253,7 @@ document.addEventListener("DOMContentLoaded", function () {
             supBody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Consolidando generación de todas las plantas...</td></tr>';
 
             apiClient.get("Turbines/All").done(function (res) {
-                const turbines = res?.data || res?.Data || [];
+                const turbines = readListResponse(res);
                 Promise.all(turbines.map(t =>
                     fetchAllGeneration(t.id ?? t.Id).then(logs => ({
                         turbine: t,
@@ -313,7 +300,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const OVERDUE_DAYS = 30;
 
         apiClient.get("Turbines/All").done(function (res) {
-            const list = res?.data || res?.Data || [];
+            const list = readListResponse(res);
             if (!list.length) {
                 statusBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No hay turbinas registradas.</td></tr>';
                 return;
@@ -446,17 +433,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            const rowsHtml = lastRows.map(r => `<tr><td>${esc(formatPeriodForExport(r.label))}</td><td>${fmt(r.req, 2)}</td><td>${fmt(r.asg, 2)}</td><td>${fmt(r.uns, 2)}</td><td>${r.pct.toFixed(1)} %</td></tr>`).join("");
-            const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Reporte de Asignación Mensual</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#222}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:8px;text-align:left}th{background:#f2f2f2}</style></head><body><h2>Reporte de Asignación Mensual</h2><table><thead><tr><th>Distribución</th><th>Solicitado (MWh)</th><th>Asignado (MWh)</th><th>No Suplido (MWh)</th><th>% Cumplimiento</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
-            const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "reporte_asignacion_mensual.html";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            fileDownloads.exportTable({
+                title: "Reporte de Asignación Mensual",
+                fileName: "reporte_asignacion_mensual",
+                format: "PDF",
+                headers: ["Periodo", "Solicitado (MWh)", "Asignado (MWh)", "No Suplido (MWh)", "% Cumplimiento"],
+                rows: lastRows.map(r => [formatPeriodForExport(r.label), r.req.toFixed(2), r.asg.toFixed(2), r.uns.toFixed(2), r.pct.toFixed(1)])
+            }).then(function (fileName) {
+                notify.success("Reporte exportado: " + fileName);
+            }).catch(function (error) {
+                notify.error("No se pudo exportar el reporte: " + error.message);
+            });
         });
     }
 });

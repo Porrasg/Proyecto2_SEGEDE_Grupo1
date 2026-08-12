@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const battTurbineSelect = document.getElementById("simBattTurbine");
     const historyBody = document.getElementById("simHistoryBody");
+    const callerUserId = parseInt(session.getUserId() || 0);
 
     loadTurbines();
 
@@ -70,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             runTrigger(btnFail, `¿Forzar una falla ${severity} en la turbina seleccionada?`, "Forzar Falla",
                 `Turbina #${turbineId}, ${severity}`,
-                function () { return apiClient.post("Failures/Register", { turbineId: turbineId, description: description, severity: severity }); });
+                function () { return apiClient.post("Failures/Register?callerUserId=" + callerUserId, { turbineId: turbineId, description: description, severity: severity }); });
         });
     }
 

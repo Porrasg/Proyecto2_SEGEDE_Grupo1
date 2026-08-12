@@ -132,32 +132,30 @@ document.addEventListener("DOMContentLoaded", function () {
         const confirmStateBtn = document.getElementById("opConfirmStateBtn") || document.getElementById("confirmStateBtn");
         const stateSelect = document.getElementById("opNewState") || document.getElementById("newState");
         const reasonInput = document.getElementById("opStateReason") || document.getElementById("stateReason");
-        let cachedTurbineStatuses = null;
+        let availableTurbineStatuses = [];
 
-        function populateStateSelect(currentState) {
-            if (!stateSelect || !cachedTurbineStatuses) return;
-            stateSelect.innerHTML = cachedTurbineStatuses
+        function populateStateSelect() {
+            if (!stateSelect) return;
+            stateSelect.innerHTML = availableTurbineStatuses
                 .map(s => `<option value="${s.value}">${s.label}</option>`)
                 .join("");
-            stateSelect.value = currentState || cachedTurbineStatuses[0]?.value || "";
+            stateSelect.value = availableTurbineStatuses[0]?.value || "";
+            if (confirmStateBtn) confirmStateBtn.disabled = availableTurbineStatuses.length === 0;
         }
 
         function openStateModal(id, currentState) {
             selectedTurbineId = id;
             if (reasonInput) reasonInput.value = "";
 
-            if (cachedTurbineStatuses) {
-                populateStateSelect(currentState);
-                stateModal?.show();
-                return;
-            }
-
-            apiClient.get("Turbines/Statuses").done(function (res) {
-                cachedTurbineStatuses = (res || []).map(s => ({
+            apiClient.get("Turbines/AllowedTransitions/" + id).done(function (res) {
+                availableTurbineStatuses = (res || []).map(s => ({
                     value: s.value ?? s.Value,
                     label: s.label ?? s.Label
                 }));
-                populateStateSelect(currentState);
+                populateStateSelect();
+                if (!availableTurbineStatuses.length) {
+                    notify.info("La turbina no tiene transiciones de estado disponibles.");
+                }
             }).fail(function (xhr) {
                 handleApiError(xhr);
             }).always(function () {
@@ -318,7 +316,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 // 5. Determinar la acción y enviar el payload completo homologado
                 const request = isEdit
                     ? apiClient.put(`Turbines/Update?callerUserId=${currentUserId}`, turbinePayload)
-                    : apiClient.post(`Turbines/Register?callerUserId=${currentUserId}}`, turbinePayload);
+                    : apiClient.post(`Turbines/Register?callerUserId=${currentUserId}`, turbinePayload);
 
                 request.done(function () {
                     notify.success(isEdit ? "Turbina actualizada exitosamente." : "Turbina registrada exitosamente.");
@@ -521,10 +519,17 @@ document.addEventListener("DOMContentLoaded", function () {
                         const processedLogs = cronoLogs.map(s => {
                             console.log("Objeto de cambio individual (History):", s); 
 
-                            let newSt = s.newState || s.NewState || s.action || s.Action || "";
+                            let newSt = s.newState || s.NewState || "";
+                            let explicitPreviousState = s.previousState || s.PreviousState || "";
                             const reasonText = s.reason || s.Reason || s.description || s.Description || "";
 
-                            if (newSt.toUpperCase() === "UPDATE" || !newSt) {
+                            const transitionMatch = reasonText.match(/Estado:\s*([A-Za-z]+)\s*->\s*([A-Za-z]+)/i);
+                            if (transitionMatch) {
+                                explicitPreviousState = transitionMatch[1];
+                                newSt = transitionMatch[2];
+                            }
+
+                            if (!newSt) {
                                 const lowerReason = reasonText.toLowerCase();
                                 if (lowerReason.includes("maintenance")) newSt = "Maintenance";
                                 else if (lowerReason.includes("active")) newSt = "Active";
@@ -534,7 +539,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                 else newSt = "Active";
                             }
 
-                            const prevSt = currentStateTracker;
+                            const prevSt = explicitPreviousState || currentStateTracker;
                             currentStateTracker = newSt;
 
                             // 1. Fallbacks para Fecha

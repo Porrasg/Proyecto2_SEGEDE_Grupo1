@@ -1,5 +1,6 @@
 ﻿using CoreApp;
 using Entities_DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers
@@ -20,6 +21,19 @@ namespace WebAPI.Controllers
         {
             users?.ForEach(u => u.Password = string.Empty);
             return users;
+        }
+
+        // Agrega el JWT de sesion (login ya completo, post-OTP) al objeto de usuario
+        // ya serializado, sin romper la forma plana que session.save() del frontend
+        // ya espera (role/userId/email al nivel raiz, no anidados bajo "user").
+        private static object WithToken(User user)
+        {
+            var node = System.Text.Json.JsonSerializer.SerializeToNode(user, new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            })!.AsObject();
+            node["token"] = JwtTokenHelper.GenerateToken(user);
+            return node;
         }
 
         public class UserRegisterRequest
@@ -193,6 +207,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ChangePasswordByEmail")]
+        [AllowAnonymous]
         public ActionResult ChangePasswordByEmail(ChangePasswordEmailRequest request)
         {
             try
@@ -209,6 +224,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Register")]
+        [AllowAnonymous]
         public ActionResult Register(UserRegisterRequest request)
         {
             try
@@ -233,6 +249,7 @@ namespace WebAPI.Controllers
                 user.Status = string.IsNullOrWhiteSpace(user.Status) ? "Pending" : user.Status;
 
                 um.Create(user);
+                AuditHelper.TryAudit(null, "Create", "Users", user.Id, $"Autorregistro de comprador: {user.Email}");
                 return Ok(new { message = "Comprador registrado con éxito. Active su cuenta con el código enviado a su correo." });
             }
             catch (Exception ex)
@@ -243,12 +260,14 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ConfirmChangePasswordByEmail")]
+        [AllowAnonymous]
         public ActionResult ConfirmChangePasswordByEmail([FromBody] ConfirmChangePasswordEmailRequest request, [FromQuery] string tokenCode)
         {
             try
             {
                 var um = new UserManager();
                 um.ConfirmChangePassword(request.Email, tokenCode, request.NewPassword, request.ConfirmPassword);
+                AuditHelper.TryAudit(null, "Update", "Users", null, $"Cambio de contraseña confirmado por correo: {request.Email}");
                 return Ok(new { message = "Contraseña actualizada correctamente." });
             }
             catch (Exception ex)
@@ -301,6 +320,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Create")]
+        [Authorize(Roles = "Administrator")]
         public ActionResult Create(User user, [FromQuery] int? callerUserId)
         {
             try
@@ -336,6 +356,7 @@ namespace WebAPI.Controllers
 
         [HttpPut]
         [Route("Update")]
+        [Authorize(Roles = "Administrator")]
         public ActionResult Update(User user, [FromQuery] int? callerUserId)
         {
             try
@@ -366,6 +387,7 @@ namespace WebAPI.Controllers
 
         [HttpDelete]
         [Route("Delete")]
+        [Authorize(Roles = "Administrator")]
         public ActionResult Delete(User user, [FromQuery] int? callerUserId)
         {
             try
@@ -396,13 +418,22 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Login")]
+        [AllowAnonymous]
         public ActionResult Login(LoginRequest request)
         {
             try
             {
                 var um = new UserManager();
                 var user = um.Login(request.Email, request.Password);
-                return Ok(Sanitize(user));
+                var sanitizedUser = Sanitize(user);
+
+                // Las cuentas estaticas de demostracion no usan OTP. Entregarles el
+                // JWT aqui mantiene operativo su objetivo de pruebas rapidas sin
+                // adelantar la autenticacion de los usuarios reales, que siguen
+                // recibiendo el token solo despues de ValidateLoginOtp.
+                return user.Id < 0
+                    ? Ok(WithToken(sanitizedUser))
+                    : Ok(sanitizedUser);
             }
             catch (Exception ex)
             {
@@ -413,13 +444,14 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ValidateLoginOtp")]
+        [AllowAnonymous]
         public ActionResult ValidateLoginOtp(OtpRequest request)
         {
             try
             {
                 var um = new UserManager();
                 var user = um.ValidateLoginOtp(request.Email, request.OtpCode);
-                return Ok(Sanitize(user));
+                return Ok(WithToken(Sanitize(user)));
             }
             catch (Exception ex)
             {
@@ -429,6 +461,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ResetPassword")]
+        [AllowAnonymous]
         public ActionResult ResetPassword(ResetPasswordRequest request)
         {
             try
@@ -441,6 +474,7 @@ namespace WebAPI.Controllers
                 }
 
                 um.ConfirmResetPassword(request.Email, request.OtpCode, request.NewPassword, request.ConfirmPassword);
+                AuditHelper.TryAudit(null, "Update", "Users", null, $"Contraseña restablecida vía recuperación: {request.Email}");
                 return Ok("Contraseña restablecida correctamente.");
             }
             catch (Exception ex)
@@ -451,6 +485,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("RecoverPassword")]
+        [AllowAnonymous]
         public ActionResult RecoverPassword([FromBody] OtpRequest request)
         {
             try
@@ -467,12 +502,14 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ConfirmResetPassword")]
+        [AllowAnonymous]
         public ActionResult ConfirmResetPassword(ResetPasswordRequest request)
         {
             try
             {
                 var um = new UserManager();
                 um.ConfirmResetPassword(request.Email, request.OtpCode, request.NewPassword, request.ConfirmPassword);
+                AuditHelper.TryAudit(null, "Update", "Users", null, $"Contraseña restablecida vía recuperación: {request.Email}");
                 return Ok("Contraseña restablecida correctamente.");
             }
             catch (Exception ex)
@@ -483,6 +520,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ActivateAccount")]
+        [AllowAnonymous]
         public ActionResult ActivateAccount([FromBody] OtpRequest request)
         {
             try
@@ -496,6 +534,7 @@ namespace WebAPI.Controllers
                 // Endpoint legado sin campos de contraseña; el flujo real de activación
                 // es la acción Activate (abajo), que sí exige establecer la contraseña.
                 um.ActivateAccount(request.Email?.Trim(), request.OtpCode?.Trim(), null, null);
+                AuditHelper.TryAudit(null, "Update", "Users", null, $"Cuenta activada (endpoint legado): {request.Email}");
                 return Ok(new { message = "Cuenta activada correctamente." });
             }
             catch (Exception ex)
@@ -506,6 +545,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Activate")]
+        [AllowAnonymous]
         public ActionResult Activate([FromBody] UserActivationRequest request)
         {
             try
@@ -522,6 +562,7 @@ namespace WebAPI.Controllers
 
                 var um = new UserManager();
                 um.ActivateAccount(request.Email?.Trim(), request.TokenCode?.Trim(), request.NewPassword, request.ConfirmPassword);
+                AuditHelper.TryAudit(null, "Update", "Users", null, $"Cuenta activada: {request.Email}");
                 return Ok(new { message = "Cuenta activada con éxito." });
             }
             catch (Exception ex)
@@ -532,6 +573,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ResendOtp")]
+        [AllowAnonymous]
         public ActionResult ResendOtp([FromBody] OtpRequest request, [FromQuery] string usageType)
         {
             try

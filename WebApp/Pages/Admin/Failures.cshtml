@@ -8,15 +8,29 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>@ViewData["Title"]</h2>
     </div>
-        <div class="d-flex justify-content-between mb-3">
-        <div class="d-flex gap-2">
-            <select class="form-select" id="failSeverity"><option value="">Todas las Severidades</option><option value="Normal">Normal</option><option value="Critical">Critical</option></select>
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted small">Total reportadas</div><div class="fs-3 fw-bold" id="failureKpiTotal">0</div></div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted small">Críticas</div><div class="fs-3 fw-bold text-danger" id="failureKpiCritical">0</div></div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted small">Abiertas</div><div class="fs-3 fw-bold text-warning" id="failureKpiOpen">0</div></div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted small">Resueltas</div><div class="fs-3 fw-bold text-success" id="failureKpiResolved">0</div></div></div></div>
+    </div>
+    <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+        <div class="d-flex flex-wrap gap-2 flex-grow-1">
+            <input class="form-control" id="failSearch" style="max-width:280px" placeholder="Buscar turbina o descripción" aria-label="Buscar reporte técnico">
+            <select class="form-select" id="failSeverity" style="max-width:210px"><option value="">Todas las severidades</option><option value="Low">Baja</option><option value="Medium">Media</option><option value="High">Alta</option><option value="Critical">Crítica</option></select>
+            <select class="form-select" id="failStatus" style="max-width:210px"><option value="">Todos los estados</option><option value="Reported">Reportada</option><option value="UnderReview">En revisión</option><option value="Resolved">Resuelta</option><option value="Cancelled">Cancelada</option></select>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-outline-primary" id="btnExportFailuresCsv" disabled><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+            <button class="btn btn-outline-primary" id="btnExportFailuresPdf" disabled><i class="bi bi-file-earmark-pdf me-1"></i>PDF</button>
         </div>
     </div>
-    <table class="table table-striped">
-        <thead><tr><th>ID</th><th>Turbina</th><th>Severidad</th><th>Descripción</th><th>Fecha Reporte</th></tr></thead>
-        <tbody id="failsOverviewBody"><tr><td colspan="5" class="text-center">Cargando reportes de fallas...</td></tr></tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead><tr><th>ID</th><th>Turbina</th><th>Severidad</th><th>Estado</th><th>Descripción</th><th>Resolución</th><th>Ingeniero</th><th>Fecha Reporte</th></tr></thead>
+            <tbody id="failsOverviewBody"><tr><td colspan="8" class="text-center">Cargando reportes de fallas...</td></tr></tbody>
+        </table>
+    </div>
 </div>
 
 @section Scripts {

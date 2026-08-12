@@ -12,6 +12,25 @@
         <i class="bi bi-exclamation-triangle me-1"></i>
         <span id="maintComplianceAlertText"></span>
     </div>
+    <div class="card shadow-sm border-0 mb-4" id="maintenanceCalendar">
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <div class="fw-semibold"><i class="bi bi-calendar3 me-2"></i>Calendario técnico</div>
+                <small class="text-muted">Mantenimientos preventivos, correctivos y operativos</small>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="maintenanceCalendarPrevious" aria-label="Mes anterior"><i class="bi bi-chevron-left"></i></button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="maintenanceCalendarToday">Hoy</button>
+                <strong class="maintenance-calendar-title text-center" id="maintenanceCalendarTitle"></strong>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="maintenanceCalendarNext" aria-label="Mes siguiente"><i class="bi bi-chevron-right"></i></button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="maintenance-calendar-weekdays" aria-hidden="true"><span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span></div>
+            <div class="maintenance-calendar-grid" id="maintenanceCalendarGrid" aria-label="Calendario mensual de mantenimientos"></div>
+            <div class="alert alert-light border mt-3 mb-0 d-none" id="maintenanceCalendarDetail" aria-live="polite"></div>
+        </div>
+    </div>
         <div class="d-flex justify-content-between mb-3">
         <div class="d-flex gap-2">
             <select class="form-select" id="maintStatus"><option value="">Todos los Estados</option><option value="Scheduled">Programado</option><option value="InProgress">En Progreso</option><option value="Completed">Completado</option></select>
@@ -25,5 +44,6 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/pages-controller/AdminMaintenanceFailureViewController.js" asp-append-version="true"></script>
+    <script src="~/js/maintenanceCalendar.js"></script>
+    <script src="~/js/pages-controller/AdminMaintenanceFailureViewController.js"></script>
 }

@@ -15,9 +15,16 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    // ==========================================
+<<<<<<<<< Temporary merge branch 1
+    if (!userId) {
+        notify.warning("No se pudo obtener el usuario de la sesión.");
+        return;
+    }
+
+    // Cargo los datos reales del panel
+=========
     // 1. PANEL PRINCIPAL (/Buyer/Dashboard)
-    // ==========================================
+>>>>>>>>> Temporary merge branch 2
     if (document.getElementById("buyActiveForecasts")) {
         let buyDemandChartInst = null;
         let buyBillingChartInst = null;

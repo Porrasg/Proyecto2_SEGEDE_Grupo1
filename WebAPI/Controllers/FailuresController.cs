@@ -39,15 +39,37 @@ namespace WebAPI.Controllers
         // cambio queda en la bitácora de auditoría.
         [HttpPost]
         [Route("Register")]
-        public ActionResult Register(FailureRegisterRequest request, [FromQuery] int callerUserId)
+        public ActionResult Register(FailureRegisterRequest request, [FromQuery] int? callerUserId)
         {
             try
             {
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                if (!actorUserId.HasValue)
+                {
+                    return Unauthorized(new { message = "No se pudo identificar al usuario que reporta la falla." });
+                }
+
+                Turbine? affectedTurbine = null;
+                if (request.Severity == "Critical")
+                {
+                    affectedTurbine = new TurbineManager().RetrieveTurbineById(request.TurbineId);
+                    var canBecomeDamaged = affectedTurbine.Status == "Damaged" ||
+                        (TurbineManager.AllowedTransitions.TryGetValue(affectedTurbine.Status, out var allowed) &&
+                         allowed.Contains("Damaged", StringComparer.Ordinal));
+                    if (!canBecomeDamaged)
+                    {
+                        return BadRequest(new
+                        {
+                            message = $"La turbina en estado {affectedTurbine.Status} no admite registrar una falla crítica."
+                        });
+                    }
+                }
+
                 var fm = new FailureManager();
                 var failure = new Failure
                 {
                     TurbineId = request.TurbineId,
-                    EngineerId = callerUserId,
+                    EngineerId = actorUserId.Value,
                     Severity = request.Severity,
                     Description = request.Description,
                     FailureDate = DateTime.Now
@@ -55,27 +77,17 @@ namespace WebAPI.Controllers
 
                 fm.Create(failure);
 
+                AuditHelper.TryAudit(actorUserId, "Create", "Failures", failure.Id, $"Falla reportada en turbina #{request.TurbineId} (severidad: {request.Severity})");
+
                 // Lógica cruzada: una falla crítica deja la turbina fuera de operación
                 if (request.Severity == "Critical")
                 {
                     var tm = new TurbineManager();
-                    tm.ChangeState(request.TurbineId, "Damaged");
-
-                    try
+                    if (affectedTurbine!.Status != "Damaged")
                     {
-                        var am = new AuditManager();
-                        am.Create(new Audit
-                        {
-                            UserId = callerUserId,
-                            Action = "Update",
-                            EntityName = "Turbines",
-                            EntityId = request.TurbineId,
-                            Description = $"Turbina marcada como Damaged por falla crítica: {request.Description}"
-                        });
-                    }
-                    catch
-                    {
-                        // La auditoría no debe impedir el reporte ya registrado
+                        tm.ChangeState(request.TurbineId, "Damaged");
+                        AuditHelper.TryAudit(actorUserId, "ChangeState", "Turbines", request.TurbineId,
+                            $"Estado: {affectedTurbine.Status} -> Damaged. Motivo: falla crítica #{failure.Id}: {request.Description}");
                     }
                 }
 
