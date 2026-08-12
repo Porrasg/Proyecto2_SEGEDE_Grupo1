@@ -2,9 +2,8 @@
 document.addEventListener("DOMContentLoaded", function () {
     const userId = session.getUserId() || 1;
 
-    // ==========================================
+
     // 1. PRECIOS (/Admin/Prices)
-    // ==========================================
     const priceForm = document.getElementById("priceForm");
     if (priceForm) {
         loadPriceHistory();
@@ -60,9 +59,8 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
 
-    // ==========================================
+   
     // 2. IMPUESTOS (/Admin/Taxes)
-    // ==========================================
     const taxForm = document.getElementById("taxForm");
     if (taxForm) {
         loadTaxHistory();

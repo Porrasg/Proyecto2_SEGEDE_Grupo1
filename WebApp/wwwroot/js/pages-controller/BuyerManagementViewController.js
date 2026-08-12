@@ -39,9 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const buyerScopeReady = resolveBuyerScopeId();
 
-    // ==========================================
     // 1. MIS PRONÓSTICOS (/Buyer/Forecasts)
-    // ==========================================
     const forecastsBody = document.getElementById("buyForecastsBody");
     if (forecastsBody) {
         let allForecasts = [];
@@ -218,9 +216,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // ==========================================
+    
     // 2. ESTADOS DE CUENTA (/Buyer/Statements)
-    // ==========================================
     const stmtsBody = document.getElementById("buyStmtsBody");
     if (stmtsBody) {
         let allStatements = [];
@@ -427,9 +424,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // ==========================================
+    
     // 3. DISTRIBUCIONES (/Buyer/Distributions)
-    // ==========================================
     const distBody = document.getElementById("buyDistBody");
     if (distBody) {
         buyerScopeReady.then(function (buyerScopeId) {

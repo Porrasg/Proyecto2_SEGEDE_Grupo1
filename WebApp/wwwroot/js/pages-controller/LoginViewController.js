@@ -8,9 +8,9 @@ document.addEventListener("DOMContentLoaded", function () {
         return !!email && staticLoginEmails.includes(String(email).trim().toLowerCase());
     }
 
-    // ==========================================
+  
     // 1. FLUJO DE LOGIN - PASO 1 (/Login)
-    // ==========================================
+    
     const loginForm = document.getElementById("loginForm");
     if (loginForm) {
         const loginMessage = document.getElementById("loginMessage");
@@ -80,9 +80,9 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ==========================================
+  
     // 2. FLUJO DE LOGIN - PASO 2 OTP (/LoginOtp)
-    // ==========================================
+  
     const otpForm = document.getElementById("otpForm");
     if (otpForm) {
         const savedEmail = sessionStorage.getItem("sgde_login_email");
@@ -216,9 +216,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // ==========================================
+   
     // 3. FLUJO DE REGISTRO (/Register)
-    // ==========================================
+   
     const registerForm = document.getElementById("registerForm");
     if (registerForm) {
         // Edad calculada automáticamente a partir de la fecha de nacimiento (RF de registro).
@@ -344,9 +344,8 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ==========================================
+   
     // 4. FLUJO DE ACTIVACIÓN (/Activate)
-    // ==========================================
     const activateForm = document.getElementById("activateForm");
     if (activateForm) {
         const actEmailEl = document.getElementById("actEmail");

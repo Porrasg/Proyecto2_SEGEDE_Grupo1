@@ -55,9 +55,9 @@ document.addEventListener("DOMContentLoaded", function () {
         initFailuresModule();
     });
 
-    // ==========================================
+    
     // 1. MONITORIZACIÓN ENERGÉTICA (/Engineer/Energy)
-    // ==========================================
+ 
     function initEnergyModule() {
         const energyTurbineSelect = document.getElementById("engEnergyTurbine");
         if (!energyTurbineSelect) return;
@@ -197,9 +197,8 @@ document.addEventListener("DOMContentLoaded", function () {
         `).join("");
     }
 
-    // ==========================================
+   
     // 2. MANTENIMIENTOS (/Engineer/Maintenances)
-    // ==========================================
     function initMaintenancesModule() {
         const maintsBody = document.getElementById("engMaintsBody");
         if (!maintsBody) return;
@@ -378,9 +377,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // ==========================================
+
     // 3. AVERÍAS Y FALLAS (/Engineer/Failures)
-    // ==========================================
     function initFailuresModule() {
         const failsBody = document.getElementById("engFailsBody");
         if (!failsBody) return;
@@ -470,9 +468,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // ==========================================
+ 
     // UTILIDADES
-    // ==========================================
     function populateTurbineSelect(selectEl, includeAllOption) {
         if (!selectEl) return;
         const currentVal = selectEl.value;
