@@ -17,7 +17,8 @@ document.addEventListener("DOMContentLoaded", function () {
     let userNames = {};
     if (auditBody) {
         apiClient.get("Users/RetrieveAll").done(function (res) {
-            (res?.data || res?.Data || []).forEach(function (u) {
+            const users = Array.isArray(res) ? res : (res?.data || res?.Data || []);
+            users.forEach(function (u) {
                 userNames[u.id ?? u.Id] = `${u.firstName || u.FirstName || ""} ${u.firstLastName || u.FirstLastName || ""}`.trim() || `Usuario #${u.id ?? u.Id}`;
             });
         }).always(loadAuditLogs);
