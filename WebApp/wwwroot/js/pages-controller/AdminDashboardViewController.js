@@ -55,31 +55,44 @@ document.addEventListener("DOMContentLoaded", function () {
                 const totalBilledAmount = (invoices || []).reduce(function (sum, i) { return sum + Number(i.totalAmount ?? i.TotalAmount ?? i.amount ?? i.Amount ?? 0); }, 0);
                 const flushDate = (flushes && flushes[0]) ? (flushes[0].executedAt || flushes[0].ExecutedAt) : null;
 
-                // Producción del periodo: suma de energía efectivamente transferida al Banco Central
-                // Calculo solamente la energía completada durante el mes y año actuales.
-                const now = new Date();
-                const periodProductionMWh = (flushes || [])
-                    .filter(function (f) {
-                        const status = f.status || f.Status;
-                        const executedAt = f.executedAt || f.ExecutedAt;
-                        if (status !== "Completed" || !executedAt) return false;
-                        const d = new Date(executedAt);
-                        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-                    })
-                    .reduce(function (sum, f) { return sum + Number(f.transferredEnergyMWh ?? f.TransferredEnergyMWh ?? 0); }, 0);
-
                 setText("kpiTotalTurbines", totalTurbines);
                 setText("kpiActiveTurbines", activeTurbines);
                 setText("kpiTurbinesInMaintenance", turbinesInMaintenance);
                 setText("kpiCbInventory", formatNumber(centralBankInventoryMWh) + " MWh");
                 setText("kpiEffectiveCap", formatNumber(effectiveCapacityMWh) + " MWh");
-                setText("kpiPeriodProduction", formatNumber(periodProductionMWh) + " MWh");
                 setText("kpiMonthForecasts", monthForecasts);
                 setText("kpiTotalDemand", formatNumber(totalDemandMWh) + " MWh");
                 setText("kpiTotalBilled", "₡ " + formatNumber(totalBilledAmount));
                 setText("kpiLastFlush", flushDate ? new Date(flushDate).toLocaleDateString("es-CR", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "Sin registros");
 
                 renderAdminCharts(totalTurbines, activeTurbines, centralBankInventoryMWh, effectiveCapacityMWh, totalDemandMWh);
+
+                // Y5: "Producción del periodo" ya NO es un proxy de Flush (energía trasladada
+                // al Banco Central) sino la suma real de EnergyProduction/GenerationHistory
+                // (el mismo endpoint que ya usa el reporte "Energía Generada por Turbina" en
+                // Admin/Reports), filtrando cortes cuyo EventDate cae en el mes/año actuales.
+                // Es un fetch aparte porque depende de conocer primero los IDs de turbina.
+                const now = new Date();
+                Promise.all((turbines || []).map(function (t) {
+                    const id = t.id ?? t.Id;
+                    return id ? apiClient.get("EnergyProduction/GenerationHistory/" + id).then(function (res) {
+                        return res?.data?.items || res?.Data?.Items || [];
+                    }).catch(function () { return []; }) : Promise.resolve([]);
+                })).then(function (histories) {
+                    const periodProductionMWh = histories
+                        .reduce(function (all, h) { return all.concat(h); }, [])
+                        .filter(function (p) {
+                            const eventDate = p.eventDate || p.EventDate;
+                            if (!eventDate) return false;
+                            const d = new Date(eventDate);
+                            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                        })
+                        .reduce(function (sum, p) { return sum + Number(p.generatedEnergy ?? p.GeneratedEnergy ?? 0); }, 0);
+
+                    setText("kpiPeriodProduction", formatNumber(periodProductionMWh) + " MWh");
+                }).catch(function () {
+                    setText("kpiPeriodProduction", "-");
+                });
             }).catch(function (xhr) {
                 handleApiError(xhr);
             });
