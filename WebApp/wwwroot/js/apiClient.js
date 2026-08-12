@@ -23,9 +23,13 @@ const apiClient = (function () {
         return BASE + cleanPath;
     }
 
-    // No se envía encabezado de autorización porque este proyecto usa sesión por usuario autenticado
+    // Envía el JWT emitido en Users/ValidateLoginOtp (guardado por session.js) como
+    // Bearer token, si existe. Las cuentas estáticas que se saltan el OTP no tienen
+    // token todavía (ver JwtTokenHelper.cs) y por lo tanto no van a poder llamar los
+    // endpoints que exijan [Authorize] una vez que ese backdoor se elimine (K1).
     function authHeader() {
-        return {};
+        const token = (typeof session !== "undefined" && session.getToken) ? session.getToken() : null;
+        return token ? { Authorization: "Bearer " + token } : {};
     }
 
     // Agrega .done()/.fail()/.always() sobre una Promise nativa, replicando la

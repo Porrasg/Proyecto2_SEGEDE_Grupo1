@@ -36,6 +36,13 @@ const session = (function () {
         return s?.email ?? s?.Email ?? null;
     }
 
+    // Devuelve el JWT de sesión emitido por Users/ValidateLoginOtp (null si no hay,
+    // por ejemplo con las cuentas estáticas que todavía se saltan el OTP).
+    function getToken() {
+        const s = get();
+        return s?.token ?? s?.Token ?? null;
+    }
+
     // Verifica si la sesión ha caducado comparando la fecha de expiración
     function isExpired() { 
         const s = get(); 
@@ -50,7 +57,7 @@ const session = (function () {
         sessionStorage.removeItem(KEY); 
     }
 
-    return { save, get, getRole, getUserId, getEmail, isExpired, isAuthenticated, clear };
+    return { save, get, getRole, getUserId, getEmail, getToken, isExpired, isAuthenticated, clear };
 })();
 
 // Exponer en el objeto global con inicial minúscula y mayúscula por compatibilidad

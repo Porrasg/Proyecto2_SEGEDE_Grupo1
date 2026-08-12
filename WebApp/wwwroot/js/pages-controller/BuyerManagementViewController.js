@@ -298,9 +298,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             fetch(apiClient.url("Billing/Export?callerUserId=" + userId + "&callerRole=Buyer"), {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: Object.assign({ "Content-Type": "application/json" }, apiClient.authHeader()),
                 body: JSON.stringify({ statementId: parseInt(id), format: format })
             }).then(response => {
                 if (!response.ok) {
