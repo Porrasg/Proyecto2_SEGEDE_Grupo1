@@ -364,6 +364,7 @@ FodyWeavers.xsd
 
 # IA Memory / Progress Tracking
 memoriadelaIA/
+/AGENTS.md
 temp-*.json
 
 # Configuración local de Claude Code (permisos/settings de cada máquina, no compartir)
