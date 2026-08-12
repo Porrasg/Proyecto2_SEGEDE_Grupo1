@@ -1,4 +1,5 @@
 using CoreApp;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers
@@ -33,6 +34,7 @@ namespace WebAPI.Controllers
 
         [HttpPut]
         [Route("SetPermission")]
+        [Authorize(Roles = "Administrator")]
         public ActionResult SetPermission(SetPermissionRequest request, [FromQuery] int? callerUserId)
         {
             try

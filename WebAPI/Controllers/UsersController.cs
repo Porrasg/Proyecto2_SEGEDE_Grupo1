@@ -1,5 +1,6 @@
 ﻿using CoreApp;
 using Entities_DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers
@@ -207,6 +208,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ChangePasswordByEmail")]
+        [AllowAnonymous]
         public ActionResult ChangePasswordByEmail(ChangePasswordEmailRequest request)
         {
             try
@@ -223,6 +225,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Register")]
+        [AllowAnonymous]
         public ActionResult Register(UserRegisterRequest request)
         {
             try
@@ -257,6 +260,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ConfirmChangePasswordByEmail")]
+        [AllowAnonymous]
         public ActionResult ConfirmChangePasswordByEmail([FromBody] ConfirmChangePasswordEmailRequest request, [FromQuery] string tokenCode)
         {
             try
@@ -315,6 +319,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Create")]
+        [Authorize(Roles = "Administrator")]
         public ActionResult Create(User user, [FromQuery] int? callerUserId)
         {
             try
@@ -350,6 +355,7 @@ namespace WebAPI.Controllers
 
         [HttpPut]
         [Route("Update")]
+        [Authorize(Roles = "Administrator")]
         public ActionResult Update(User user, [FromQuery] int? callerUserId)
         {
             try
@@ -380,6 +386,7 @@ namespace WebAPI.Controllers
 
         [HttpDelete]
         [Route("Delete")]
+        [Authorize(Roles = "Administrator")]
         public ActionResult Delete(User user, [FromQuery] int? callerUserId)
         {
             try
@@ -410,6 +417,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Login")]
+        [AllowAnonymous]
         public ActionResult Login(LoginRequest request)
         {
             try
@@ -426,6 +434,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ValidateLoginOtp")]
+        [AllowAnonymous]
         public ActionResult ValidateLoginOtp(OtpRequest request)
         {
             try
@@ -442,6 +451,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ResetPassword")]
+        [AllowAnonymous]
         public ActionResult ResetPassword(ResetPasswordRequest request)
         {
             try
@@ -464,6 +474,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("RecoverPassword")]
+        [AllowAnonymous]
         public ActionResult RecoverPassword([FromBody] OtpRequest request)
         {
             try
@@ -480,6 +491,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ConfirmResetPassword")]
+        [AllowAnonymous]
         public ActionResult ConfirmResetPassword(ResetPasswordRequest request)
         {
             try
@@ -496,6 +508,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ActivateAccount")]
+        [AllowAnonymous]
         public ActionResult ActivateAccount([FromBody] OtpRequest request)
         {
             try
@@ -519,6 +532,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Activate")]
+        [AllowAnonymous]
         public ActionResult Activate([FromBody] UserActivationRequest request)
         {
             try
@@ -545,6 +559,7 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ResendOtp")]
+        [AllowAnonymous]
         public ActionResult ResendOtp([FromBody] OtpRequest request, [FromQuery] string usageType)
         {
             try

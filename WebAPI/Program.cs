@@ -6,7 +6,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+// Y1-C: filtro global que exige autenticacion (cualquier JWT valido) por defecto
+// en TODOS los controllers/acciones. Las acciones que deben seguir siendo
+// publicas (Login, Register, Activate, RecoverPassword, etc.) se marcan
+// explicitamente con [AllowAnonymous] en su propio controller.
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter());
+});
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
