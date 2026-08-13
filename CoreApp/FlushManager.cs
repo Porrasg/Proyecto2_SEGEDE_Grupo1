@@ -32,8 +32,6 @@ namespace CoreApp
 
             return flush;
         }
-
-
         public void Create(Flush flush)
         {
             if (flush == null)
@@ -126,8 +124,6 @@ namespace CoreApp
             // Crear el registro del vaciado
             flushCrud.Create(flush);
         }
-
-
         public void Update(Flush flush)
         {
             if (flush == null)
@@ -196,8 +192,6 @@ namespace CoreApp
             // Actualizar el vaciado
             flushCrud.Update(flush);
         }
-
-
         public void Delete(Flush flush)
         {
             if (flush == null)
@@ -236,8 +230,6 @@ namespace CoreApp
             // Cancelar lógicamente el vaciado
             flushCrud.Delete(flush);
         }
-
-
         private bool HasEmptyFields(Flush flush)
         {
             return flush.FlushBatchId <= 0 ||
@@ -254,24 +246,21 @@ namespace CoreApp
                    flush.TransferredEnergyMWh < 0 ||
                    flush.SaturationLossMWh < 0;
         }
-
         private bool IsValidExecutionType(
             string executionType)
         {
             return executionType == "Automatic" ||
                    executionType == "Manual";
         }
-
         private bool IsValidStatus(string status)
         {
             return status == "Completed" ||
                    status == "Cancelled";
         }
- 
 
     //metodo encargado del vaciado al bancocentral
-    public void ExecuteFlush(Flush flush)
-        {
+        public void ExecuteFlush(Flush flush)
+            {
             if (flush == null)
             {
                 throw new ArgumentNullException("La informacion del vaciado es invalida");
@@ -334,6 +323,68 @@ namespace CoreApp
             flush.Status="Completed";
             var flushCrud = new FlushCrudFactory();
             flushCrud.Create(flush);
+        }
+        // metodo encargado de ejecutar el vaciado masivo
+        public int ExecuteMassFlush(string executionType)
+        {
+            if (executionType != "Manual" && executionType != "Automatic")
+            {
+                throw new Exception("El tipo de ejecución no es válido.");
+            }
+
+            var cbManager = new CentralBankManager();
+            var centralBanks = cbManager.RetrieveAllCentralBanks();
+
+            if (centralBanks.Count == 0)
+            {
+                throw new Exception(
+                    "No hay un Banco Central registrado para recibir la energía."
+                );
+            }
+
+            var centralBank = centralBanks[0];
+
+            var batteryManager = new BatteryManager();
+            var batteries = batteryManager.RetrieveAllBatteries();
+
+            // Obtener el siguiente número de lote
+            var flushes = RetrieveAllFlushes();
+
+            int batchId = 1;
+
+            foreach (var previous in flushes)
+            {
+                if (previous.FlushBatchId >= batchId)
+                {
+                    batchId = previous.FlushBatchId + 1;
+                }
+            }
+
+            int processed = 0;
+
+            foreach (var battery in batteries)
+            {
+                // Solo baterías activas con energía disponible
+                if (battery.Status != "Active" ||
+                    battery.CurrentEnergyMWh <= 0)
+                {
+                    continue;
+                }
+
+                Create(new Flush
+                {
+                    FlushBatchId = batchId,
+                    TurbineId = battery.TurbineId,
+                    BatteryId = battery.Id,
+                    CentralBankId = centralBank.Id,
+                    ExecutionType = executionType,
+                    ExecutedAt = DateTime.Now
+                });
+
+                processed++;
+            }
+
+            return processed;
         }
     }
 }

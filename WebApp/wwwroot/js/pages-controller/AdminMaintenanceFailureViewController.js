@@ -200,12 +200,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 const type = m.maintenanceType || m.MaintenanceType || "-";
                 const turbineId = m.turbineId ?? m.TurbineId;
                 return `<tr>
-                    <td>${m.id ?? m.Id}</td>
-                    <td>${turbineCodes[turbineId] || `#${turbineId}`}</td>
-                    <td><span class="badge bg-secondary">${typeLabels[type] || type}</span></td>
+                    <td>${escapeHtml(m.id ?? m.Id)}</td>
+                    <td>${escapeHtml(turbineCodes[turbineId] || `#${turbineId}`)}</td>
+                    <td><span class="badge bg-secondary">${escapeHtml(typeLabels[type] || type)}</span></td>
                     <td>${new Date(m.estimatedStartDate || m.EstimatedStartDate).toLocaleDateString("es-CR")}</td>
                     <td>${new Date(m.estimatedEndDate || m.EstimatedEndDate).toLocaleDateString("es-CR")}</td>
-                    <td><span class="badge ${badge[status] || "bg-secondary"}">${statusLabels[status] || status}</span></td>
+                    <td><span class="badge ${badge[status] || "bg-secondary"}">${escapeHtml(statusLabels[status] || status)}</span></td>
                     <td>${escapeHtml(m.result || m.Result || "-")}</td>
                 </tr>`;
             }).join("");
@@ -285,17 +285,17 @@ document.addEventListener("DOMContentLoaded", function () {
             }
             const severityBadges = { Low: "bg-info text-dark", Medium: "bg-warning text-dark", High: "bg-danger-subtle text-danger", Critical: "bg-danger" };
             const severityLabels = { Low: "Baja", Medium: "Media", High: "Alta", Critical: "Crítica" };
-            const statusBadges = { Reported: "bg-warning text-dark", UnderReview: "bg-info text-dark", Resolved: "bg-success", Cancelled: "bg-secondary" };
-            const statusLabels = { Reported: "Reportada", UnderReview: "En revisión", Resolved: "Resuelta", Cancelled: "Cancelada" };
+            const statusBadges = { Reported: "bg-warning text-dark", InProgress: "bg-info text-dark", Resolved: "bg-success", Cancelled: "bg-secondary" };
+            const statusLabels = { Reported: "Reportada", InProgress: "En progreso", Resolved: "Resuelta", Cancelled: "Cancelada" };
             failBody.innerHTML = items.map(function (f) {
                 const sev = f.severity || f.Severity || "-";
                 const status = f.status || f.Status || "Reported";
                 const turbineId = f.turbineId ?? f.TurbineId;
                 return `<tr>
-                    <td>${f.id ?? f.Id}</td>
-                    <td>${turbineCodes[turbineId] || `#${turbineId}`}</td>
-                    <td><span class="badge ${severityBadges[sev] || "bg-secondary"}">${severityLabels[sev] || sev}</span></td>
-                    <td><span class="badge ${statusBadges[status] || "bg-secondary"}">${statusLabels[status] || status}</span></td>
+                    <td>${escapeHtml(f.id ?? f.Id)}</td>
+                    <td>${escapeHtml(turbineCodes[turbineId] || `#${turbineId}`)}</td>
+                    <td><span class="badge ${severityBadges[sev] || "bg-secondary"}">${escapeHtml(severityLabels[sev] || sev)}</span></td>
+                    <td><span class="badge ${statusBadges[status] || "bg-secondary"}">${escapeHtml(statusLabels[status] || status)}</span></td>
                     <td>${escapeHtml(f.description || f.Description || "-")}</td>
                     <td>${escapeHtml(f.resolution || f.Resolution || "Pendiente")}</td>
                     <td>#${f.engineerId ?? f.EngineerId ?? "—"}</td>

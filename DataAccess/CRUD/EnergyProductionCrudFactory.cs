@@ -101,5 +101,23 @@ namespace DataAccess.CRUD
                 CreatedAt = (DateTime)row["CreatedAt"]
             };
         }
+
+        public List<EnergyProduction> RetrieveAllProductions()
+        {
+            var lsResults = new List<EnergyProduction>();
+
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "RET_ALL_ENERGY_PRODUCTION_PR";
+
+            var rows = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            foreach (var row in rows)
+            {
+                lsResults.Add(BuildEnergyProduction(row));
+            }
+
+            return lsResults;
+        }
+
     }
 }
