@@ -26,6 +26,7 @@
     let maintenances = [];
     let turbineLabels = {};
     let dayClickHandler = null; 
+    let selectedDay = null;
 
     function startOfMonth(date) {
         return new Date(date.getFullYear(), date.getMonth(), 1);
@@ -126,16 +127,45 @@
             const cell = document.createElement("section");
             cell.className = "maintenance-calendar-day";
             cell.dataset.date = dateKey(day);
+
             cell.addEventListener("click", function ()
             {
-                if (dayClickHandler)
-                {
+                //prueba
+                console.log("Click detectado en la celda: ", day);
+
+                //Guardar el dia seleccionado
+                selectedDay = new Date(day);
+
+                //Recargar de nuevo el calendario para mostrar el dia seleccionado
+                render();
+                    
+                if (dayClickHandler) {
+                    console.log("dayClickHandler exists");
                     dayClickHandler(new Date(day))
                 }
+                else {
+
+                    //prueba
+                    console.log("dayClickHandler es null");
+                }
+
+
             });
 
-            if (day.getMonth() !== currentMonth.getMonth()) cell.classList.add("is-outside");
-            if (sameDay(day, today)) cell.classList.add("is-today");
+            // Dias fuera del mes actual
+            if (day.getMonth() !== currentMonth.getMonth()) {
+                cell.classList.add("is-outside");
+            }
+            //Si existe un dia seleccionado, unicamente se resalta ese dia.
+            if (selectedDay) {
+                if (sameDay(day, selectedDay)) {
+                    cell.classList.add("is-selected");
+                }
+            }
+            // Si no se ha seleccionado el dia, se marca el dia actual
+            else if (sameDay(day, today)) {
+                cell.classList.add("is-today");
+            }
 
             const heading = document.createElement("div");
             heading.className = "maintenance-calendar-day-number";

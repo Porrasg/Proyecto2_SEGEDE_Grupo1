@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         //Elementos del modal de programacion de mantenimiento
         const scheduleModalEl = document.getElementById("scheduleMaintenanceModal");
-        const scheduleModal = schedulemodalEl ? new bootstrap.Modal(scheduleModalEl) : null;
+        const scheduleModal = scheduleModalEl ? new bootstrap.Modal(scheduleModalEl) : null;
 
         // Elementos del modal de programacion de mantenimiento
         const turbineSelect = document.getElementById("maintenanceTurbine");
@@ -24,6 +24,50 @@ document.addEventListener("DOMContentLoaded", function () {
         const startInput = document.getElementById("maintenanceStart");
         const endInput = document.getElementById("maintenanceEnd");
         const saveMaintenanceBtn = document.getElementById("saveMaintenanceBtn");
+
+
+      
+        // CLICK SOBRE UN DÍA DEL CALENDARIO
+        function toDateTimeLocal(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            const hours = String(date.getHours()).padStart(2, "0");
+            const minutes = String(date.getMinutes()).padStart(2, "0");
+
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        // Al seleccionar un día del calendario, preparar el formulario de programación de mantenimiento con valores iniciales.
+        window.maintenanceCalendar?.onDayClick(function (selectedDate) {
+
+            console.log("Fecha recibida en Admin:", selectedDate);
+
+            const startDate = new Date(selectedDate);
+            startDate.setHours(8, 0, 0, 0);
+           
+            const endDate = new Date(selectedDate);
+            endDate.setHours(11, 0, 0, 0);
+
+            // Cargar las fechas calculadas en los campos del formulario
+            if (startInput) {
+                startInput.value = toDateTimeLocal(startDate);
+            }
+
+            if (endInput) {
+                endInput.value = toDateTimeLocal(endDate);
+            }
+            // Establecer mantenimiento preventivo como tipo inicial
+            if (maintenanceTypeInput) {
+                maintenanceTypeInput.value = "Preventive";
+            }
+            // Limpiar la selección de turbina antes de abrir el modal
+            if (turbineSelect) {
+                turbineSelect.value = "";
+            }
+            // Mostrar el modal para programar el mantenimiento
+            scheduleModal?.show();
+        });
 
         //Filtros existentes en la vista de mantenimientos 
         const statusFilter = document.getElementById("maintStatus");
@@ -37,7 +81,7 @@ document.addEventListener("DOMContentLoaded", function () {
         //Cargar turbinas para la tabla/calendario y para el modal 
         apiClient.get("Turbines/RetrieveAll").done(function (res) {
 
-            const turbines = readlist(res);
+            const turbines = readList(res);
 
             turbines.forEach(function (t) {
                 const id = t.id ?? t.Id;
@@ -138,6 +182,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
         }
 
+
+        // Ejecutar la programacion cuando el usuario presiona el btn Guardar
+        if (saveMaintenanceBtn) {
+            saveMaintenanceBtn.addEventListener("click", scheduleMaintenance);
+        }
 
 
 
