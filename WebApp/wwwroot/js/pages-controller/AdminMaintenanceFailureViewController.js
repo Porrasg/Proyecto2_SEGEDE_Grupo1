@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Elementos del modal de programacion de mantenimiento
         const turbineSelect = document.getElementById("maintenanceTurbine");
+        const engineerSelect = document.getElementById("maintenanceEngineer");
         const maintenanceTypeInput = document.getElementById("maintenanceType");
         const startInput = document.getElementById("maintenanceStart");
         const endInput = document.getElementById("maintenanceEnd");
@@ -108,6 +109,36 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             }
         }).always(loadMaintenances);
+
+        //Cargar usuarios con role de ingeniero para el modal
+        apiClient.get("Users/RetrieveAll").done(function (res) {
+
+            const users = readList(res);
+
+            //Filtrar por usuario con role Engineer unicamente
+            const engineers = users.filter(function (u) {
+                const role = u.role || u.Role;
+                return role === "Engineer";
+            });
+
+            //Llenar el select del modal
+            if (engineerSelect) {
+
+                engineerSelect.innerHTML = '<option value="">Seleccione un ingeniero</option>';
+
+                engineers.forEach(function (u) {
+
+                    const id = u.id ?? u.Id;
+                    const firstName = u.firstName || u.FirstName || "";
+                    const firstLastName = u.firstLastName || u.FirstLastName || "";
+
+                    engineerSelect.innerHTML += `<option value="${id}"> ${firstName} ${firstLastName} </option>`;
+                });
+
+            }
+
+        });
+        
 
 
         // Programar un mantenimiento utilizando los datos ingresados en el modal
