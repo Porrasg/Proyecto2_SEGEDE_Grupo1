@@ -25,6 +25,7 @@
     let currentMonth = startOfMonth(new Date());
     let maintenances = [];
     let turbineLabels = {};
+    let dayClickHandler = null; 
 
     function startOfMonth(date) {
         return new Date(date.getFullYear(), date.getMonth(), 1);
@@ -125,6 +126,14 @@
             const cell = document.createElement("section");
             cell.className = "maintenance-calendar-day";
             cell.dataset.date = dateKey(day);
+            cell.addEventListener("click", function ()
+            {
+                if (dayClickHandler)
+                {
+                    dayClickHandler(new Date(day))
+                }
+            });
+
             if (day.getMonth() !== currentMonth.getMonth()) cell.classList.add("is-outside");
             if (sameDay(day, today)) cell.classList.add("is-today");
 
@@ -175,6 +184,11 @@
             turbineLabels = labels || {};
             render();
         },
+
+        onDayClick: function (callback) {
+            dayClickHandler = callback;
+        },
+
         refresh: render
     };
 })();
