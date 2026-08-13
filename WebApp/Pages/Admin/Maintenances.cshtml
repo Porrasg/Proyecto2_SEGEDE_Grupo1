@@ -43,6 +43,74 @@
     </table>
 </div>
 
+<!--Modal Creacion horario de Mantenimiento-->
+<div class="modal fade" id="scheduleMaintenanceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Programar mantenimiento</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="mb-3">
+                    <label class="form-label">Turbina</label>
+                    <select class="form-select" id="maintenanceTurbine">
+                        <option value="">Seleccione una turbina</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Tipo de mantenimiento</label>
+                    <select class="form-select" id="maintenanceType">
+                        <option value="Preventive">Preventivo</option>
+                        <option value="Corrective">Correctivo</option>
+                        <option value="Predictive">Predictivo</option>
+                        <option value="Inspection">Inspección</option>
+                        <option value="Emergency">Emergencia</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Inicio estimado</label>
+                    <input type="datetime-local"
+                           class="form-control"
+                           id="maintenanceStart">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Fin estimado</label>
+                    <input type="datetime-local"
+                           class="form-control"
+                           id="maintenanceEnd">
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button type="button"
+                        class="btn btn-primary"
+                        id="saveMaintenanceBtn">
+                    Guardar mantenimiento
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
 @section Scripts {
     <script src="~/js/maintenanceCalendar.js"></script>
     <script src="~/js/pages-controller/AdminMaintenanceFailureViewController.js"></script>
