@@ -11,22 +11,144 @@ document.addEventListener("DOMContentLoaded", function () {
         let allMaintenances = [];
         let turbineCodes = {};
 
+        // Usuario Actual
+        const currentUserId = session.getUserId();
+
+        //Elementos del modal de programacion de mantenimiento
+        const scheduleModalEl = document.getElementById("scheduleMaintenanceModal");
+        const scheduleModal = schedulemodalEl ? new bootstrap.Modal(scheduleModalEl) : null;
+
+        // Elementos del modal de programacion de mantenimiento
+        const turbineSelect = document.getElementById("maintenanceTurbine");
+        const maintenanceTypeInput = document.getElementById("maintenanceType");
+        const startInput = document.getElementById("maintenanceStart");
+        const endInput = document.getElementById("maintenanceEnd");
+        const saveMaintenanceBtn = document.getElementById("saveMaintenanceBtn");
+
+        //Filtros existentes en la vista de mantenimientos 
         const statusFilter = document.getElementById("maintStatus");
         const typeFilter = document.getElementById("maintType");
+
+        // Agregar eventos de cambio a los filtros para actualizar la tabla y el calendario
         if (statusFilter) statusFilter.addEventListener("change", renderMaintFiltered);
         if (typeFilter) typeFilter.addEventListener("change", renderMaintFiltered);
 
+
+        //Cargar turbinas para la tabla/calendario y para el modal 
         apiClient.get("Turbines/RetrieveAll").done(function (res) {
-            readList(res).forEach(function (t) {
+
+            const turbines = readlist(res);
+
+            turbines.forEach(function (t) {
                 const id = t.id ?? t.Id;
                 turbineCodes[id] = t.code || t.Code || `#${id}`;
             });
+
+            // Cargar opciones de turbinas en el modal de programación de mantenimiento 
+            if (turbineSelect) {
+                
+                turbineSelect.innerHTML =
+
+                    '<option value= "">Seleccione una turbina</option>';
+
+                // Agregar opciones de turbinas al select del modal
+                turbines.forEach(function (t) {
+
+                    const id = t.id ?? t.Id;
+                    const code = t.code || t.Code || `#${id}`;
+                    const name = t.name || t.Name || " ";
+
+                    // Agregar opción al select de turbinas
+                    turbineSelect.innerHTML +=
+                        `<option value="${id}">${code} - ${name}</option>`;
+                });
+            }
         }).always(loadMaintenances);
+
+
+        // Programar un mantenimiento utilizando los datos ingresados en el modal
+        function scheduleMaintenance() {
+
+            // Obtener los valores seleccionados por el usuario
+            const turbineId = parseInt(turbineSelect?.value || 0);
+            const maintenanceType = maintenanceTypeInput?.value;
+            const startDate = startInput?.value;
+            const endDate = endInput?.value;
+
+            // Validar que todos los campos obligatorios estén completos
+            if (!turbineId || !maintenanceType || !startDate || !endDate) {
+                notify.warning("Debe completar todos los campos del mantenimiento.");
+                return;
+            }
+
+            // Convertir las fechas del formulario a objetos Date
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            // La fecha de finalización debe ser posterior a la fecha de inicio
+            if (end <= start) {
+                notify.warning("La fecha de finalización debe ser posterior a la fecha de inicio.");
+                return;
+            }
+
+            // Crear el objeto que será enviado al MaintenancesController
+            const payload = {
+                turbineId: turbineId,
+                maintenanceType: maintenanceType,
+                estimatedStartDate: start.toISOString(),
+                estimatedEndDate: end.toISOString()
+            };
+
+            // Deshabilitar el botón mientras se procesa la solicitud
+            if (saveMaintenanceBtn) {
+                saveMaintenanceBtn.disabled = true;
+                saveMaintenanceBtn.innerHTML =
+                    '<span class="spinner-border spinner-border-sm"></span> Guardando...';
+            }
+
+            // Enviar la solicitud HTTP al endpoint Schedule
+            apiClient.post(
+                `Maintenances/Schedule?callerUserId=${currentUserId}`,
+                payload
+            )
+                .done(function (res) {
+
+                    notify.success(
+                        res?.message ||
+                        res?.Message ||
+                        "Mantenimiento programado correctamente."
+                    );
+
+                    // Cerrar el modal
+                    scheduleModal?.hide();
+
+                    // Recargar los mantenimientos desde la API / Esto actualiza tanto la tabla como el calendario.
+                    loadMaintenances();
+                })
+                .fail(function (xhr) {
+                    handleApiError(xhr);
+                })
+                .always(function () {
+
+                    // Reactivar el botón independientemente del resultado
+                    if (saveMaintenanceBtn) {
+                        saveMaintenanceBtn.disabled = false;
+                        saveMaintenanceBtn.textContent = "Guardar mantenimiento";
+                    }
+                });
+        }
+
+
+
+
+
 
         // Aviso de cumplimiento: turbinas sin mantenimiento agendado en el mes en curso
         // (obligatoriedad mensual de la rúbrica).
         const complianceAlert = document.getElementById("maintComplianceAlert");
         const complianceAlertText = document.getElementById("maintComplianceAlertText");
+
+        // Cargar turbinas sin mantenimiento agendado en el mes en curso
         if (complianceAlert && complianceAlertText) {
             apiClient.get("Maintenances/ComplianceAlert").done(function (res) {
                 const turbines = res?.data || res?.Data || [];
@@ -39,6 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
+        // Función para cargar mantenimientos desde la API
         function loadMaintenances() {
             maintBody.innerHTML = '<tr><td colspan="7" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando mantenimientos...</td></tr>';
             apiClient.get("Maintenances/RetrieveAll")
@@ -52,6 +175,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
         }
 
+        // Función para renderizar mantenimientos filtrados según los filtros seleccionados
         function renderMaintFiltered() {
             const status = statusFilter?.value || "";
             const type = typeFilter?.value || "";
@@ -62,6 +186,7 @@ document.addEventListener("DOMContentLoaded", function () {
             window.maintenanceCalendar?.setData(filtered, turbineCodes);
         }
 
+        // Función para renderizar la tabla de mantenimientos
         function renderMaintenances(items) {
             if (!items.length) {
                 maintBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Sin mantenimientos registrados.</td></tr>';
@@ -96,6 +221,7 @@ document.addEventListener("DOMContentLoaded", function () {
         let filteredFailures = [];
         let turbineCodes = {};
 
+        // Filtros existentes en la vista de fallas
         const severityFilter = document.getElementById("failSeverity");
         const statusFilter = document.getElementById("failStatus");
         const searchInput = document.getElementById("failSearch");
