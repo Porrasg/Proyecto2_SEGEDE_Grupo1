@@ -4853,4 +4853,22 @@ BEGIN
 END;
 GO
 
---
+--retrieve all energy production records
+CREATE OR ALTER PROCEDURE dbo.RET_ALL_ENERGY_PRODUCTION_PR
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        EnergyProductionId,
+        TurbineId,
+        PeriodStart,
+        EventDate,
+        GrossEnergyMWh,
+        MaintenanceLossMWh,
+        GeneratedEnergy,
+        CreatedAt
+    FROM dbo.tblEnergyProduction
+    ORDER BY EventDate DESC;
+END;
+GO

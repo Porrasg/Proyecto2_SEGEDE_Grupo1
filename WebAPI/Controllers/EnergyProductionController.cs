@@ -1,4 +1,6 @@
 using CoreApp;
+using Entities_DTOs;
+using DataAccess.CRUD;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 
@@ -61,6 +63,39 @@ namespace WebAPI.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = ex.Message });
+            }
+        }
+        [HttpGet]
+        [Route("RetrieveAll")]
+        public ActionResult RetrieveAll()
+        {
+            try
+            {
+                var em = new EnergyProductionManager();
+
+                var turbines = new TurbineCrudFactory()
+                    .RetrieveAll<Turbine>();
+
+                var all = new List<EnergyProduction>();
+
+                foreach (var turbine in turbines)
+                {
+                    var history = em.RetrieveGenerationHistory(turbine.Id);
+
+                    if (history != null)
+                    {
+                        all.AddRange(history);
+                    }
+                }
+
+                return Ok(all);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = ex.Message
+                });
             }
         }
     }

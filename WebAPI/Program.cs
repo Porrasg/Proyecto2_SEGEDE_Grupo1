@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using WebAPI;
+using WebAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddHostedService<FlushAutomaticService>();
 
 // Add services to the container.
 
