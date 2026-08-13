@@ -146,12 +146,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // Obtener los valores seleccionados por el usuario
             const turbineId = parseInt(turbineSelect?.value || 0);
+            const engineerId = parseInt(engineerSelect?.value || 0);
             const maintenanceType = maintenanceTypeInput?.value;
             const startDate = startInput?.value;
             const endDate = endInput?.value;
 
             // Validar que todos los campos obligatorios estén completos
-            if (!turbineId || !maintenanceType || !startDate || !endDate) {
+            if (!turbineId || !engineerId || !maintenanceType || !startDate || !endDate) {
                 notify.warning("Debe completar todos los campos del mantenimiento.");
                 return;
             }
@@ -169,10 +170,13 @@ document.addEventListener("DOMContentLoaded", function () {
             // Crear el objeto que será enviado al MaintenancesController
             const payload = {
                 turbineId: turbineId,
+                engineerId: engineerId,
                 maintenanceType: maintenanceType,
                 estimatedStartDate: start.toISOString(),
                 estimatedEndDate: end.toISOString()
             };
+
+            console.log("Payload mantenimiento: ", payload);
 
             // Deshabilitar el botón mientras se procesa la solicitud
             if (saveMaintenanceBtn) {
