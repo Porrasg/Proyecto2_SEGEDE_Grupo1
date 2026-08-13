@@ -32,8 +32,6 @@ namespace CoreApp
 
             return flush;
         }
-
-
         public void Create(Flush flush)
         {
             if (flush == null)
@@ -126,8 +124,6 @@ namespace CoreApp
             // Crear el registro del vaciado
             flushCrud.Create(flush);
         }
-
-
         public void Update(Flush flush)
         {
             if (flush == null)
@@ -196,8 +192,6 @@ namespace CoreApp
             // Actualizar el vaciado
             flushCrud.Update(flush);
         }
-
-
         public void Delete(Flush flush)
         {
             if (flush == null)
@@ -236,8 +230,6 @@ namespace CoreApp
             // Cancelar lógicamente el vaciado
             flushCrud.Delete(flush);
         }
-
-
         private bool HasEmptyFields(Flush flush)
         {
             return flush.FlushBatchId <= 0 ||
@@ -254,24 +246,21 @@ namespace CoreApp
                    flush.TransferredEnergyMWh < 0 ||
                    flush.SaturationLossMWh < 0;
         }
-
         private bool IsValidExecutionType(
             string executionType)
         {
             return executionType == "Automatic" ||
                    executionType == "Manual";
         }
-
         private bool IsValidStatus(string status)
         {
             return status == "Completed" ||
                    status == "Cancelled";
         }
- 
 
     //metodo encargado del vaciado al bancocentral
-    public void ExecuteFlush(Flush flush)
-        {
+        public void ExecuteFlush(Flush flush)
+            {
             if (flush == null)
             {
                 throw new ArgumentNullException("La informacion del vaciado es invalida");
