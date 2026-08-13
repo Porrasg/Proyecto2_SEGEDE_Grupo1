@@ -454,7 +454,147 @@
             '<tr><td colspan="6" class="text-center text-danger">Error al cargar el historial de producción.</td></tr>'
         );
     }
-}
+    }
+
+    // 6. CARGAR CAPTURAS TÉCNICAS DE LAS BATERÍAS
+    async function loadBatterySnapshots() {
+
+        try {
+
+            const res = await apiClient.get('BatterySnapshots/RetrieveAll');
+
+            console.log("BatterySnapshots res =", res);
+
+            const rows = Array.isArray(res)
+                ? res
+                : (res?.data?.items ||
+                    res?.data?.Data ||
+                    res?.data ||
+                    []);
+
+            console.log("BatterySnapshots rows =", rows);
+            console.log("BatterySnapshots cantidad =", rows.length);
+
+            const trs = rows.map(r => {
+
+                const flushId =
+                    r.flushId ??
+                    r.FlushId ??
+                    'N/D';
+
+                const batteryId =
+                    r.batteryId ??
+                    r.BatteryId ??
+                    'N/D';
+
+                const turbineId =
+                    r.turbineId ??
+                    r.TurbineId ??
+                    'N/D';
+
+                const maximumCapacity =
+                    r.maximumCapacityMWh ??
+                    r.MaximumCapacityMWh ??
+                    0;
+
+                const currentEnergy =
+                    r.currentEnergyMWh ??
+                    r.CurrentEnergyMWh ??
+                    0;
+
+                const totalGenerated =
+                    r.totalGeneratedMWh ??
+                    r.TotalGeneratedMWh ??
+                    0;
+
+                const totalTransferred =
+                    r.totalTransferredMWh ??
+                    r.TotalTransferredMWh ??
+                    0;
+
+                const totalSaturationLoss =
+                    r.totalSaturationLossMWh ??
+                    r.TotalSaturationLossMWh ??
+                    0;
+
+                const status =
+                    r.status ??
+                    r.Status ??
+                    'N/D';
+
+                const capturedAt =
+                    r.capturedAt ??
+                    r.CapturedAt;
+
+                const badgeColor =
+                    status === 'Active'
+                        ? 'bg-success'
+                        : 'bg-secondary';
+
+                return `<tr>
+                <td>${flushId}</td>
+
+                <td>${batteryId}</td>
+
+                <td>${turbineId}</td>
+
+                <td class="font-monospace text-end">
+                    ${formatDecimal(maximumCapacity)}
+                </td>
+
+                <td class="font-monospace text-end fw-bold">
+                    ${formatDecimal(currentEnergy)}
+                </td>
+
+                <td class="font-monospace text-end">
+                    ${formatDecimal(totalGenerated)}
+                </td>
+
+                <td class="font-monospace text-end">
+                    ${formatDecimal(totalTransferred)}
+                </td>
+
+                <td class="font-monospace text-end text-danger">
+                    ${formatDecimal(totalSaturationLoss)}
+                </td>
+
+                <td>
+                    <span class="badge ${badgeColor}">
+                        ${status}
+                    </span>
+                </td>
+
+                <td>
+                    ${capturedAt
+                        ? new Date(capturedAt).toLocaleString('es-CR')
+                        : 'N/D'}
+                </td>
+            </tr>`;
+            }).join('');
+
+            $('#batterySnapshotsTable tbody').html(
+                trs ||
+                '<tr><td colspan="10" class="text-center text-muted">No hay capturas técnicas registradas.</td></tr>'
+            );
+
+            if ($.fn.DataTable) {
+
+                $('#batterySnapshotsTable').DataTable({
+                    destroy: true,
+                    order: [[9, 'desc']]
+                });
+
+            }
+
+        } catch (e) {
+
+            console.error('Error loadBatterySnapshots:', e);
+
+            $('#batterySnapshotsTable tbody').html(
+                '<tr><td colspan="10" class="text-center text-danger">Error al cargar las capturas técnicas.</td></tr>'
+            );
+        }
+    }
 
     // CORRECCIÓN: Forzamos la ejecución secuencial estricta para evitar bloqueos
        async function refreshAll() {
@@ -462,7 +602,9 @@
         await loadBatteries();
         await loadHistory();
         await loadProductionHistory();
+        await loadBatterySnapshots();
     }
+
 
     $(document).ready(function () {
         // Ejecución lineal única y segura al cargar el DOM
