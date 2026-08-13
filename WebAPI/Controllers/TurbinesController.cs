@@ -2,6 +2,7 @@
 using Entities_DTOs;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace WebAPI.Controllers
 {
@@ -30,6 +31,10 @@ namespace WebAPI.Controllers
             public string? Reason { get; set; }
         }
 
+        private static readonly Regex StateChangePattern = new(
+            @"^Estado:\s*(?<previous>[A-Za-z]+)\s*->\s*(?<next>[A-Za-z]+)\.\s*Motivo:\s*(?<reason>.*)$",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
         [HttpGet]
         [Route("RetrieveAll")]
         [Route("All")] // alias que usa el módulo de Reportes
@@ -43,7 +48,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(TurbinesController), ex);
             }
         }
 
@@ -71,7 +76,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return ApiErrorHelper.Handle(nameof(TurbinesController), ex);
             }
         }
 
@@ -87,7 +92,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(TurbinesController), ex);
             }
         }
 
@@ -97,6 +102,12 @@ namespace WebAPI.Controllers
         {
             try
             {
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                if (!actorUserId.HasValue)
+                {
+                    return Unauthorized(new { message = "No se pudo identificar al usuario que registra la turbina." });
+                }
+
                 var tm = new TurbineManager();
                 var turbine = new Turbine
                 {
@@ -113,7 +124,6 @@ namespace WebAPI.Controllers
                 tm.Create(turbine);
 
                 //Registrar la creacion de la turbina en la bitacora 
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
                 AuditHelper.TryAudit(actorUserId, "Create", "Turbines", turbine.Id, $"Turbina {turbine.Code} registrada con estado Active");
 
 
@@ -121,7 +131,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = ex.Message });
+                return ApiErrorHelper.Handle(nameof(TurbinesController), ex);
             }
         }
 
@@ -136,12 +146,17 @@ namespace WebAPI.Controllers
                     return BadRequest(new { message = "El motivo técnico del cambio de estado es obligatorio." });
                 }
 
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                if (!actorUserId.HasValue)
+                {
+                    return Unauthorized(new { message = "No se pudo identificar al usuario que cambia el estado." });
+                }
+
                 var tm = new TurbineManager();
                 var previousState = tm.RetrieveTurbineById(request.TurbineId).Status;
                 tm.ChangeState(request.TurbineId, request.NewState);
 
                 //Registrar el cambio de estado de la turbina
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
                 AuditHelper.TryAudit(actorUserId, "ChangeState", "Turbines", request.TurbineId,
                     $"Estado: {previousState} -> {request.NewState}. Motivo: {request.Reason.Trim()}");
 
@@ -149,23 +164,32 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = ex.Message });
+                return ApiErrorHelper.Handle(nameof(TurbinesController), ex);
             }
         }
 
         [HttpPost]
         [Route("Create")]
-        public ActionResult Create(Turbine turbine)
+        public ActionResult Create(Turbine turbine, [FromQuery] int? callerUserId)
         {
             try
             {
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                if (!actorUserId.HasValue)
+                {
+                    return Unauthorized(new { message = "No se pudo identificar al usuario que registra la turbina." });
+                }
+
+                turbine.Status = "Active";
                 var tm = new TurbineManager();
                 tm.Create(turbine);
+                AuditHelper.TryAudit(actorUserId, "Create", "Turbines", turbine.Id,
+                    $"Turbina {turbine.Code} registrada con estado Active (endpoint directo)");
                 return Ok(turbine);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(TurbinesController), ex);
             }
         }
 
@@ -175,34 +199,53 @@ namespace WebAPI.Controllers
         {
             try
             {
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                if (!actorUserId.HasValue)
+                {
+                    return Unauthorized(new { message = "No se pudo identificar al usuario que actualiza la turbina." });
+                }
+
                 var tm = new TurbineManager();
                 tm.Update(turbine);
 
                 //Registrar la actualizacion de la turbina en la bitacora
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
                 AuditHelper.TryAudit(actorUserId, "Update", "Turbines", turbine.Id, $"Información de la turbina {turbine.Code} actualizada");
 
                 return Ok(turbine);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(TurbinesController), ex);
             }
         }
 
         [HttpDelete]
         [Route("Delete")]
-        public ActionResult Delete(Turbine turbine)
+        public ActionResult Delete(Turbine turbine, [FromQuery] string? reason, [FromQuery] int? callerUserId)
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(reason))
+                {
+                    return BadRequest(new { message = "El motivo técnico de la baja es obligatorio." });
+                }
+
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                if (!actorUserId.HasValue)
+                {
+                    return Unauthorized(new { message = "No se pudo identificar al usuario que da de baja la turbina." });
+                }
+
                 var tm = new TurbineManager();
+                var previousState = tm.RetrieveTurbineById(turbine.Id).Status;
                 tm.Delete(turbine);
+                AuditHelper.TryAudit(actorUserId, "ChangeState", "Turbines", turbine.Id,
+                    $"Estado: {previousState} -> Decommissioned. Motivo: {reason.Trim()}");
                 return Ok(turbine);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(TurbinesController), ex);
             }
         }
        
@@ -212,26 +255,15 @@ namespace WebAPI.Controllers
 
         [HttpGet]
         [Route("Metrics/{id}")]
-        public ActionResult GetMetrics(int id)
+        public ActionResult GetMetrics(int id, [FromQuery] int periodDays = 30)
         {
             try
             {
-                var turbine = new TurbineManager().RetrieveTurbineById(id);
-                if (turbine == null)
-                    return NotFound(new { message = $"No se encontró la turbina con ID {id}" });
-
-                var maints = new MaintenanceManager().RetrieveByTurbineId(id) ?? new List<Maintenance>();
-
-                // Enviamos SOLO los datos crudos
-                return Ok(new
-                {
-                    availability = turbine.ManufactureYear,
-                    maintenances = maints
-                });
+                return Ok(new TurbineManager().RetrieveOperationalMetrics(id, periodDays));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = ex.Message });
+                return ApiErrorHelper.Handle(nameof(TurbinesController), ex);
             }
         }
 
@@ -242,10 +274,28 @@ namespace WebAPI.Controllers
             try
             {
                 var audits = new AuditManager().RetrieveAllAudits() ?? new List<Audit>();
-                var logs = audits.Where(a => a != null && string.Equals(a.EntityName, "Turbines", StringComparison.OrdinalIgnoreCase) && a.EntityId == id);
+                var logs = audits
+                    .Where(a => a != null &&
+                                string.Equals(a.EntityName, "Turbines", StringComparison.OrdinalIgnoreCase) &&
+                                string.Equals(a.Action, "ChangeState", StringComparison.OrdinalIgnoreCase) &&
+                                a.EntityId == id)
+                    .OrderByDescending(a => a.CreatedAt)
+                    .Select(a =>
+                    {
+                        var match = StateChangePattern.Match(a.Description ?? string.Empty);
+                        return new
+                        {
+                            auditId = a.Id,
+                            date = a.CreatedAt,
+                            previousState = match.Success ? match.Groups["previous"].Value : string.Empty,
+                            newState = match.Success ? match.Groups["next"].Value : string.Empty,
+                            reason = match.Success ? match.Groups["reason"].Value : a.Description,
+                            userId = a.UserId
+                        };
+                    });
                 return Ok(logs);
             }
-            catch (Exception ex) { return StatusCode(500, new { message = ex.Message }); }
+            catch (Exception ex) { return ApiErrorHelper.Handle(nameof(TurbinesController), ex); }
         }
 
         [HttpGet]
@@ -254,10 +304,9 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var maints = new MaintenanceManager().RetrieveAllMaintenances() ?? new List<Maintenance>();
-                return Ok(maints.Where(m => m != null && m.TurbineId == id));
+                return Ok(new MaintenanceManager().RetrieveByTurbineId(id));
             }
-            catch (Exception ex) { return StatusCode(500, new { message = ex.Message }); }
+            catch (Exception ex) { return ApiErrorHelper.Handle(nameof(TurbinesController), ex); }
         }
 
         [HttpGet]
@@ -266,10 +315,9 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var failures = new FailureManager().RetrieveAllFailures() ?? new List<Failure>();
-                return Ok(failures.Where(f => f != null && f.TurbineId == id));
+                return Ok(new FailureManager().RetrieveByTurbineId(id));
             }
-            catch (Exception ex) { return StatusCode(500, new { message = ex.Message }); }
+            catch (Exception ex) { return ApiErrorHelper.Handle(nameof(TurbinesController), ex); }
         }
     }
 }

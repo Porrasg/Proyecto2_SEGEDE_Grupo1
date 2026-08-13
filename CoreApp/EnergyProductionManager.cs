@@ -147,5 +147,12 @@ namespace CoreApp
             var crud = new EnergyProductionCrudFactory();
             return crud.RetrieveByTurbineId(turbineId);
         }
+
+        public List<EnergyProduction> RetrieveAllProductions()
+        {
+            var crud = new EnergyProductionCrudFactory();
+
+            return crud.RetrieveAllProductions();
+        }
     }
 }

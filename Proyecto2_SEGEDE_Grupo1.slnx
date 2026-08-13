@@ -8,6 +8,9 @@
   <Folder Name="/2_CoreApp/">
     <Project Path="CoreApp/CoreApp.csproj" />
   </Folder>
+  <Folder Name="/2_CoreApp.Tests/">
+    <Project Path="CoreApp.Tests/CoreApp.Tests.csproj" />
+  </Folder>
   <Folder Name="/3_WebAPI/">
     <Project Path="WebAPI/WebAPI.csproj" Id="fd8be5d5-a385-4675-a2a3-23a930054896" />
   </Folder>

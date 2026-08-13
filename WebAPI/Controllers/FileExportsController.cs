@@ -1,4 +1,4 @@
-using CoreApp;
+﻿using CoreApp;
 using Entities_DTOs;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,8 +14,13 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var result = new FileExportManager().Generate(request);
                 var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                if (!actorUserId.HasValue)
+                {
+                    return Unauthorized(new { message = "No se pudo identificar al usuario que descarga el archivo." });
+                }
+
+                var result = new FileExportManager().Generate(request);
                 AuditHelper.TryAudit(actorUserId, "Download", "FileExports", null,
                     $"Archivo {result.FileName} descargado en formato {result.Format}; {result.RowCount} fila(s)");
 
@@ -23,7 +28,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return ApiErrorHelper.Handle(nameof(FileExportsController), ex);
             }
         }
 
@@ -43,7 +48,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = ex.Message });
+                return ApiErrorHelper.Handle(nameof(FileExportsController), ex);
             }
         }
     }

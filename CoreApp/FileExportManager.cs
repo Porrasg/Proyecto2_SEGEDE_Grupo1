@@ -1,4 +1,4 @@
-using Entities_DTOs;
+﻿using Entities_DTOs;
 using System.IO.Compression;
 using System.Security;
 using System.Text;
@@ -38,7 +38,7 @@ namespace CoreApp
                     ContentType = "application/pdf",
                     FileName = baseName + ".pdf"
                 },
-                _ => throw new Exception("El formato de exportación no es válido")
+                _ => throw new BusinessException("El formato de exportación no es válido")
             };
 
             result.Format = format;
@@ -48,25 +48,25 @@ namespace CoreApp
 
         private static void Validate(FileExportRequest request)
         {
-            if (request == null) throw new Exception("La solicitud de exportación es obligatoria");
-            if (string.IsNullOrWhiteSpace(request.Title)) throw new Exception("El título del archivo es obligatorio");
-            if (request.Headers == null || request.Headers.Count == 0) throw new Exception("La exportación debe incluir encabezados");
-            if (request.Headers.Count > MaximumColumns) throw new Exception($"La exportación admite un máximo de {MaximumColumns} columnas");
-            if (request.Rows == null) throw new Exception("Las filas de la exportación son obligatorias");
-            if (request.Rows.Count > MaximumRows) throw new Exception($"La exportación admite un máximo de {MaximumRows} filas");
+            if (request == null) throw new BusinessException("La solicitud de exportación es obligatoria");
+            if (string.IsNullOrWhiteSpace(request.Title)) throw new BusinessException("El título del archivo es obligatorio");
+            if (request.Headers == null || request.Headers.Count == 0) throw new BusinessException("La exportación debe incluir encabezados");
+            if (request.Headers.Count > MaximumColumns) throw new BusinessException($"La exportación admite un máximo de {MaximumColumns} columnas");
+            if (request.Rows == null) throw new BusinessException("Las filas de la exportación son obligatorias");
+            if (request.Rows.Count > MaximumRows) throw new BusinessException($"La exportación admite un máximo de {MaximumRows} filas");
 
             foreach (var header in request.Headers)
             {
-                if (string.IsNullOrWhiteSpace(header)) throw new Exception("Los encabezados no pueden estar vacíos");
-                if (header.Length > MaximumCellLength) throw new Exception("Un encabezado excede el tamaño permitido");
+                if (string.IsNullOrWhiteSpace(header)) throw new BusinessException("Los encabezados no pueden estar vacíos");
+                if (header.Length > MaximumCellLength) throw new BusinessException("Un encabezado excede el tamaño permitido");
             }
 
             foreach (var row in request.Rows)
             {
                 if (row == null || row.Count != request.Headers.Count)
-                    throw new Exception("Todas las filas deben tener la misma cantidad de columnas que los encabezados");
+                    throw new BusinessException("Todas las filas deben tener la misma cantidad de columnas que los encabezados");
                 if (row.Any(cell => (cell?.Length ?? 0) > MaximumCellLength))
-                    throw new Exception("Una celda excede el tamaño permitido");
+                    throw new BusinessException("Una celda excede el tamaño permitido");
             }
         }
 

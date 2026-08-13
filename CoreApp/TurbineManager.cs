@@ -44,7 +44,7 @@ namespace CoreApp
             // Validar el identificador de la turbina
             if (id <= 0)
             {
-                throw new Exception("El identificador de la turbina no es válido");
+                throw new BusinessException("El identificador de la turbina no es válido");
             }
 
             var tCrud = new TurbineCrudFactory();
@@ -53,10 +53,18 @@ namespace CoreApp
 
             if (turbine == null)
             {
-                throw new Exception("La turbina solicitada no existe");
+                throw new BusinessException("La turbina solicitada no existe");
             }
 
             return turbine;
+        }
+
+        public TurbineOperationalMetrics RetrieveOperationalMetrics(int turbineId, int periodDays = 30)
+        {
+            RetrieveTurbineById(turbineId);
+            var failures = new FailureManager().RetrieveByTurbineId(turbineId);
+            var maintenances = new MaintenanceManager().RetrieveByTurbineId(turbineId);
+            return TurbineMetricsCalculator.Calculate(failures, maintenances, DateTime.Now, periodDays);
         }
 
         // Cambia únicamente el estado operativo de una turbina existente
@@ -64,7 +72,7 @@ namespace CoreApp
         {
             if (turbineId <= 0)
             {
-                throw new Exception("El identificador de la turbina no es válido");
+                throw new BusinessException("El identificador de la turbina no es válido");
             }
 
             var tCrud = new TurbineCrudFactory();
@@ -73,18 +81,18 @@ namespace CoreApp
 
             if (currentTurbine == null)
             {
-                throw new Exception("La turbina que desea actualizar no existe");
+                throw new BusinessException("La turbina que desea actualizar no existe");
             }
 
             if (string.Equals(currentTurbine.Status, newState, StringComparison.Ordinal))
             {
-                throw new Exception("La turbina ya se encuentra en el estado solicitado");
+                throw new BusinessException("La turbina ya se encuentra en el estado solicitado");
             }
 
             if (!AllowedTransitions.TryGetValue(currentTurbine.Status, out var allowed) ||
                 !allowed.Contains(newState, StringComparer.Ordinal))
             {
-                throw new Exception($"La transición de {currentTurbine.Status} a {newState} no está permitida");
+                throw new BusinessException($"La transición de {currentTurbine.Status} a {newState} no está permitida");
             }
 
             // Se reutiliza la misma validación de estados del resto del manager
@@ -92,7 +100,7 @@ namespace CoreApp
 
             if (!IsValidStatus(currentTurbine))
             {
-                throw new Exception(InvalidStatusMessage);
+                throw new BusinessException(InvalidStatusMessage);
             }
 
             currentTurbine.UpdatedAt = DateTime.Now;
@@ -115,29 +123,29 @@ namespace CoreApp
         {
             if (turbine == null)
             {
-                throw new Exception("La turbina no puede ser nula");
+                throw new BusinessException("La turbina no puede ser nula");
             }
 
             if (HasEmptyFields(turbine))
             {
-                throw new Exception("Todos los campos obligatorios deben estar completos");
+                throw new BusinessException("Todos los campos obligatorios deben estar completos");
             }
 
             // Validar el año de fabricación
             if (!IsValidManufactureYear(turbine.ManufactureYear))
             {
-                throw new Exception("El año de fabricación no es válido");
+                throw new BusinessException("El año de fabricación no es válido");
             }
 
             // Validar la capacidad nominal semanal
             if (turbine.NominalWeeklyCapacityMWh <= 0)
             {
-                throw new Exception("La capacidad nominal debe ser mayor a 0");
+                throw new BusinessException("La capacidad nominal debe ser mayor a 0");
             }
 
             if (!IsValidStatus(turbine))
             {
-                throw new Exception(InvalidStatusMessage);
+                throw new BusinessException(InvalidStatusMessage);
             }
 
             var tCrud = new TurbineCrudFactory();
@@ -146,7 +154,7 @@ namespace CoreApp
 
             if (turbineByCode != null)
             {
-                throw new Exception("Ya existe una turbina registrada con ese código");
+                throw new BusinessException("Ya existe una turbina registrada con ese código");
             }
 
             // Se asignan las fechas de creación y actualización
@@ -160,32 +168,32 @@ namespace CoreApp
         {
             if (turbine == null)
             {
-                throw new Exception("La turbina no puede ser nula");
+                throw new BusinessException("La turbina no puede ser nula");
             }
 
             if (turbine.Id <= 0)
             {
-                throw new Exception("El identificador de la turbina no es válido");
+                throw new BusinessException("El identificador de la turbina no es válido");
             }
 
             if (HasEmptyFields(turbine))
             {
-                throw new Exception("Todos los campos obligatorios deben estar completos");
+                throw new BusinessException("Todos los campos obligatorios deben estar completos");
             }
 
             if (!IsValidManufactureYear(turbine.ManufactureYear))
             {
-                throw new Exception("El año de fabricación no es válido");
+                throw new BusinessException("El año de fabricación no es válido");
             }
 
             if (turbine.NominalWeeklyCapacityMWh <= 0)
             {
-                throw new Exception("La capacidad nominal debe ser mayor a 0");
+                throw new BusinessException("La capacidad nominal debe ser mayor a 0");
             }
 
             if (!IsValidStatus(turbine))
             {
-                throw new Exception(InvalidStatusMessage);
+                throw new BusinessException(InvalidStatusMessage);
             }
 
             var tCrud = new TurbineCrudFactory();
@@ -194,14 +202,19 @@ namespace CoreApp
 
             if (currentTurbine == null)
             {
-                throw new Exception("La turbina que desea actualizar no existe");
+                throw new BusinessException("La turbina que desea actualizar no existe");
+            }
+
+            if (!string.Equals(turbine.Status, currentTurbine.Status, StringComparison.Ordinal))
+            {
+                throw new ArgumentException("El estado operativo no se puede cambiar desde la edición general; utilice el cambio de estado con motivo técnico");
             }
 
             var turbineByCode = tCrud.RetrieveByCode(turbine.Code);
 
             if (turbineByCode != null && turbineByCode.Id != turbine.Id)
             {
-                throw new Exception("Ya existe otra turbina registrada con ese código");
+                throw new BusinessException("Ya existe otra turbina registrada con ese código");
             }
 
             // Se conservan las fechas de creación y se guarda la fecha de actualización
@@ -215,12 +228,12 @@ namespace CoreApp
         {
             if (turbine == null)
             {
-                throw new Exception("La turbina no puede ser nula");
+                throw new BusinessException("La turbina no puede ser nula");
             }
 
             if (turbine.Id <= 0)
             {
-                throw new Exception("El identificador de la turbina no es válido");
+                throw new BusinessException("El identificador de la turbina no es válido");
             }
 
             var tCrud = new TurbineCrudFactory();
@@ -229,19 +242,27 @@ namespace CoreApp
 
             if (currentTurbine == null)
             {
-                throw new Exception("La turbina que desea eliminar no existe");
+                throw new BusinessException("La turbina que desea eliminar no existe");
             }
 
             if (currentTurbine.Status == "Decommissioned")
             {
-                throw new Exception("La turbina ya se encuentra dada de baja");
+                throw new BusinessException("La turbina ya se encuentra dada de baja");
             }
 
-            // Se actualiza el estado a "Decommissioned" y se guarda la fecha de actualización
-            turbine.Status = "Decommissioned";
-            turbine.UpdatedAt = DateTime.Now;
+            if (!AllowedTransitions.TryGetValue(currentTurbine.Status, out var allowed) ||
+                !allowed.Contains("Decommissioned", StringComparer.Ordinal))
+            {
+                throw new ArgumentException($"La transición de {currentTurbine.Status} a Decommissioned no está permitida");
+            }
 
-            tCrud.Delete(turbine);
+            // La baja es lógica y siempre utiliza el registro persistido, nunca los
+            // campos que el cliente pudo enviar junto con el identificador.
+            currentTurbine.Status = "Decommissioned";
+            currentTurbine.UpdatedAt = DateTime.Now;
+
+            tCrud.Delete(currentTurbine);
+            new CentralBankManager().UpdateMaximumCapacity();
         }
 
         private bool HasEmptyFields(Turbine turbine)

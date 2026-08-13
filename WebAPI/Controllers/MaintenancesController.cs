@@ -37,7 +37,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(MaintenancesController), ex);
             }
         }
 
@@ -54,7 +54,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = ex.Message });
+                return ApiErrorHelper.Handle(nameof(MaintenancesController), ex);
             }
         }
 
@@ -71,7 +71,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = ex.Message });
+                return ApiErrorHelper.Handle(nameof(MaintenancesController), ex);
             }
         }
 
@@ -107,7 +107,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = ex.Message });
+                return ApiErrorHelper.Handle(nameof(MaintenancesController), ex);
             }
         }
 
@@ -119,6 +119,17 @@ namespace WebAPI.Controllers
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(request.Result))
+                {
+                    return BadRequest(new { message = "El informe técnico del mantenimiento es obligatorio." });
+                }
+
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                if (!actorUserId.HasValue)
+                {
+                    return Unauthorized(new { message = "No se pudo identificar al usuario que completa el mantenimiento." });
+                }
+
                 var mm = new MaintenanceManager();
                 var maintenance = mm.RetrieveById(request.MaintenanceId);
 
@@ -137,7 +148,6 @@ namespace WebAPI.Controllers
                 maintenance.Status = "Completed";
 
                 mm.Update(maintenance);
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
                 AuditHelper.TryAudit(actorUserId, "Update", "Maintenances", maintenance.Id, "Mantenimiento marcado como completado");
 
                 // Lógica cruzada: al completar el mantenimiento la turbina vuelve a operar
@@ -154,7 +164,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = ex.Message });
+                return ApiErrorHelper.Handle(nameof(MaintenancesController), ex);
             }
         }
 
@@ -165,17 +175,22 @@ namespace WebAPI.Controllers
         {
             try
             {
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                if (!actorUserId.HasValue)
+                {
+                    return Unauthorized(new { message = "No se pudo identificar al usuario que cancela el mantenimiento." });
+                }
+
                 var mm = new MaintenanceManager();
                 var maintenance = mm.RetrieveById(id);
 
                 mm.Delete(maintenance);
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
                 AuditHelper.TryAudit(actorUserId, "Cancel", "Maintenances", id, "Mantenimiento cancelado.");
                 return Ok(new { message = "Mantenimiento cancelado." });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = ex.Message });
+                return ApiErrorHelper.Handle(nameof(MaintenancesController), ex);
             }
         }
 
@@ -191,7 +206,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(MaintenancesController), ex);
             }
         }
 
@@ -201,14 +216,21 @@ namespace WebAPI.Controllers
         {
             try
             {
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                if (!actorUserId.HasValue)
+                {
+                    return Unauthorized(new { message = "No se pudo identificar al ingeniero responsable." });
+                }
+
+                maintenance.EngineerId = actorUserId.Value;
                 var mm = new MaintenanceManager();
                 mm.Create(maintenance);
-                AuditHelper.TryAudit(callerUserId, "Create", "Maintenances", maintenance.Id, "Mantenimiento creado (endpoint directo)");
+                AuditHelper.TryAudit(actorUserId, "Create", "Maintenances", maintenance.Id, "Mantenimiento creado (endpoint directo)");
                 return Ok(maintenance);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(MaintenancesController), ex);
             }
         }
 
@@ -218,14 +240,20 @@ namespace WebAPI.Controllers
         {
             try
             {
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                if (!actorUserId.HasValue)
+                {
+                    return Unauthorized(new { message = "No se pudo identificar al usuario que actualiza el mantenimiento." });
+                }
+
                 var mm = new MaintenanceManager();
                 mm.Update(maintenance);
-                AuditHelper.TryAudit(callerUserId, "Update", "Maintenances", maintenance.Id, "Mantenimiento actualizado (endpoint directo)");
+                AuditHelper.TryAudit(actorUserId, "Update", "Maintenances", maintenance.Id, "Mantenimiento actualizado (endpoint directo)");
                 return Ok(maintenance);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(MaintenancesController), ex);
             }
         }
 
@@ -235,14 +263,20 @@ namespace WebAPI.Controllers
         {
             try
             {
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                if (!actorUserId.HasValue)
+                {
+                    return Unauthorized(new { message = "No se pudo identificar al usuario que cancela el mantenimiento." });
+                }
+
                 var mm = new MaintenanceManager();
                 mm.Delete(maintenance);
-                AuditHelper.TryAudit(callerUserId, "Delete", "Maintenances", maintenance.Id, "Mantenimiento eliminado (endpoint directo)");
+                AuditHelper.TryAudit(actorUserId, "Cancel", "Maintenances", maintenance.Id, "Mantenimiento cancelado (endpoint directo)");
                 return Ok(maintenance);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(MaintenancesController), ex);
             }
         }
     }
