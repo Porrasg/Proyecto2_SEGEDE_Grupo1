@@ -29,7 +29,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(FailuresController), ex);
             }
         }
 
@@ -97,7 +97,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = ex.Message });
+                return ApiErrorHelper.Handle(nameof(FailuresController), ex);
             }
         }
 
@@ -113,7 +113,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(FailuresController), ex);
             }
         }
 
@@ -130,7 +130,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(FailuresController), ex);
             }
         }
 
@@ -146,7 +146,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(FailuresController), ex);
             }
         }
 
@@ -162,7 +162,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(FailuresController), ex);
             }
         }
 
@@ -178,55 +178,83 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(FailuresController), ex);
             }
         }
 
         [HttpPost]
         [Route("Create")]
-        public ActionResult Create(Failure failure)
+        public ActionResult Create(Failure failure, [FromQuery] int? callerUserId)
         {
             try
             {
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                if (!actorUserId.HasValue)
+                {
+                    return Unauthorized(new { message = "No se pudo identificar al usuario que reporta la falla." });
+                }
+
+                failure.EngineerId = actorUserId.Value;
+                failure.FailureDate = DateTime.Now;
                 var fm = new FailureManager();
                 fm.Create(failure);
+                AuditHelper.TryAudit(actorUserId, "Create", "Failures", failure.Id,
+                    $"Falla reportada en turbina #{failure.TurbineId} (endpoint directo)");
                 return Ok(failure);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(FailuresController), ex);
             }
         }
 
         [HttpPut]
         [Route("Update")]
-        public ActionResult Update(Failure failure)
+        public ActionResult Update(Failure failure, [FromQuery] int? callerUserId)
         {
             try
             {
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                if (!actorUserId.HasValue)
+                {
+                    return Unauthorized(new { message = "No se pudo identificar al usuario que actualiza la falla." });
+                }
+
                 var fm = new FailureManager();
+                var previousStatus = fm.RetrieveById(failure.Id).Status;
                 fm.Update(failure);
+                AuditHelper.TryAudit(actorUserId, "Update", "Failures", failure.Id,
+                    previousStatus == failure.Status
+                        ? "Información técnica de la falla actualizada"
+                        : $"Estado: {previousStatus} -> {failure.Status}. Información técnica de la falla actualizada");
                 return Ok(failure);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(FailuresController), ex);
             }
         }
 
         [HttpDelete]
         [Route("Delete")]
-        public ActionResult Delete(Failure failure)
+        public ActionResult Delete(Failure failure, [FromQuery] int? callerUserId)
         {
             try
             {
+                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                if (!actorUserId.HasValue)
+                {
+                    return Unauthorized(new { message = "No se pudo identificar al usuario que cancela la falla." });
+                }
+
                 var fm = new FailureManager();
                 fm.Delete(failure);
+                AuditHelper.TryAudit(actorUserId, "Cancel", "Failures", failure.Id, "Falla cancelada");
                 return Ok(failure);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return ApiErrorHelper.Handle(nameof(FailuresController), ex);
             }
         }
     }

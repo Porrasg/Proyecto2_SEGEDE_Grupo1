@@ -1,9 +1,8 @@
 // OperationsComplementaryViewController.js (§22.1, §27) - Controlador para Energía, Mantenimientos y Averías
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("Inicializando OperationsComplementaryViewController...");
-
     const role = session.getRole();
-    const userId = session.getUserId() || 1;
+    const userId = session.getUserId();
+    const callerQuery = Number(userId) > 0 ? "?callerUserId=" + encodeURIComponent(userId) : "";
     const readList = function (response) {
         return apiClient.unwrapList ? apiClient.unwrapList(response) : (Array.isArray(response) ? response : []);
     };
@@ -20,15 +19,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     apiClient.get("Turbines/RetrieveAll").done(function (res) {
 
-        // Pruebas temporales para verificar la estructura de la respuesta
-        console.log("Turbines respuesta =", res);
-        console.log("¿Es arreglo? =", Array.isArray(res));
-        console.log("res.data =", res?.data);
-
         // Soporta respuestas que vengan como arreglo directo o dentro de propiedades como data, Data o items
         const list = readList(res);
-
-        console.log("Lista de turbinas =", list);
 
         // Construir mapa de turbinas para llenar los selectores
         list.forEach(t => {
@@ -45,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     }).fail(function (xhr) {
 
-        console.error("Error al cargar turbinas:", xhr);
+        handleApiError(xhr);
 
         initEnergyModule();
         initMaintenancesModule();
@@ -257,7 +249,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     Inspection: '<span class="badge bg-secondary">Inspección</span>',
                     Emergency: '<span class="badge bg-danger">Emergencia</span>'
                 };
-                const typeBadge = typeBadges[type] || `<span class="badge bg-secondary">${type}</span>`;
+                const typeBadge = typeBadges[type] || `<span class="badge bg-secondary">${escapeHtml(type)}</span>`;
 
                 const estStart = formatDateTime(m.estimatedStartDate || m.EstimatedStartDate);
                 const estEnd = formatDateTime(m.estimatedEndDate || m.EstimatedEndDate);
@@ -276,8 +268,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 return `
                     <tr>
-                        <td>#${id}</td>
-                        <td class="fw-bold">${tCode}</td>
+                        <td>#${escapeHtml(id)}</td>
+                        <td class="fw-bold">${escapeHtml(tCode)}</td>
                         <td>${typeBadge}</td>
                         <td class="small"><b>Inicio:</b> ${estStart}<br><b>Fin:</b> ${estEnd}</td>
                         <td class="small">${realStart !== "-" ? `<b>Inicio:</b> ${realStart}<br><b>Fin:</b> ${realEnd}` : '<span class="text-muted">Pendiente</span>'}</td>
@@ -315,17 +307,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
+            if (new Date(end) <= new Date(start)) {
+                notify.warning("La fecha final debe ser posterior a la fecha inicial.");
+                return;
+            }
+
             const btn = document.getElementById("saveMaintBtn");
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Programando...';
 
-            apiClient.post("Maintenances/Schedule?callerUserId=" + userId, {
+            apiClient.post("Maintenances/Schedule" + callerQuery, {
                 turbineId: tid,
                 maintenanceType: type,
                 estimatedStartDate: new Date(start).toISOString(),
                 estimatedEndDate: new Date(end).toISOString()
             }).done(function () {
-                notify.success("Mantenimiento programado y turbina en transición de estado.");
+                notify.success("Mantenimiento programado correctamente.");
                 bootstrap.Modal.getInstance(document.getElementById("regMaintModal"))?.hide();
                 loadMaintenances();
             }).fail(function (xhr) {
@@ -347,11 +344,11 @@ document.addEventListener("DOMContentLoaded", function () {
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Procesando...';
 
-            apiClient.post("Maintenances/Complete?callerUserId=" + userId, {
+            apiClient.post("Maintenances/Complete" + callerQuery, {
                 maintenanceId: parseInt(editingMaintId),
                 result: resultText
             }).done(function () {
-                notify.success("Mantenimiento finalizado y turbina reactivada operacionalmente.");
+                notify.success("Mantenimiento finalizado correctamente.");
                 bootstrap.Modal.getInstance(document.getElementById("compMaintModal"))?.hide();
                 loadMaintenances();
             }).fail(function (xhr) {
@@ -365,7 +362,7 @@ document.addEventListener("DOMContentLoaded", function () {
         function cancelMaintenance(id) {
             notify.confirm("¿Está seguro de cancelar este mantenimiento programado?", { dangerous: true, confirmText: "Cancelar mantenimiento" }).then(function (ok) {
                 if (!ok) return;
-                apiClient.post("Maintenances/Cancel/" + id + "?callerUserId=" + userId).done(function () {
+                apiClient.post("Maintenances/Cancel/" + id + callerQuery).done(function () {
                     notify.info("Mantenimiento cancelado.");
                     loadMaintenances();
                 }).fail(function (xhr) {
@@ -431,14 +428,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 };
                 const sevBadge = severityMap[sev] || `<span class="badge bg-secondary">${escapeHtml(sev)}</span>`;
                 const status = f.status || f.Status || "Reported";
-                const statusMap = { Reported: "Reportada", UnderReview: "En revisión", Resolved: "Resuelta", Cancelled: "Cancelada" };
+                const statusMap = { Reported: "Reportada", InProgress: "En progreso", Resolved: "Resuelta", Cancelled: "Cancelada" };
                 const desc = f.description || f.Description || "-";
                 const dateStr = formatDateTime(f.failureDate || f.FailureDate);
 
                 return `
                     <tr class="${sev.toLowerCase() === 'critical' ? 'table-danger' : ''}">
-                        <td>#${id}</td>
-                        <td class="fw-bold">${tCode}</td>
+                        <td>#${escapeHtml(id)}</td>
+                        <td class="fw-bold">${escapeHtml(tCode)}</td>
                         <td>${sevBadge}</td>
                         <td>${escapeHtml(statusMap[status] || status)}</td>
                         <td>${escapeHtml(desc)}</td>
@@ -450,7 +447,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function registerFailure() {
             const tid = parseInt(document.getElementById("fTurbine")?.value || 0);
-            const sev = document.getElementById("fSeverity")?.value || "Normal";
+            const sev = document.getElementById("fSeverity")?.value || "Medium";
             const desc = document.getElementById("fDesc")?.value.trim();
 
             if (!tid || !desc || desc.length < 10 || desc.length > 500) {
@@ -462,7 +459,7 @@ document.addEventListener("DOMContentLoaded", function () {
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Reportando...';
 
-            apiClient.post("Failures/Register?callerUserId=" + userId, {
+            apiClient.post("Failures/Register" + callerQuery, {
                 turbineId: tid,
                 severity: sev,
                 description: desc
@@ -487,7 +484,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const currentVal = selectEl.value;
         let html = includeAllOption ? '<option value="">Todas las Turbinas</option>' : '';
         Object.keys(allTurbinesMap).forEach(id => {
-            html += `<option value="${id}">${allTurbinesMap[id]}</option>`;
+            html += `<option value="${escapeHtml(id)}">${escapeHtml(allTurbinesMap[id])}</option>`;
         });
         selectEl.innerHTML = html;
         if (currentVal) selectEl.value = currentVal;
