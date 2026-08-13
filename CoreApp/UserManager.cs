@@ -409,6 +409,22 @@ namespace CoreApp
                 {
                     user.LockoutEndAt = DateTime.Now.AddMinutes(15);
                     uCrud.UpdateLoginAttempts(user);
+
+                    // Enviar notificación de bloqueo de cuenta
+                    try
+                    {
+                        var notificationManager = new NotificationManager();
+                        notificationManager.SendAccountLockedNotification(
+                            user.Email,
+                            user.FirstName,
+                            15  // minutos de bloqueo
+                        );
+                    }
+                    catch
+                    {
+                        // No bloquear la operación si falla el envío del correo
+                    }
+
                     throw new Exception("3 intentos agotados. La cuenta se bloqueó por 15 minutos.");
                 }
 
@@ -539,6 +555,21 @@ namespace CoreApp
             catch
             {
                 // No bloquear el login por un fallo de auditoría
+            }
+
+            // Enviar notificación de inicio de sesión exitoso
+            try
+            {
+                var notificationManager = new NotificationManager();
+                notificationManager.SendLoginSuccessNotification(
+                    user.Email,
+                    user.FirstName,
+                    DateTime.Now.ToString("dd/MM/yyyy HH:mm")
+                );
+            }
+            catch
+            {
+                // No bloquear el login por un fallo en el envío del correo
             }
 
             return user;

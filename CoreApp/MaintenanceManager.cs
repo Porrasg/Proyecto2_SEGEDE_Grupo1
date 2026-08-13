@@ -176,12 +176,13 @@ namespace CoreApp
             // a un ReferenceId específico (se deja sin referencia en vez de usar un Id inválido).
             try
             {
-                new OtpManager().SendGenericEmail(
+                var notificationManager = new NotificationManager();
+                notificationManager.SendServiceScheduledNotification(
                     engineer.Email,
                     engineer.FirstName,
-                    "Mantenimiento agendado - Turbina #" + maintenance.TurbineId,
-                    $"Se le asignó un mantenimiento ({maintenance.MaintenanceType}) para la turbina #{maintenance.TurbineId}, " +
-                    $"programado del {maintenance.EstimatedStartDate:dd/MM/yyyy HH:mm} al {maintenance.EstimatedEndDate:dd/MM/yyyy HH:mm}.");
+                    $"Turbina #{maintenance.TurbineId}",
+                    $"{maintenance.EstimatedStartDate:dd/MM/yyyy HH:mm} - {maintenance.EstimatedEndDate:dd/MM/yyyy HH:mm}"
+                );
             }
             catch { /* no bloquear el mantenimiento ya creado */ }
 

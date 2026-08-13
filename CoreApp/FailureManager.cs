@@ -118,21 +118,39 @@ namespace CoreApp
 
             crud.Create(failure);
 
-            // Alarma de criticidad sistémica: notificar al ingeniero asignado cuando la falla es
-            // Critical. Cada canal en su propio try/catch para no revertir la falla ya registrada.
-            if (failure.Severity == "Critical")
+            // Notificar al ingeniero asignado sobre la falla reportada
+            // Cada canal en su propio try/catch para no revertir la falla ya registrada.
+            try
             {
-                try
+                var notificationManager = new NotificationManager();
+
+                // Para fallas críticas, usar la notificación de alarma
+                if (failure.Severity == "Critical")
                 {
-                    new OtpManager().SendGenericEmail(
+                    notificationManager.SendCriticalAlarmNotification(
                         engineer.Email,
                         engineer.FirstName,
-                        "ALERTA CRÍTICA - Falla en Turbina #" + failure.TurbineId,
-                        $"Se reportó una falla de severidad <strong>Crítica</strong> en la turbina #{failure.TurbineId}. " +
-                        $"Descripción: {failure.Description}");
+                        $"Falla crítica en Turbina #{failure.TurbineId}: {failure.Description}",
+                        failure.Severity
+                    );
                 }
-                catch { /* no bloquear la falla ya registrada */ }
+                else
+                {
+                    // Para otras severidades (High, Medium, Low), usar notificación de falla
+                    notificationManager.SendTurbineFailureNotification(
+                        engineer.Email,
+                        engineer.FirstName,
+                        $"Turbina #{failure.TurbineId}",
+                        failure.Severity,
+                        failure.Description
+                    );
+                }
+            }
+            catch { /* no bloquear la falla ya registrada */ }
 
+            // Registrar notificación interna en BD solo para fallas críticas
+            if (failure.Severity == "Critical")
+            {
                 try
                 {
                     new NotificationManager().Create(new Notification

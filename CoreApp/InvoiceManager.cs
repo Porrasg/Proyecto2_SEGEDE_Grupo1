@@ -145,6 +145,29 @@ namespace CoreApp
 
             // Crear la factura
             crud.Create(invoice);
+
+            // Enviar notificación de factura generada al comprador
+            try
+            {
+                var userCrud = new UserCrudFactory();
+                var buyer = userCrud.RetrieveById<User>(invoice.BuyerId);
+
+                if (buyer != null && !string.IsNullOrWhiteSpace(buyer.Email))
+                {
+                    var notificationManager = new NotificationManager();
+                    notificationManager.SendInvoiceGeneratedNotification(
+                        buyer.Email,
+                        buyer.FirstName,
+                        invoice.InvoiceNumber,
+                        $"₡{invoice.TotalAmount:N2}",
+                        invoice.DueDate.ToString("dd/MM/yyyy")
+                    );
+                }
+            }
+            catch
+            {
+                // No revertir la factura si falla el envío del correo
+            }
         }
 
         // Actualiza solo el estado de pago u otros datos permitidos.
