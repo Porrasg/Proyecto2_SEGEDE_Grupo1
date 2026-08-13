@@ -34,8 +34,13 @@ namespace DataAccess.CRUD
             sqlOperation.AddDateTimeParameter("CreatedAt", turbine.CreatedAt);
             sqlOperation.AddNullableDateTimeParameter("UpdatedAt", turbine.UpdatedAt); // puede ser nulo
 
-            // Ejecutamos el SP
-            sqlDao.ExecuteProcedure(sqlOperation);
+            // Ejecutamos el SP y agregar el id generado
+            var result = sqlDao.ExecuteQueryProcedure(sqlOperation);
+            
+            if (result.Count > 0) 
+            {
+                turbine.Id = (int)result[0]["TurbineId"];
+            }
         }
 
         public override void Delete(BaseDTO baseDTO)

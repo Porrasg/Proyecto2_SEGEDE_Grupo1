@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Inicializando TurbineManagementViewController...");
 
     const role = session.getRole();
-    const currrenUserId = session.getUserId(); 
+    const currentUserId = session.getUserId(); 
 
     if (role !== "Engineer" && role !== "Administrator" && role !== "Admin") {
         notify.error("Acceso denegado. Requiere privilegios de Ingeniero u Operaciones.");
@@ -221,7 +221,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-        // Modal editar y mapeo corregidos HFQ 
+        // Modal editar y mapeo corregidos 
         function openEditModal(t) {
             if (!t) return;
 
@@ -266,7 +266,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-        // GUARDAR TURBINA / CORREGIDO HFQ
+        // GUARDAR TURBINA / CORREGIDO 
         const saveTurbineBtn = document.getElementById("saveTurbineBtn");
         if (saveTurbineBtn) {
             saveTurbineBtn.addEventListener("click", function () {

@@ -15,7 +15,7 @@ builder.Services.AddHostedService<FlushAutomaticService>();
 // explicitamente con [AllowAnonymous] en su propio controller.
 builder.Services.AddControllers(options =>
 {
-  //  options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter());
+    options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter());
 });
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddEndpointsApiExplorer();
