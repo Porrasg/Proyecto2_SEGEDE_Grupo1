@@ -4808,3 +4808,67 @@ BEGIN
     END CATCH;
 END;
 GO
+
+--sp de configuracion de flush
+CREATE OR ALTER PROCEDURE dbo.RET_FLUSH_CONFIG_PR
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        FlushConfigId,
+        ExecutionTime,
+        IsAutomatic,
+        CreatedAt,
+        UpdatedAt
+    FROM dbo.tblFlushConfig
+    WHERE FlushConfigId = 1;
+END;
+GO
+-- sp para actualizar la configuracion de flush
+CREATE OR ALTER PROCEDURE dbo.UPD_FLUSH_CONFIG_PR
+(
+    @FlushConfigId INT,
+    @ExecutionTime TIME(0),
+    @IsAutomatic BIT,
+    @UpdatedAt DATETIME
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE dbo.tblFlushConfig
+    SET
+        ExecutionTime = @ExecutionTime,
+        IsAutomatic = @IsAutomatic,
+        UpdatedAt = @UpdatedAt
+    WHERE FlushConfigId = @FlushConfigId;
+
+    IF @@ROWCOUNT = 0
+    BEGIN
+        THROW 50001,
+            'No se encontró la configuración de Flush indicada',
+            1;
+    END;
+END;
+GO
+
+--retrieve all energy production records
+CREATE OR ALTER PROCEDURE dbo.RET_ALL_ENERGY_PRODUCTION_PR
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        EnergyProductionId,
+        TurbineId,
+        PeriodStart,
+        EventDate,
+        GrossEnergyMWh,
+        MaintenanceLossMWh,
+        GeneratedEnergy,
+        CreatedAt
+    FROM dbo.tblEnergyProduction
+    ORDER BY EventDate DESC;
+END;
+GO

@@ -480,3 +480,31 @@ CREATE TABLE [dbo].[tblEnergyLosses](
 ) ON [PRIMARY]
 
 GO
+
+--Tabla para la configuracion de los flushes automaticos, incluyendo la hora de ejecucion y si es automatico o manual.
+CREATE TABLE dbo.tblFlushConfig
+(
+    FlushConfigId INT IDENTITY(1,1) PRIMARY KEY,
+    ExecutionTime TIME(0) NOT NULL,
+    IsAutomatic BIT NOT NULL,
+    CreatedAt DATETIME NOT NULL,
+    UpdatedAt DATETIME NULL
+);
+GO
+-- configuración inicial: ejecución a las 00:00 horas, modo manual (IsAutomatic = 0)
+INSERT INTO dbo.tblFlushConfig
+(
+    ExecutionTime,
+    IsAutomatic,
+    CreatedAt,
+    UpdatedAt
+)
+VALUES
+(
+    '00:00',
+    0,
+    GETDATE(),
+    NULL
+);
+GO
+

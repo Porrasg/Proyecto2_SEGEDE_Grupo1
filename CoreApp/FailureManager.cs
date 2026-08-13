@@ -8,6 +8,14 @@ namespace CoreApp
 {
     public class FailureManager
     {
+        private static readonly Dictionary<string, string[]> AllowedTransitions = new()
+        {
+            { "Reported", new[] { "InProgress", "Resolved", "Cancelled" } },
+            { "InProgress", new[] { "Resolved", "Cancelled" } },
+            { "Resolved", Array.Empty<string>() },
+            { "Cancelled", Array.Empty<string>() }
+        };
+
         public List<Failure> RetrieveAllFailures()
         {
             var crud = new FailureCrudFactory();
@@ -18,7 +26,7 @@ namespace CoreApp
             // Validar el identificador de la falla
             if (id <= 0)
             {
-                throw new Exception("El identificador de la falla no es válido");
+                throw new BusinessException("El identificador de la falla no es válido");
             }
 
             var crud = new FailureCrudFactory();
@@ -28,7 +36,7 @@ namespace CoreApp
             // Validar que la falla exista
             if (failure == null)
             {
-                throw new Exception( "No se encontró la falla solicitada");
+                throw new BusinessException( "No se encontró la falla solicitada");
             }
 
             return failure;
@@ -37,7 +45,7 @@ namespace CoreApp
         {
             if (failure == null)
             {
-                throw new Exception("La falla no puede ser nula");
+                throw new BusinessException("La falla no puede ser nula");
             }
 
             // Asignar el estado inicial de la falla
@@ -45,29 +53,29 @@ namespace CoreApp
 
             if (HasEmptyFields(failure))
             {
-                throw new Exception("Todos los campos obligatorios deben completarse");
+                throw new BusinessException("Todos los campos obligatorios deben completarse");
             }
 
             // Validar la severidad de la falla
             if (!IsValidSeverity(failure.Severity))
             {
-                throw new Exception("La severidad de la falla no es válida");
+                throw new BusinessException("La severidad de la falla no es válida");
             }
 
             // Validar el estado de la falla
             if (!IsValidStatus(failure.Status))
             {
-                throw new Exception("El estado de la falla no es válido");
+                throw new BusinessException("El estado de la falla no es válido");
             }
             
             if (failure.FailureDate == default(DateTime))
             {
-                throw new Exception("La fecha de la falla es obligatoria");
+                throw new BusinessException("La fecha de la falla es obligatoria");
             }
             
             if (failure.FailureDate > DateTime.Now)
             {
-                throw new Exception(
+                throw new BusinessException(
                     "La fecha de la falla no puede ser futura");
             }
 
@@ -78,13 +86,13 @@ namespace CoreApp
 
             if (turbine == null)
             {
-                throw new Exception("La turbina seleccionada no existe");
+                throw new BusinessException("La turbina seleccionada no existe");
             }
 
             // Validar que la turbina no esté dada de baja
             if (turbine.Status == "Decommissioned")
             {
-                throw new Exception("No se puede reportar una falla para una turbina dada de baja");
+                throw new BusinessException("No se puede reportar una falla para una turbina dada de baja");
             }
 
             var userCrud = new UserCrudFactory();
@@ -94,19 +102,19 @@ namespace CoreApp
 
             if (engineer == null)
             {
-                throw new Exception("El ingeniero seleccionado no existe");
+                throw new BusinessException("El ingeniero seleccionado no existe");
             }
 
             // Validar que el usuario tenga el rol de ingeniero
             if (engineer.Role != "Engineer")
             {
-                throw new Exception("El usuario seleccionado no tiene el rol de ingeniero");
+                throw new BusinessException("El usuario seleccionado no tiene el rol de ingeniero");
             }
 
             // Validar que el ingeniero se encuentre activo
             if (engineer.Status != "Active")
             {
-                throw new Exception("El ingeniero seleccionado no se encuentra activo");
+                throw new BusinessException("El ingeniero seleccionado no se encuentra activo");
             }
 
             // Asignar los valores iniciales de la falla
@@ -168,48 +176,48 @@ namespace CoreApp
         {
             if (failure == null)
             {
-                throw new Exception("La falla no puede ser nula");
+                throw new BusinessException("La falla no puede ser nula");
             }
 
             if (failure.Id <= 0)
             {
-                throw new Exception("El identificador de la falla no es válido");
+                throw new BusinessException("El identificador de la falla no es válido");
             }
 
             if (HasEmptyFields(failure))
             {
-                throw new Exception("Todos los campos obligatorios deben completarse");
+                throw new BusinessException("Todos los campos obligatorios deben completarse");
             }
 
             // Validar la severidad de la falla
             if (!IsValidSeverity(failure.Severity))
             {
-                throw new Exception("La severidad de la falla no es válida");
+                throw new BusinessException("La severidad de la falla no es válida");
             }
 
             // Validar el estado de la falla
             if (!IsValidStatus(failure.Status))
             {
-                throw new Exception("El estado de la falla no es válido");
+                throw new BusinessException("El estado de la falla no es válido");
             }
 
             // Validar la fecha de la falla
             if (failure.FailureDate == default(DateTime))
             {
-                throw new Exception("La fecha de la falla es obligatoria");
+                throw new BusinessException("La fecha de la falla es obligatoria");
             }
 
             // Validar que la fecha de la falla no sea futura
             if (failure.FailureDate > DateTime.Now)
             {
-                throw new Exception("La fecha de la falla no puede ser futura");
+                throw new BusinessException("La fecha de la falla no puede ser futura");
             }
 
             // Validar la resolución de una falla resuelta
             if (failure.Status == "Resolved" &&
                 string.IsNullOrWhiteSpace(failure.Resolution))
             {
-                throw new Exception("Una falla resuelta debe incluir una descripción de la solución");
+                throw new BusinessException("Una falla resuelta debe incluir una descripción de la solución");
             }
 
             var failureCrud = new FailureCrudFactory();
@@ -219,13 +227,27 @@ namespace CoreApp
 
             if (currentFailure == null)
             {
-                throw new Exception("La falla que desea actualizar no existe");
+                throw new BusinessException("La falla que desea actualizar no existe");
             }
 
-            // Validar que la falla no esté cancelada
-            if (currentFailure.Status == "Cancelled")
+            // Una falla finalizada es inmutable y no puede reabrirse silenciosamente.
+            if (currentFailure.Status == "Cancelled" || currentFailure.Status == "Resolved")
             {
-                throw new Exception("No se puede modificar una falla cancelada");
+                throw new BusinessException("No se puede modificar una falla resuelta o cancelada");
+            }
+
+            if (failure.TurbineId != currentFailure.TurbineId ||
+                failure.EngineerId != currentFailure.EngineerId ||
+                failure.FailureDate != currentFailure.FailureDate)
+            {
+                throw new BusinessException("La turbina, el ingeniero y la fecha original de una falla no se pueden modificar");
+            }
+
+            if (!string.Equals(failure.Status, currentFailure.Status, StringComparison.Ordinal) &&
+                (!AllowedTransitions.TryGetValue(currentFailure.Status, out var allowed) ||
+                 !allowed.Contains(failure.Status, StringComparer.Ordinal)))
+            {
+                throw new BusinessException($"La transición de {currentFailure.Status} a {failure.Status} no está permitida");
             }
 
             var turbineCrud = new TurbineCrudFactory();
@@ -235,13 +257,13 @@ namespace CoreApp
 
             if (turbine == null)
             {
-                throw new Exception("La turbina seleccionada no existe");
+                throw new BusinessException("La turbina seleccionada no existe");
             }
 
             // Validar que la turbina no esté dada de baja
             if (turbine.Status == "Decommissioned")
             {
-                throw new Exception("No se puede asignar la falla a una turbina dada de baja");
+                throw new BusinessException("No se puede asignar la falla a una turbina dada de baja");
             }
 
             var userCrud = new UserCrudFactory();
@@ -251,17 +273,17 @@ namespace CoreApp
 
             if (engineer == null)
             {
-                throw new Exception("El ingeniero seleccionado no existe");
+                throw new BusinessException("El ingeniero seleccionado no existe");
             }
 
             if (engineer.Role != "Engineer")
             {
-                throw new Exception("El usuario seleccionado no tiene el rol de ingeniero");
+                throw new BusinessException("El usuario seleccionado no tiene el rol de ingeniero");
             }
 
             if (engineer.Status != "Active")
             {
-                throw new Exception("El ingeniero seleccionado no se encuentra activo");
+                throw new BusinessException("El ingeniero seleccionado no se encuentra activo");
             }
 
             // Mantener la fecha original de creación
@@ -277,12 +299,12 @@ namespace CoreApp
         {
             if (failure == null)
             {
-                throw new Exception("La falla no puede ser nula");
+                throw new BusinessException("La falla no puede ser nula");
             }
 
             if (failure.Id <= 0)
             {
-                throw new Exception("El identificador de la falla no es válido");
+                throw new BusinessException("El identificador de la falla no es válido");
             }
 
             var failureCrud = new FailureCrudFactory();
@@ -292,36 +314,37 @@ namespace CoreApp
 
             if (currentFailure == null)
             {
-                throw new Exception("La falla que desea cancelar no existe");
+                throw new BusinessException("La falla que desea cancelar no existe");
             }
 
             // Validar que la falla no esté cancelada
             if (currentFailure.Status == "Cancelled")
             {
-                throw new Exception("La falla ya se encuentra cancelada");
+                throw new BusinessException("La falla ya se encuentra cancelada");
             }
 
             // Validar que la falla no esté resuelta
             if (currentFailure.Status == "Resolved")
             {
-                throw new Exception("No se puede cancelar una falla resuelta");
+                throw new BusinessException("No se puede cancelar una falla resuelta");
             }
 
-            // Asignar el estado de cancelación
-            failure.Status = "Cancelled";
+            // La cancelación lógica siempre utiliza la fila persistida, no los datos
+            // opcionales recibidos desde el cliente.
+            currentFailure.Status = "Cancelled";
 
             // Asignar la fecha de actualización
-            failure.UpdatedAt = DateTime.Now;
+            currentFailure.UpdatedAt = DateTime.Now;
 
             // Cancelar lógicamente la falla
-            failureCrud.Delete(failure);
+            failureCrud.Delete(currentFailure);
         }
 
         public List<Failure> RetrieveByTurbineId(int turbineId)
         {
             if (turbineId <= 0)
             {
-                throw new Exception("El identificador de la turbina no es válido");
+                throw new BusinessException("El identificador de la turbina no es válido");
             }
 
             var turbineCrud = new TurbineCrudFactory();
@@ -332,7 +355,7 @@ namespace CoreApp
             // Validar que la turbina exista
             if (turbine == null)
             {
-                throw new Exception("La turbina seleccionada no existe");
+                throw new BusinessException("La turbina seleccionada no existe");
             }
 
             var failureCrud = new FailureCrudFactory();
@@ -346,7 +369,7 @@ namespace CoreApp
         {
             if (engineerId <= 0)
             {
-                throw new Exception("El identificador del ingeniero no es válido");
+                throw new BusinessException("El identificador del ingeniero no es válido");
             }
 
             var userCrud = new UserCrudFactory();
@@ -357,13 +380,13 @@ namespace CoreApp
             // Validar que el ingeniero exista
             if (engineer == null)
             {
-                throw new Exception("El ingeniero seleccionado no existe");
+                throw new BusinessException("El ingeniero seleccionado no existe");
             }
 
             // Validar que el usuario tenga el rol de ingeniero
             if (engineer.Role != "Engineer")
             {
-                throw new Exception("El usuario seleccionado no tiene el rol de ingeniero");
+                throw new BusinessException("El usuario seleccionado no tiene el rol de ingeniero");
             }
 
             var failureCrud = new FailureCrudFactory();
@@ -377,12 +400,12 @@ namespace CoreApp
         {
             if (string.IsNullOrWhiteSpace(status))
             {
-                throw new Exception("El estado de la falla es obligatorio");
+                throw new BusinessException("El estado de la falla es obligatorio");
             }
             
             if (!IsValidStatus(status))
             {
-                throw new Exception("El estado de la falla no es válido");
+                throw new BusinessException("El estado de la falla no es válido");
             }
 
             var crud = new FailureCrudFactory();
@@ -397,13 +420,13 @@ namespace CoreApp
             // Validar que la severidad haya sido ingresada
             if (string.IsNullOrWhiteSpace(severity))
             {
-                throw new Exception("La severidad de la falla es obligatoria");
+                throw new BusinessException("La severidad de la falla es obligatoria");
             }
 
             // Validar la severidad de la falla
             if (!IsValidSeverity(severity))
             {
-                throw new Exception("La severidad de la falla no es válida");
+                throw new BusinessException("La severidad de la falla no es válida");
             }
 
             var failureCrud = new FailureCrudFactory();
