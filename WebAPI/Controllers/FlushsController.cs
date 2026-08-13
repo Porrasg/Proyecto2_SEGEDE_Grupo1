@@ -176,5 +176,39 @@ namespace WebAPI.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        [HttpGet]
+        [Route("RetrieveConfiguration")]
+        public ActionResult RetrieveConfiguration()
+        {
+            try
+            {
+                var fm = new FlushConfigManager();
+                var config = fm.RetrieveConfiguration();
+
+                return Ok(config);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut]
+        [Route("UpdateConfiguration")]
+        public ActionResult UpdateConfiguration(FlushConfig config)
+        {
+            try
+            {
+                var fm = new FlushConfigManager();
+                fm.UpdateConfiguration(config);
+
+                return Ok(config);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
     }
 }
