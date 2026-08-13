@@ -379,11 +379,89 @@
         }
     }
 
+       async function loadProductionHistory() {
+    try {
+        const res = await apiClient.get('EnergyProduction/RetrieveAll');
+
+        const rows = Array.isArray(res)
+            ? res
+            : (res?.data?.items || res?.data?.Data || res?.data || []);
+
+        const trs = rows.map(r => {
+
+            const turbineId = r.turbineId ?? r.TurbineId ?? 'N/D';
+
+            const periodStart =
+                r.periodStart ?? r.PeriodStart;
+
+            const eventDate =
+                r.eventDate ?? r.EventDate;
+
+            const gross =
+                r.grossEnergyMWh ?? r.GrossEnergyMWh ?? 0;
+
+            const loss =
+                r.maintenanceLossMWh ?? r.MaintenanceLossMWh ?? 0;
+
+            const generated =
+                r.generatedEnergy ?? r.GeneratedEnergy ?? 0;
+
+            return `<tr>
+                <td>${turbineId}</td>
+
+                <td>
+                    ${periodStart
+                        ? new Date(periodStart).toLocaleString('es-CR')
+                        : 'N/D'}
+                </td>
+
+                <td>
+                    ${eventDate
+                        ? new Date(eventDate).toLocaleString('es-CR')
+                        : 'N/D'}
+                </td>
+
+                <td class="font-monospace text-end">
+                    ${formatDecimal(gross)}
+                </td>
+
+                <td class="font-monospace text-end">
+                    ${formatDecimal(loss)}
+                </td>
+
+                <td class="font-monospace text-end text-success fw-bold">
+                    ${formatDecimal(generated)}
+                </td>
+            </tr>`;
+        }).join('');
+
+        $('#energyProductionTable tbody').html(
+            trs ||
+            '<tr><td colspan="6" class="text-center text-muted">No hay registros de producción.</td></tr>'
+        );
+
+        if ($.fn.DataTable) {
+            $('#energyProductionTable').DataTable({
+                destroy: true,
+                order: [[2, 'desc']]
+            });
+        }
+
+    } catch (e) {
+        console.error('Error loadProductionHistory:', e);
+
+        $('#energyProductionTable tbody').html(
+            '<tr><td colspan="6" class="text-center text-danger">Error al cargar el historial de producción.</td></tr>'
+        );
+    }
+}
+
     // CORRECCIÓN: Forzamos la ejecución secuencial estricta para evitar bloqueos
-    async function refreshAll() {
+       async function refreshAll() {
         await loadCentralBank();
         await loadBatteries();
         await loadHistory();
+        await loadProductionHistory();
     }
 
     $(document).ready(function () {
@@ -400,5 +478,4 @@
             doExecuteProduction();
         });
     });
-
 })();
