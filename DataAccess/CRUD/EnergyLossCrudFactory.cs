@@ -17,12 +17,8 @@ namespace DataAccess.CRUD
         // Implementación del método Create para registrar una pérdida de energía en la base de datos
         public override void Create(BaseDTO baseDTO)
         {
-            var loss = baseDTO as EnergyLoss;
-
-            if (loss == null)
-            {
-                throw new Exception("El objeto proporcionado no es una pérdida de energía válida");
-            }
+            throw new NotImplementedException();
+        }
 
             var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "CRE_ENERGY_LOSS_PR";
@@ -42,22 +38,22 @@ namespace DataAccess.CRUD
         }
         public override void Delete(BaseDTO baseDTO)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("El historial de pérdidas no se elimina");
         }
 
         public override List<T> RetrieveAll<T>()
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("Use RetrieveByTurbine para consultar pérdidas de energía");
         }
 
         public override T RetrieveById<T>(int id)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("Use RetrieveByTurbine para consultar pérdidas de energía");
         }
 
         public override void Update(BaseDTO baseDTO)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("El historial de pérdidas no se modifica");
         }
 
 

@@ -17,19 +17,42 @@ namespace DataAccess.CRUD
         public override void Create(BaseDTO baseDTO)
         {
             var ep = baseDTO as EnergyProduction;
+            sqlDao.ExecuteProcedure(BuildCreateOperation(ep));
+        }
 
-            var sqlOperation = new SqlOperation();
-            sqlOperation.ProcedureName = "CRE_ENERGY_PRODUCTION_PR";
+        public void CreateAndUpdateBattery(EnergyProduction production, Battery battery)
+        {
+            var batteryOperation = new SqlOperation
+            {
+                ProcedureName = "UPD_BATTERY_PR"
+            };
+            batteryOperation.AddIntParameter("BatteryId", battery.Id);
+            batteryOperation.AddIntParameter("TurbineId", battery.TurbineId);
+            batteryOperation.AddDecimalParameter("MaximumCapacityMWh", battery.MaximumCapacityMWh);
+            batteryOperation.AddDecimalParameter("CurrentEnergyMWh", battery.CurrentEnergyMWh);
+            batteryOperation.AddDecimalParameter("TotalGeneratedMWh", battery.TotalGeneratedMWh);
+            batteryOperation.AddDecimalParameter("TotalTransferredMWh", battery.TotalTransferredMWh);
+            batteryOperation.AddDecimalParameter("TotalSaturationLossMWh", battery.TotalSaturationLossMWh);
+            batteryOperation.AddStringParameter("Status", battery.Status);
+            batteryOperation.AddNullableDateTimeParameter("UpdatedAt", battery.UpdatedAt);
 
-            sqlOperation.AddIntParameter("TurbineId", ep.TurbineId);
-            sqlOperation.AddDateTimeParameter("PeriodStart", ep.PeriodStart);
-            sqlOperation.AddDateTimeParameter("EventDate", ep.EventDate);
-            sqlOperation.AddDecimalParameter("GrossEnergyMWh", ep.GrossEnergyMWh);
-            sqlOperation.AddDecimalParameter("MaintenanceLossMWh", ep.MaintenanceLossMWh);
-            sqlOperation.AddDecimalParameter("GeneratedEnergy", ep.GeneratedEnergy);
-            sqlOperation.AddDateTimeParameter("CreatedAt", ep.CreatedAt);
+            sqlDao.ExecuteTransaction(BuildCreateOperation(production), batteryOperation);
+        }
 
-            sqlDao.ExecuteProcedure(sqlOperation);
+        private static SqlOperation BuildCreateOperation(EnergyProduction ep)
+        {
+            var operation = new SqlOperation
+            {
+                ProcedureName = "CRE_ENERGY_PRODUCTION_PR"
+            };
+            operation.AddIntParameter("TurbineId", ep.TurbineId);
+            operation.AddDateTimeParameter("PeriodStart", ep.PeriodStart);
+            operation.AddDateTimeParameter("EventDate", ep.EventDate);
+            operation.AddDecimalParameter("GrossEnergyMWh", ep.GrossEnergyMWh);
+            operation.AddDecimalParameter("MaintenanceLossMWh", ep.MaintenanceLossMWh);
+            operation.AddDecimalParameter("GeneratedEnergy", ep.GeneratedEnergy);
+            operation.AddDateTimeParameter("CreatedAt", ep.CreatedAt);
+            return operation;
         }
 
         public override void Update(BaseDTO baseDTO)

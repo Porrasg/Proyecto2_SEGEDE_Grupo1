@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Runtime.Intrinsics.Arm;
 using System.Text;
 using Microsoft.Data.SqlClient;
 
@@ -58,6 +57,43 @@ namespace DataAccess.DAO
                     command.ExecuteNonQuery();
                 }
                     
+            }
+        }
+
+        public void ExecuteTransaction(params SqlOperation[] operations)
+        {
+            if (operations == null || operations.Length == 0)
+            {
+                return;
+            }
+
+            using var conn = new SqlConnection(connectionString);
+            conn.Open();
+            using var transaction = conn.BeginTransaction();
+
+            try
+            {
+                foreach (var operation in operations)
+                {
+                    using var command = new SqlCommand(operation.ProcedureName, conn, transaction)
+                    {
+                        CommandType = CommandType.StoredProcedure
+                    };
+
+                    foreach (var parameter in operation.Parameters)
+                    {
+                        command.Parameters.Add(parameter);
+                    }
+
+                    command.ExecuteNonQuery();
+                }
+
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
             }
         }
 

@@ -37,8 +37,11 @@ namespace DataAccess.CRUD
             sqlOperation.AddStringParameter("PaymentStatus", invoice.PaymentStatus);
             sqlOperation.AddDateTimeParameter("CreatedAt", invoice.CreatedAt);
 
-            // Ejecutamos el SP
-            sqlDao.ExecuteProcedure(sqlOperation);
+            var result = sqlDao.ExecuteQueryProcedure(sqlOperation);
+            if (result.Count > 0 && result[0].TryGetValue("InvoiceId", out var generatedId))
+            {
+                invoice.Id = Convert.ToInt32(generatedId);
+            }
         }
 
         public override void Delete(BaseDTO baseDTO)
@@ -51,7 +54,6 @@ namespace DataAccess.CRUD
             sqlOperation.ProcedureName = "DEL_INVOICE_PR";
 
             sqlOperation.AddIntParameter("InvoiceId", invoice.Id);
-            sqlOperation.AddStringParameter("PaymentStatus", invoice.PaymentStatus);
 
             // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
