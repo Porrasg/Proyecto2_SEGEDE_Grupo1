@@ -1,6 +1,5 @@
 // BuyerDashboardViewController.js - Controlador JS para el Panel de Comprador
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("Inicializando BuyerDashboardViewController...");
 
     const role = session.getRole();
     const userId = session.getUserId();

@@ -1,6 +1,5 @@
 // BuyerManagementViewController.js (§22.1, §27) - Controlador JS para Pronósticos, Estados de Cuenta y Distribuciones
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("Inicializando BuyerManagementViewController...");
 
     const role = session.getRole();
     const userId = session.getUserId();

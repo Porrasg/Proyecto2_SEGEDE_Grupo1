@@ -1,6 +1,5 @@
 // LoginViewController.js (§22.1, §23, §24) - Controlador JS para autenticación, registro y recuperación
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("Inicializando LoginViewController...");
 
     //datos estaticos
     const staticLoginEmails = ["admin@segede.local", "engineer@segede.local"];

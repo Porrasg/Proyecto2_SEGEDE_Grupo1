@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
             apiClient.get("Turbines/RetrieveAll")
                 .done(function (res) {
                     // El backend devuelve la lista directa (sin envoltura data)
-                    allTurbines = Array.isArray(res) ? res : (res?.data || res?.Data || []);
+                    allTurbines = apiClient.unwrapList(res);
                     filterAndRenderTurbines();
                 })
                 .fail(function (xhr) {
@@ -478,7 +478,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const histBody = byIdEither("engHistoryBody", "historyBody");
                 if (!histBody) return;
 
-                const stateChanges = Array.isArray(res) ? res : (res?.data || res?.Data || []);
+                const stateChanges = apiClient.unwrapList(res);
                 if (!stateChanges.length) {
                     histBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Sin cambios de estado registrados.</td></tr>';
                     return;
@@ -511,7 +511,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const maintBody = byIdEither("engMaintBody", "maintBody");
                 if (!maintBody) return;
 
-                const list = Array.isArray(res) ? res : (res?.data || res?.Data || res?.result || []);
+                const list = apiClient.unwrapList(res);
 
                 if (!list.length) {
                     maintBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No hay mantenimientos registrados para esta turbina.</td></tr>';
@@ -550,7 +550,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const failBody = byIdEither("engFailBody", "failBody");
                 if (!failBody) return;
 
-                const failuresList = Array.isArray(res) ? res : (res?.data || res?.Data || res?.result || []);
+                const failuresList = apiClient.unwrapList(res);
 
                 if (!failuresList.length) {
                     failBody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No se han reportado averías en esta turbina.</td></tr>';

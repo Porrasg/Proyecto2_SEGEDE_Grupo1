@@ -123,12 +123,7 @@ document.addEventListener("DOMContentLoaded", function () {
         apiClient.get("Energy/GenerationHistory/" + turbineId + "?page=1&pageSize=20").done(function (res) {
 
             // Obtiene la lista de registros independientemente de si la API devuelve los datos dentro de items, data/Data o directamente.// Si no existen registros, utiliza un arreglo vacío.\            
-            const list =
-                res?.data?.items ||
-                res?.Data?.Items ||
-                res?.data ||
-                res?.Data ||
-                [];
+            const list = readList(res);
 
             // Envia la data obtenida para que sea mostrada en la tabla correspondiente. 
             renderGenTable(list);
@@ -140,12 +135,7 @@ document.addEventListener("DOMContentLoaded", function () {
         apiClient.get("Energy/LossHistory/" + turbineId + "?page=1&pageSize=20").done(function (res) {
 
             // Obtiene la lista de pérdidas independientemente de si la API// devuelve los datos dentro de items, data/Data o directamente.
-            const list =
-                res?.data?.items ||
-                res?.Data?.Items ||
-                res?.data ||
-                res?.Data ||
-                [];
+            const list = readList(res);
 
             // Envía los registros obtenidos al método encargado
             renderLossTable(list);
@@ -162,8 +152,8 @@ document.addEventListener("DOMContentLoaded", function () {
         body.innerHTML = list.map(g => `
             <tr>
                 <td>#${g.id || g.Id}</td>
-                <td>${formatDateTime(g.timestamp || g.Timestamp)}</td>
-                <td class="fw-bold text-success">${formatNum(g.generatedMWh || g.GeneratedMWh)} MWh</td>
+                <td>${formatDateTime(g.generateAt ?? g.GenerateAt ?? g.timestamp ?? g.Timestamp)}</td>
+                <td class="fw-bold text-success">${formatNum(g.generateMWh ?? g.GenerateMWh ?? g.generatedMWh ?? g.GeneratedMWh)} MWh</td>
                 <td>${g.windSpeedMs || g.WindSpeedMs || "-"} m/s</td>
             </tr>
         `).join("");
@@ -179,7 +169,7 @@ document.addEventListener("DOMContentLoaded", function () {
         body.innerHTML = list.map(l => `
             <tr>
                 <td>#${l.id || l.Id}</td>
-                <td>${formatDateTime(l.timestamp || l.Timestamp)}</td>
+                <td>${formatDateTime(l.occurredAt ?? l.OccurredAt ?? l.timestamp ?? l.Timestamp)}</td>
                 <td class="fw-bold text-danger">-${formatNum(l.lostMWh || l.LostMWh)} MWh</td>
                 <td>${escapeHtml(l.reason || l.Reason || "Pérdida operativa en red")}</td>
             </tr>
@@ -318,6 +308,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             apiClient.post("Maintenances/Schedule" + callerQuery, {
                 turbineId: tid,
+                engineerId: Number(userId),
                 maintenanceType: type,
                 estimatedStartDate: new Date(start).toISOString(),
                 estimatedEndDate: new Date(end).toISOString()

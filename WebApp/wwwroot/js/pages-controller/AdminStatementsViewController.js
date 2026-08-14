@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let allStatements = [];
     let userNames = {};
     let selectedStatementId = null;
+    const callerUserId = parseInt(session.getUserId() || 0);
 
     const annulModalEl = document.getElementById("annulModal");
     const annulModal = annulModalEl ? new bootstrap.Modal(annulModalEl) : null;
@@ -17,7 +18,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const exportModal = exportModalEl ? new bootstrap.Modal(exportModalEl) : null;
 
     apiClient.get("Users/RetrieveAll").done(function (res) {
-        (res?.data || res?.Data || []).forEach(function (u) {
+        apiClient.unwrapList(res).forEach(function (u) {
             userNames[u.id || u.Id] = `${u.firstName || u.FirstName || ""} ${u.firstLastName || u.FirstLastName || ""}`.trim() || `Usuario #${u.id || u.Id}`;
         });
     }).always(loadStatements);
@@ -29,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
         statementsBody.innerHTML = '<tr><td colspan="9" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando estados de cuenta...</td></tr>';
         apiClient.get("Invoices/Statements")
             .done(function (res) {
-                allStatements = res?.data || res?.Data || [];
+                allStatements = apiClient.unwrapList(res);
                 renderFiltered();
             })
             .fail(function (xhr) {
@@ -120,7 +121,7 @@ document.addEventListener("DOMContentLoaded", function () {
             confirmAnnulBtn.disabled = true;
             const original = confirmAnnulBtn.innerHTML;
             confirmAnnulBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-            apiClient.post("Billing/AnnulStatement", { statementId: parseInt(selectedStatementId), reason: reason })
+            apiClient.post("Billing/AnnulStatement?callerUserId=" + callerUserId, { statementId: parseInt(selectedStatementId), reason: reason })
                 .done(function () {
                     notify.success("Estado de cuenta anulado.");
                     annulModal?.hide();
@@ -137,7 +138,7 @@ document.addEventListener("DOMContentLoaded", function () {
             confirmRegenBtn.disabled = true;
             const original = confirmRegenBtn.innerHTML;
             confirmRegenBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-            apiClient.post("Billing/RegenerateStatement", { originalStatementId: parseInt(selectedStatementId) })
+            apiClient.post("Billing/RegenerateStatement?callerUserId=" + callerUserId, { originalStatementId: parseInt(selectedStatementId) })
                 .done(function () {
                     notify.success("Estado de cuenta regenerado con una nueva revisión.");
                     regenModal?.hide();

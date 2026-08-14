@@ -17,16 +17,7 @@
 
             const res = await apiClient.get('CentralBanks/RetrieveAll');
 
-            // PRUEBAS
-            console.log("CentralBank res =", res);
-            console.log("CentralBank data =", res.data);
-            console.log("Es arreglo:", Array.isArray(res));
-
-            const dataList = Array.isArray(res)
-                ? res
-                : (res.data?.items || res.data?.Data || res.data || []);
-
-            console.log("dataList =", dataList);
+            const dataList = apiClient.unwrapList(res);
 
             if (dataList.length === 0) {
                 return;
@@ -66,27 +57,11 @@
         try {
             const bRes = await apiClient.get('Batteries/RetrieveAllBatteries');
 
-            //PRUEBAS DE ERROR
-            console.log("bRes =", bRes);
-            console.log("typeof =", typeof bRes);
-            console.log("Array =", Array.isArray(bRes));
-            console.log("bRes.data =", bRes.data);
-
-            //const batteries = bRes.data?.items || bRes.data?.Data || bRes.data || [];
-            const batteries = Array.isArray(bRes)
-                ? bRes
-                : (bRes?.data?.items || bRes?.data?.Data || bRes?.data || []);
+            const batteries = apiClient.unwrapList(bRes);
 
             const cards = [];
 
-            //PRUEBAS DE ERROR
-            console.log("batteries =", batteries);
-            console.log("cantidad =", batteries.length);
-
             for (let i = 0; i < batteries.length; i++) { 
-
-                //PRUEBAS DE ERROR
-                console.log("Entró al for", batteries[i]);
 
                 const b = batteries[i];
 
@@ -129,23 +104,7 @@
         try {
             const res = await apiClient.get('Flushs/RetrieveAll');
 
-            //PRUEBAS DE ERROR
-            console.log("FLUSH res =", res);
-            console.log("FLUSH typeof =", typeof res);
-            console.log("FLUSH Array =", Array.isArray(res));
-            console.log("FLUSH res.data =", res.data);
-
-
-           
-            // El listado de flushes puede venir directo en un arreglo o anidado en .items
-            //const rows = res.data?.items || res.data?.Data || res.data || [];
-
-            const rows = Array.isArray(res)
-                ? res
-                : (res.data?.items || res.data?.Data || res.data || []);
-
-            console.log("FLUSH rows =", rows);
-            console.log("FLUSH cantidad =", rows.length);
+            const rows = apiClient.unwrapList(res);
 
 
             const trs = rows.map(r => {
@@ -383,9 +342,7 @@
     try {
         const res = await apiClient.get('EnergyProduction/RetrieveAll');
 
-        const rows = Array.isArray(res)
-            ? res
-            : (res?.data?.items || res?.data?.Data || res?.data || []);
+        const rows = apiClient.unwrapList(res);
 
         const trs = rows.map(r => {
 
@@ -463,17 +420,7 @@
 
             const res = await apiClient.get('BatterySnapshots/RetrieveAll');
 
-            console.log("BatterySnapshots res =", res);
-
-            const rows = Array.isArray(res)
-                ? res
-                : (res?.data?.items ||
-                    res?.data?.Data ||
-                    res?.data ||
-                    []);
-
-            console.log("BatterySnapshots rows =", rows);
-            console.log("BatterySnapshots cantidad =", rows.length);
+            const rows = apiClient.unwrapList(res);
 
             const trs = rows.map(r => {
 

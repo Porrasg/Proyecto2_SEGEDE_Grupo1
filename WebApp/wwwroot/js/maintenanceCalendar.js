@@ -131,7 +131,6 @@
             cell.addEventListener("click", function ()
             {
                 //prueba
-                console.log("Click detectado en la celda: ", day);
 
                 //Guardar el dia seleccionado
                 selectedDay = new Date(day);
@@ -140,13 +139,11 @@
                 render();
                     
                 if (dayClickHandler) {
-                    console.log("dayClickHandler exists");
                     dayClickHandler(new Date(day))
                 }
                 else {
 
                     //prueba
-                    console.log("dayClickHandler es null");
                 }
 
 

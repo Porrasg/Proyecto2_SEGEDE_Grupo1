@@ -50,9 +50,7 @@ document.addEventListener("DOMContentLoaded", function () {
         historyBody.innerHTML = '<tr><td colspan="6" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando historial...</td></tr>';
         apiClient.get("Flushs/RetrieveAll")
             .done(function (res) {
-                   const items = Array.isArray(res)
-                    ? res
-                    : (res?.data || res?.Data || []);
+                const items = apiClient.unwrapList(res);
 
                 if (!items.length) {
                     historyBody.innerHTML =

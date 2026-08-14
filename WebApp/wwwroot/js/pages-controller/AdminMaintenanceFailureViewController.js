@@ -42,7 +42,6 @@ document.addEventListener("DOMContentLoaded", function () {
         // Al seleccionar un día del calendario, preparar el formulario de programación de mantenimiento con valores iniciales.
         window.maintenanceCalendar?.onDayClick(function (selectedDate) {
 
-            console.log("Fecha recibida en Admin:", selectedDate);
 
             const startDate = new Date(selectedDate);
             startDate.setHours(8, 0, 0, 0);
@@ -176,7 +175,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 estimatedEndDate: end.toISOString()
             };
 
-            console.log("Payload mantenimiento: ", payload);
 
             // Deshabilitar el botón mientras se procesa la solicitud
             if (saveMaintenanceBtn) {
@@ -244,7 +242,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             apiClient.get("Maintenances/ComplianceAlert").done(function (res) {
 
-                const turbines = res?.data || res?.Data || [];
+                const turbines = apiClient.unwrapList(res);
 
                 //Si todavia hay turbinas pendientes, mostrar el aviso actualizado
                 if (turbines.length > 0) {
