@@ -150,6 +150,22 @@ function initLandingLogin() {
                 handleApiError(xhr);
             });
     });
+
+    const toggleLandingPassword = document.getElementById("toggleLandingPassword");
+    const landingPasswordInput = document.getElementById("loginPass");
+
+    if (toggleLandingPassword && landingPasswordInput) {
+        toggleLandingPassword.addEventListener("click", function () {
+            const isPassword = landingPasswordInput.getAttribute("type") === "password";
+            landingPasswordInput.setAttribute("type", isPassword ? "text" : "password");
+
+            const icon = this.querySelector("i");
+            if (icon) {
+                icon.classList.toggle("bi-eye");
+                icon.classList.toggle("bi-eye-slash");
+            }
+        });
+    }
 }
 
 // Destino del dashboard según el rol de la sesión activa (usado por la regla A1.1 de la adenda v3: logo/raíz redirige por rol).

@@ -32,12 +32,17 @@
                 
                 <form id="landingLoginForm">
                     <div class="mb-3">
-                        <label for="loginIdent" class="form-label fw-bold">Identificación o Correo Electrónico</label>
-                        <input type="text" class="form-control" id="loginIdent" required placeholder="ej. usuario@sgde.cr o 101110111">
+                        <label for="loginIdent" class="form-label fw-bold">Correo Electrónico</label>
+                        <input type="text" class="form-control" id="loginIdent" required placeholder="ej. usuario@sgde.cr">
                     </div>
                     <div class="mb-3">
                         <label for="loginPass" class="form-label fw-bold">Contraseña</label>
-                        <input type="password" class="form-control" id="loginPass" required placeholder="••••••••">
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="loginPass" required>
+                            <button class="btn btn-outline-secondary" type="button" id="toggleLandingPassword" title="Mostrar/ocultar contraseña" aria-label="Mostrar u ocultar contraseña">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="d-grid mb-3 mt-4">
                         <button type="submit" class="btn btn-primary py-2 fw-bold">
