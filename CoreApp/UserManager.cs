@@ -943,7 +943,9 @@ namespace CoreApp
             }
 
             // Primero se valida que el OTP sea correcto y vigente en la capa de negocio.
-            otpManager.ValidateOtp(email, tokenCode, "ACCOUNT_ACTIVATION");
+            // ACTIVATE_USER_ACCOUNT_PR valida y consume el OTP dentro de la misma
+            // transacción que activa la cuenta, por eso aquí solo se prevalida.
+            otpManager.ValidateOtp(email, tokenCode, "ACCOUNT_ACTIVATION", markAsUsed: false);
 
             // Luego se ejecuta la activación en base de datos y se fija la contraseña
             // definitiva elegida por el usuario.
