@@ -93,6 +93,11 @@
   box-shadow: inset 0 0 0 2px var(--bs-primary);
 }
 
+.maintenance-calendar-day.is-selected {
+    background-color: #fdeaea;
+    box-shadow: inset 0 0 0 2px #dc3545;
+}
+
 .maintenance-calendar-day-number {
   margin-bottom: 0.25rem;
   font-size: 0.8rem;

@@ -61,14 +61,14 @@ const apiClient = (function () {
             return err;
         }
 
+
         const promise = fetch(fullUrl, {
             method: method,
             headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
             body: body ? JSON.stringify(body) : undefined
         })
             .catch(function () {
-                // fetch() solo rechaza la promesa ante un fallo de red/CORS real (sin
-                // respuesta del servidor) - jamás por un status HTTP de error.
+                // fetch() solo rechaza la promesa ante un fallo de red/CORS real (sin respuesta del servidor) - jamás por un status HTTP de error.
                 console.warn('[SGDE apiClient] ' + method + ' ' + fullUrl + ' → HTTP 0 (sin respuesta — la Web API no está disponible o hay un problema de CORS/red)');
                 throw buildError('Sin respuesta del servidor', 0, '', null, '');
             })

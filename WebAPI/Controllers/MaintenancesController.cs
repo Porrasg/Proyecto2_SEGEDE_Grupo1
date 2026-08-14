@@ -12,6 +12,7 @@ namespace WebAPI.Controllers
         public class ScheduleRequest
         {
             public int TurbineId { get; set; }
+            public int EngineerId { get; set; }
             public string MaintenanceType { get; set; } = string.Empty;
             public DateTime EstimatedStartDate { get; set; }
             public DateTime EstimatedEndDate { get; set; }
@@ -91,10 +92,11 @@ namespace WebAPI.Controllers
                 }
 
                 var mm = new MaintenanceManager();
+
                 var maintenance = new Maintenance
                 {
                     TurbineId = request.TurbineId,
-                    EngineerId = actorUserId.Value,
+                    EngineerId = request.EngineerId,
                     MaintenanceType = request.MaintenanceType,
                     Description = $"Mantenimiento {request.MaintenanceType} programado desde el sistema",
                     EstimatedStartDate = request.EstimatedStartDate,
