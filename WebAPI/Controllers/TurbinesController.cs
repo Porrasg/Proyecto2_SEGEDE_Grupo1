@@ -102,7 +102,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                var actorUserId = AuditHelper.ResolveCallerUserId(callerUserId);
                 if (!actorUserId.HasValue)
                 {
                     return Unauthorized(new { message = "No se pudo identificar al usuario que registra la turbina." });
@@ -146,7 +146,7 @@ namespace WebAPI.Controllers
                     return BadRequest(new { message = "El motivo técnico del cambio de estado es obligatorio." });
                 }
 
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                var actorUserId = AuditHelper.ResolveCallerUserId(callerUserId);
                 if (!actorUserId.HasValue)
                 {
                     return Unauthorized(new { message = "No se pudo identificar al usuario que cambia el estado." });
@@ -174,7 +174,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                var actorUserId = AuditHelper.ResolveCallerUserId(callerUserId);
                 if (!actorUserId.HasValue)
                 {
                     return Unauthorized(new { message = "No se pudo identificar al usuario que registra la turbina." });
@@ -199,7 +199,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                var actorUserId = AuditHelper.ResolveCallerUserId(callerUserId);
                 if (!actorUserId.HasValue)
                 {
                     return Unauthorized(new { message = "No se pudo identificar al usuario que actualiza la turbina." });
@@ -230,7 +230,7 @@ namespace WebAPI.Controllers
                     return BadRequest(new { message = "El motivo técnico de la baja es obligatorio." });
                 }
 
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                var actorUserId = AuditHelper.ResolveCallerUserId(callerUserId);
                 if (!actorUserId.HasValue)
                 {
                     return Unauthorized(new { message = "No se pudo identificar al usuario que da de baja la turbina." });

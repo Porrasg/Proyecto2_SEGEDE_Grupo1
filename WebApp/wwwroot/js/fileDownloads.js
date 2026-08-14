@@ -31,7 +31,7 @@
     async function request(endpoint, body, fallbackFileName) {
         const response = await fetch(apiClient.url(withCaller(endpoint)), {
             method: "POST",
-            headers: Object.assign({ "Content-Type": "application/json" }, apiClient.authHeader()),
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body)
         });
 

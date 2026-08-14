@@ -14,7 +14,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                var actorUserId = AuditHelper.ResolveCallerUserId(callerUserId);
                 if (!actorUserId.HasValue)
                 {
                     return Unauthorized(new { message = "No se pudo identificar al usuario que descarga el archivo." });
