@@ -43,7 +43,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                var actorUserId = AuditHelper.ResolveCallerUserId(callerUserId);
                 if (!actorUserId.HasValue)
                 {
                     return Unauthorized(new { message = "No se pudo identificar al usuario que reporta la falla." });
@@ -188,7 +188,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                var actorUserId = AuditHelper.ResolveCallerUserId(callerUserId);
                 if (!actorUserId.HasValue)
                 {
                     return Unauthorized(new { message = "No se pudo identificar al usuario que reporta la falla." });
@@ -214,7 +214,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                var actorUserId = AuditHelper.ResolveCallerUserId(callerUserId);
                 if (!actorUserId.HasValue)
                 {
                     return Unauthorized(new { message = "No se pudo identificar al usuario que actualiza la falla." });
@@ -241,7 +241,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                var actorUserId = AuditHelper.ResolveCallerUserId(callerUserId);
                 if (!actorUserId.HasValue)
                 {
                     return Unauthorized(new { message = "No se pudo identificar al usuario que cancela la falla." });

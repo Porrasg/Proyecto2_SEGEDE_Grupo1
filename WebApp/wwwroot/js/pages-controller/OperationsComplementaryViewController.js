@@ -2,7 +2,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     const role = session.getRole();
     const userId = session.getUserId();
-    const callerQuery = Number(userId) > 0 ? "?callerUserId=" + encodeURIComponent(userId) : "";
+    const callerQuery = Number(userId) !== 0 ? "?callerUserId=" + encodeURIComponent(userId) : "";
     const readList = function (response) {
         return apiClient.unwrapList ? apiClient.unwrapList(response) : (Array.isArray(response) ? response : []);
     };
