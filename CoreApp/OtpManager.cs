@@ -79,7 +79,7 @@ namespace CoreApp
         }
 
         // Valida el OTP ingresado por el usuario
-        public void ValidateOtp(string email,string tokenCode,string purpose)
+        public void ValidateOtp(string email, string tokenCode, string purpose, bool markAsUsed = true)
         {
             email = email?.Trim();
             tokenCode = tokenCode?.Trim();
@@ -119,7 +119,11 @@ namespace CoreApp
                 throw new Exception("El código OTP ha expirado.");
             }
 
-            // El OTP puede validarse múltiples veces hasta expirar.
+            if (markAsUsed)
+            {
+                otp.UpdatedAt = DateTime.Now;
+                otpCrud.MarkAsUsed(otp);
+            }
         }
 
         // Envía el OTP por correo electrónico (RF-AUT-004)
@@ -146,7 +150,9 @@ namespace CoreApp
                 string emailSubject = GetEmailSubject(purpose);
 
                 // Se obtiene el mensaje del correo según el propósito
-                string purposeMessage = GetPurposeMessage(purpose);
+                string purposeMessage = WebUtility.HtmlEncode(GetPurposeMessage(purpose));
+                string safeUserName = WebUtility.HtmlEncode(userName ?? string.Empty);
+                string safeToken = WebUtility.HtmlEncode(token ?? string.Empty);
 
                 using (var mail = new MailMessage())
                 {
@@ -157,11 +163,11 @@ namespace CoreApp
                     // Diseño estructurado con HTML para una visualización limpia en la bandeja de entrada
                     mail.Body = $@"
                         <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;max-width: 600px;'>
-                            <h3 style='color: #333;'>Estimado(a) {userName}, </h3>
+                            <h3 style='color: #333;'>Estimado(a) {safeUserName}, </h3>
                             <p>{purposeMessage}</p>
                             <p>Ingrese el siguiente código de seguridad de un solo uso: </p>
                             <div style='background-color: #f8f9fa; padding: 15px; text-align: center; margin: 20px 0;'>
-                                <h2 style='color: #007bff; letter-spacing: 5px; margin: 0; font-size: 32px;'>{token}</h2>
+                                <h2 style='color: #007bff; letter-spacing: 5px; margin: 0; font-size: 32px;'>{safeToken}</h2>
                             </div>
                             <p>Este código tiene una vigencia de <strong>3 minutos</strong>.</p>
                             <hr style='border: none; border-top: 1px solid #eee;' />
@@ -182,51 +188,6 @@ namespace CoreApp
             {
                 // Si el correo no se puede enviar, se mantiene el OTP guardado y se informa la falla.
                 throw new Exception($"No se pudo enviar el correo OTP: {ex.Message}");
-            }
-        }
-
-        // Envía un correo genérico (no relacionado a OTP) reutilizando la misma plomería SMTP:
-        // agendamiento de mantenimiento, alarmas de falla crítica, asignación de cuotas, etc.
-        // Si las credenciales SMTP no están configuradas, no lanza excepción (mismo criterio
-        // que SendOtpEmail) para no bloquear la operación de negocio que originó el correo.
-        public void SendGenericEmail(string toEmail, string userName, string subject, string bodyHtml)
-        {
-            if (string.IsNullOrWhiteSpace(toEmail))
-            {
-                return;
-            }
-
-            string smtpHost = "smtp.gmail.com";
-            int smtpPort = 587;
-
-            string smtpUser = Environment.GetEnvironmentVariable("SMTP_USER");
-            string smtpPassword = Environment.GetEnvironmentVariable("SMTP_PASSWORD");
-
-            if (string.IsNullOrWhiteSpace(smtpUser) || string.IsNullOrWhiteSpace(smtpPassword))
-            {
-                return;
-            }
-
-            using (var mail = new MailMessage())
-            {
-                mail.From = new MailAddress(smtpUser, "SEGEDE - Sistema de Energía");
-                mail.To.Add(toEmail);
-                mail.Subject = subject;
-                mail.Body = $@"
-                    <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; max-width: 600px;'>
-                        <h3 style='color: #333;'>Estimado(a) {userName},</h3>
-                        <p>{bodyHtml}</p>
-                        <hr style='border: none; border-top: 1px solid #eee;' />
-                        <small style='color: #777;'>Este es un correo automático del sistema SEGEDE, no responda a este mensaje.</small>
-                    </div>";
-                mail.IsBodyHtml = true;
-
-                using (var smtp = new SmtpClient(smtpHost, smtpPort))
-                {
-                    smtp.Credentials = new NetworkCredential(smtpUser, smtpPassword);
-                    smtp.EnableSsl = true;
-                    smtp.Send(mail);
-                }
             }
         }
 

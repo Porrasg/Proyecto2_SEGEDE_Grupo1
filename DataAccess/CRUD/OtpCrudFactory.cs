@@ -100,9 +100,9 @@ namespace DataAccess.CRUD
 
         // Estos metodos no se usan para OTP, pero hay que implementarlos
         // porque la clase base los exige como parte del contrato del CRUD
-        public override void Update(BaseDTO baseDTO) { throw new NotImplementedException(); }
-        public override void Delete(BaseDTO baseDTO) { throw new NotImplementedException(); }
-        public override T RetrieveById<T>(int id) { throw new NotImplementedException(); }
-        public override List<T> RetrieveAll<T>() { throw new NotImplementedException(); }
+        public override void Update(BaseDTO baseDTO) { throw new NotSupportedException("Use MarkAsUsed o InvalidatePreviousOtps para actualizar OTP"); }
+        public override void Delete(BaseDTO baseDTO) { throw new NotSupportedException("Los OTP se invalidan lógicamente y no se eliminan"); }
+        public override T RetrieveById<T>(int id) { throw new NotSupportedException("Use RetrieveValidOtp para consultar OTP"); }
+        public override List<T> RetrieveAll<T>() { throw new NotSupportedException("No se expone el historial completo de OTP"); }
     }
 }
