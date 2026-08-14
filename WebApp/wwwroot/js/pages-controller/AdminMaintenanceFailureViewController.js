@@ -218,10 +218,17 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
 
-        // Ejecutar la programacion cuando el usuario presiona el btn Guardar
+        // Cargar el aviso de cumplimiento cuando la vista se inicializa.
+        // Posteriormente esta función también se reutiliza después de crear un mantenimiento.
         if (saveMaintenanceBtn) {
             saveMaintenanceBtn.addEventListener("click", scheduleMaintenance);
         }
+
+
+
+        // Elementos del aviso de cumplimiento mensual
+        const complianceAlert = document.getElementById("maintComplianceAlert");
+        const complianceAlertText = document.getElementById("maintComplianceAlertText");
 
         //Cargar turbinas sin mantenimiento agendado en el mes en curso
         function loadComplianceAlert() {
