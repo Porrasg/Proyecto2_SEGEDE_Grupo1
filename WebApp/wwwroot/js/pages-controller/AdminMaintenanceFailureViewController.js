@@ -203,6 +203,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     // Recargar los mantenimientos desde la API / Esto actualiza tanto la tabla como el calendario.
                     loadMaintenances();
+
+                    //Recargar el aviso de cumplimiento mensual
+                    loadComplianceAlert();
+
                 })
                 .fail(function (xhr) {
                     handleApiError(xhr);
