@@ -223,27 +223,44 @@ document.addEventListener("DOMContentLoaded", function () {
             saveMaintenanceBtn.addEventListener("click", scheduleMaintenance);
         }
 
+        //Cargar turbinas sin mantenimiento agendado en el mes en curso
+        function loadComplianceAlert() {
 
+            //Si los elementos del aviso no existen en la vista, no se hace nada
+            if (!complianceAlert || !complianceAlertText) {
+                return;
+            }
 
-
-
-        // Aviso de cumplimiento: turbinas sin mantenimiento agendado en el mes en curso
-        // (obligatoriedad mensual de la rúbrica).
-        const complianceAlert = document.getElementById("maintComplianceAlert");
-        const complianceAlertText = document.getElementById("maintComplianceAlertText");
-
-        // Cargar turbinas sin mantenimiento agendado en el mes en curso
-        if (complianceAlert && complianceAlertText) {
             apiClient.get("Maintenances/ComplianceAlert").done(function (res) {
+
                 const turbines = res?.data || res?.Data || [];
+
+                //Si todavia hay turbinas pendientes, mostrar el aviso actualizado
                 if (turbines.length > 0) {
+
                     const codes = turbines.map(t => t.code || t.Code || `#${t.id || t.Id}`).join(", ");
-                    complianceAlertText.textContent =
-                        `${turbines.length} turbina(s) sin mantenimiento agendado este mes: ${codes}.`;
+
+                    complianceAlertText.textContent = `${turbines.length} turbina(s) sin mantenimiento agendado este mes: ${codes}.`;
+
                     complianceAlert.classList.remove("d-none");
                 }
-            });
+                else {
+                    //Si ya todas las turbinas tienen mantenimiento, ocultar mensaje
+                    complianceAlertText.textContent = "";
+                    complianceAlert.classList.add("d-none");
+                }
+            })
+                .fail(function (xhr) {
+
+                    console.error("Error al cargar aviso de cumplimiento:", xhr);
+                });            
         }
+
+        //Ejecutar una vez al cargar la pagina
+        loadComplianceAlert();
+
+
+
 
         // Función para cargar mantenimientos desde la API
         function loadMaintenances() {
