@@ -3,6 +3,7 @@ using Entities_DTOs;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace CoreApp
 {
@@ -143,7 +144,129 @@ namespace CoreApp
             
             return lossCrud.RetrieveByTurbine(turbineId);
         }
+        // Método para determinar la razón de la pérdida de energía según el estado de la turbina
+        private string GetLossReason(string status)
+        {
+            switch (status)
+            {
+                case "Inactive":
+                    return "Turbina inactiva";
 
+                case "Maintenance":
+                    return "Turbina en mantenimiento";
+
+                case "Damaged":
+                    return "Turbina dañada";
+
+                default:
+                    return "Turbina no disponible para generación";
+            }
+        }
+        // Método para determinar la energía perdida y el costo de oportunidad asociado a una turbina detenida, y registrar la pérdida en la base de datos.
+        private void RegisterEnergyLoss( Turbine turbine, decimal lostMWh, DateTime occurredAt)
+        {
+            var billingManager = new BillingManager();
+
+            var activePrice = billingManager.RetrieveActivePrice();
+
+            if (activePrice == null)
+            {
+                throw new Exception(
+                    "No existe un precio activo por MWh para calcular el costo de oportunidad"
+                );
+            }
+
+            decimal opportunityCost =
+                lostMWh * activePrice.PriceCRCPerMWh;
+
+            opportunityCost = Math.Round(opportunityCost, 4);
+
+            var lossCrud = new EnergyLossCrudFactory();
+
+            var loss = new EnergyLoss
+            {
+                TurbineId = turbine.Id,
+                BatteryId = null,
+                LostMWh = lostMWh,
+                OpportunityCostCRC = opportunityCost,
+                Reason = GetLossReason(turbine.Status),
+                OccurredAt = occurredAt,
+                CreatedAt = DateTime.Now
+            };
+
+            lossCrud.Create(loss);
+        }
+        // Método para procesar la energía generada por una turbina mientas esta activa o detenida, y registrar las pérdidas de energía si la turbina está detenida.
+        public void ProcessTurbineEnergy(Turbine turbine, decimal hours)
+        {
+            if (turbine == null)
+            {
+                throw new Exception("La turbina no puede ser nula");
+            }
+
+            if (hours <= 0)
+            {
+                throw new Exception("La cantidad de horas debe ser mayor a cero");
+            }
+
+            // Una turbina dada de baja no participa en la simulación
+            if (turbine.Status == "Decommissioned")
+            {
+                return;
+            }
+
+            // Calcular la producción correspondiente a las horas transcurridas.
+            decimal weeklyHours = 7m * 24m;
+
+            decimal expectedEnergy =
+                turbine.NominalWeeklyCapacityMWh *
+                (hours / weeklyHours);
+
+            expectedEnergy = Math.Round(expectedEnergy, 4);
+
+            if (expectedEnergy <= 0)
+            {
+                return;
+            }
+
+            // TURBINA ACTIVA
+            if (turbine.Status == "Active")
+            {
+                var batteryCrud = new BatteriesCrudFactory();
+
+                var battery = batteryCrud
+                    .RetrieveAll<Battery>()
+                    .FirstOrDefault(b =>
+                        b.TurbineId == turbine.Id &&
+                        b.Status == "Active");
+
+                if (battery == null)
+                {
+                    // No podemos almacenar la generación si no hay batería.
+                    return;
+                }
+
+                var generation = new EnergyGeneration
+                {
+                    TurbineId = turbine.Id,
+                    GenerateMWh = expectedEnergy,
+                    WindSpeedMs = 0,
+                    GenerateAt = DateTime.Now,
+                    CreateAt = DateTime.Now
+                };
+
+                var generationCrud = new EnergyGenerationCrudFactory();
+
+                // El SP se encarga de: registrar generación, almacenar energía, controlar saturación, registrar pérdidas por saturación
+                generationCrud.Create(generation);
+
+                return;
+            }
+
+            // TURBINA DETENIDA
+           
+            RegisterEnergyLoss(turbine, expectedEnergy, DateTime.Now);
+        }
 
     }
 }

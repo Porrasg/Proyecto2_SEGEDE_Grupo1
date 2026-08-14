@@ -1861,11 +1861,12 @@ BEGIN
         DECLARE @TransferredEnergyMWh DECIMAL(18,4);
         DECLARE @SaturationLossMWh DECIMAL(18,4);
 
-        DECLARE @FlushId INT;
+        DECLARE @NewFlushId INT;
 
-       
+        -- ============================================================
         -- 1. Obtener y bloquear la batería
-        
+        -- ============================================================
+
         SELECT
             @SnapshotEnergyMWh = CurrentEnergyMWh
         FROM dbo.tblBatteries WITH (UPDLOCK, HOLDLOCK)
@@ -1887,8 +1888,11 @@ BEGIN
                 1;
         END;
 
+
+        -- ============================================================
         -- 2. Obtener y bloquear el Banco Central
-       
+        -- ============================================================
+
         SELECT
             @BankCurrentInventoryMWh = CurrentInventoryMWh,
             @BankMaximumCapacityMWh = MaximumCapacityMWh
@@ -1903,9 +1907,11 @@ BEGIN
                 1;
         END;
 
-      
+
+        -- ============================================================
         -- 3. Calcular capacidad disponible
-       
+        -- ============================================================
+
         SET @AvailableCapacityMWh =
             @BankMaximumCapacityMWh -
             @BankCurrentInventoryMWh;
@@ -1915,9 +1921,11 @@ BEGIN
             SET @AvailableCapacityMWh = 0;
         END;
 
-      
+
+        -- ============================================================
         -- 4. Calcular energía transferida y pérdida
-       
+        -- ============================================================
+
         IF @SnapshotEnergyMWh <= @AvailableCapacityMWh
         BEGIN
             SET @TransferredEnergyMWh =
@@ -1935,9 +1943,11 @@ BEGIN
                 @AvailableCapacityMWh;
         END;
 
-       
+
+        -- ============================================================
         -- 5. Registrar el Flush
-      
+        -- ============================================================
+
         INSERT INTO dbo.tblFlushes
         (
             FlushBatchId,
@@ -1967,22 +1977,24 @@ BEGIN
             @CreatedAt
         );
 
-        
-        -- 6. Obtener el ID del Flush recién creado
-       
-        SET @FlushId = CAST(SCOPE_IDENTITY() AS INT);
+        -- Guardar inmediatamente el ID del Flush
+        SET @NewFlushId = CAST(SCOPE_IDENTITY() AS INT);
 
-        
-        -- 7. CREAR SNAPSHOT DE LA BATERÍA
-        --    Se hace ANTES de modificar la batería.
-       
+
+        -- ============================================================
+        -- 6. Crear captura técnica ANTES de modificar la batería
+        -- ============================================================
+
         EXEC dbo.CRE_BATTERY_SNAPSHOT_PR
             @BatteryId = @BatteryId,
             @TurbineId = @TurbineId,
-            @FlushId = @FlushId;
+            @FlushId = @NewFlushId;
 
-        -- 8. Vaciar la batería
-       
+
+        -- ============================================================
+        -- 7. Vaciar batería y actualizar acumulados
+        -- ============================================================
+
         UPDATE dbo.tblBatteries
         SET
             CurrentEnergyMWh = 0,
@@ -1995,9 +2007,11 @@ BEGIN
             UpdatedAt = GETDATE()
         WHERE BatteryId = @BatteryId;
 
-      
-        -- 9. Actualizar el Banco Central
-      
+
+        -- ============================================================
+        -- 8. Actualizar Banco Central
+        -- ============================================================
+
         UPDATE dbo.tblCentralBank
         SET
             CurrentInventoryMWh =
@@ -2012,14 +2026,16 @@ BEGIN
             UpdatedAt = GETDATE()
         WHERE CentralBankId = @CentralBankId;
 
-        -- 10. Confirmar transacción
-       
+
+        -- ============================================================
+        -- 9. Confirmar transacción
+        -- ============================================================
+
         COMMIT TRANSACTION;
 
-     
-        -- 11. Devolver el ID del Flush
-        
-        SELECT @FlushId AS FlushId;
+
+        -- Devolver el ID del Flush creado
+        SELECT @NewFlushId AS FlushId;
 
     END TRY
     BEGIN CATCH
@@ -4947,7 +4963,7 @@ BEGIN
             1;
     END;
 
-    -- Guardar la captura técnica
+    -- Insertar captura técnica
     INSERT INTO dbo.tblBatterySnapshots
     (
         FlushId,
@@ -4958,6 +4974,7 @@ BEGIN
         TotalGeneratedMWh,
         TotalTransferredMWh,
         TotalSaturationLossMWh,
+        CapturedEnergy,
         Status,
         CapturedAt
     )
@@ -4971,6 +4988,7 @@ BEGIN
         @TotalGeneratedMWh,
         @TotalTransferredMWh,
         @TotalSaturationLossMWh,
+        @CurrentEnergyMWh,
         @BatteryStatus,
         GETDATE()
     );
@@ -5000,5 +5018,68 @@ BEGIN
         CapturedAt
     FROM dbo.tblBatterySnapshots
     ORDER BY CapturedAt DESC;
+END;
+GO
+-- sp para insertar un registro de pérdida de energía
+CREATE OR ALTER PROCEDURE dbo.CRE_ENERGY_LOSS_PR
+(
+    @TurbineId INT,
+    @BatteryId INT = NULL,
+    @LostMWh DECIMAL(18,4),
+    @OpportunityCostCRC DECIMAL(18,4),
+    @Reason NVARCHAR(250),
+    @OccurredAt DATETIME,
+    @CreatedAt DATETIME
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO dbo.tblEnergyLosses
+    (
+        TurbineId,
+        BatteryId,
+        LostMWh,
+        OpportunityCostCRC,
+        Reason,
+        OccurredAt,
+        CreatedAt
+    )
+    VALUES
+    (
+        @TurbineId,
+        @BatteryId,
+        @LostMWh,
+        @OpportunityCostCRC,
+        @Reason,
+        @OccurredAt,
+        @CreatedAt
+    );
+
+    SELECT CAST(SCOPE_IDENTITY() AS INT) AS EnergyLossId;
+END;
+GO
+
+-- sp para obtener el historial de pérdidas de energía de una turbina
+CREATE OR ALTER PROCEDURE dbo.RET_BY_TURBINE_ENERGY_LOSS_PR
+(
+    @TurbineId INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        EnergyLossId,
+        TurbineId,
+        BatteryId,
+        LostMWh,
+        OpportunityCostCRC,
+        Reason,
+        OccurredAt,
+        CreatedAt
+    FROM dbo.tblEnergyLosses
+    WHERE TurbineId = @TurbineId
+    ORDER BY OccurredAt DESC;
 END;
 GO

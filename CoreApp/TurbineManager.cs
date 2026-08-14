@@ -20,7 +20,6 @@ namespace CoreApp
             { "Damaged", "Dañada" },
             { "Decommissioned", "Dada de Baja" }
         };
-
         public static readonly Dictionary<string, string[]> AllowedTransitions = new Dictionary<string, string[]>
         {
             { "Active", new[] { "Inactive", "Maintenance", "Damaged", "Decommissioned" } },
@@ -29,16 +28,13 @@ namespace CoreApp
             { "Damaged", new[] { "Maintenance", "Decommissioned" } },
             { "Decommissioned", Array.Empty<string>() }
         };
-
         private static string InvalidStatusMessage =>
             "El estado debe ser " + string.Join(", ", ValidStatuses.Values);
-
         public List<Turbine> RetrieveAllTurbines()
         {
             var tCrud = new TurbineCrudFactory();
             return tCrud.RetrieveAll<Turbine>();
         }
-
         public Turbine RetrieveTurbineById(int id)
         {
             // Validar el identificador de la turbina
@@ -58,7 +54,6 @@ namespace CoreApp
 
             return turbine;
         }
-
         public TurbineOperationalMetrics RetrieveOperationalMetrics(int turbineId, int periodDays = 30)
         {
             RetrieveTurbineById(turbineId);
@@ -66,7 +61,6 @@ namespace CoreApp
             var maintenances = new MaintenanceManager().RetrieveByTurbineId(turbineId);
             return TurbineMetricsCalculator.Calculate(failures, maintenances, DateTime.Now, periodDays);
         }
-
         // Cambia únicamente el estado operativo de una turbina existente
         public void ChangeState(int turbineId, string newState)
         {
@@ -94,7 +88,6 @@ namespace CoreApp
             {
                 throw new BusinessException($"La transición de {currentTurbine.Status} a {newState} no está permitida");
             }
-
             // Se reutiliza la misma validación de estados del resto del manager
             currentTurbine.Status = newState;
 
@@ -110,7 +103,6 @@ namespace CoreApp
             var centralBankManager = new CentralBankManager();
             centralBankManager.UpdateMaximumCapacity();
         }
-
         public IReadOnlyList<string> GetAllowedTransitions(int turbineId)
         {
             var turbine = RetrieveTurbineById(turbineId);
@@ -118,7 +110,6 @@ namespace CoreApp
                 ? allowed
                 : Array.Empty<string>();
         }
-
         public void Create(Turbine turbine)
         {
             if (turbine == null)
@@ -130,13 +121,11 @@ namespace CoreApp
             {
                 throw new BusinessException("Todos los campos obligatorios deben estar completos");
             }
-
             // Validar el año de fabricación
             if (!IsValidManufactureYear(turbine.ManufactureYear))
             {
                 throw new BusinessException("El año de fabricación no es válido");
             }
-
             // Validar la capacidad nominal semanal
             if (turbine.NominalWeeklyCapacityMWh <= 0)
             {
@@ -156,14 +145,12 @@ namespace CoreApp
             {
                 throw new BusinessException("Ya existe una turbina registrada con ese código");
             }
-
             // Se asignan las fechas de creación y actualización
             turbine.CreatedAt = DateTime.Now;
             turbine.UpdatedAt = null;
 
             tCrud.Create(turbine);
         }
-
         public void Update(Turbine turbine)
         {
             if (turbine == null)
@@ -216,14 +203,12 @@ namespace CoreApp
             {
                 throw new BusinessException("Ya existe otra turbina registrada con ese código");
             }
-
             // Se conservan las fechas de creación y se guarda la fecha de actualización
             turbine.CreatedAt = currentTurbine.CreatedAt;
             turbine.UpdatedAt = DateTime.Now;
 
             tCrud.Update(turbine);
         }
-
         public void Delete(Turbine turbine)
         {
             if (turbine == null)
@@ -255,7 +240,6 @@ namespace CoreApp
             {
                 throw new ArgumentException($"La transición de {currentTurbine.Status} a Decommissioned no está permitida");
             }
-
             // La baja es lógica y siempre utiliza el registro persistido, nunca los
             // campos que el cliente pudo enviar junto con el identificador.
             currentTurbine.Status = "Decommissioned";
@@ -264,7 +248,6 @@ namespace CoreApp
             tCrud.Delete(currentTurbine);
             new CentralBankManager().UpdateMaximumCapacity();
         }
-
         private bool HasEmptyFields(Turbine turbine)
         {
             return string.IsNullOrWhiteSpace(turbine.Code) ||
@@ -274,7 +257,6 @@ namespace CoreApp
                    string.IsNullOrWhiteSpace(turbine.Model) ||
                    string.IsNullOrWhiteSpace(turbine.Status);
         }
-
         private bool IsValidManufactureYear(int manufactureYear)
         {
             // Validar que el año de fabricación esté entre 1800 y el año actual

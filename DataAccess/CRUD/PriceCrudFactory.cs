@@ -25,7 +25,6 @@ namespace DataAccess.CRUD
 
             sqlDao.ExecuteProcedure(sqlOperation);
         }
-
         public override void Update(BaseDTO baseDTO)
         {
             throw new Exception("El historial de precios no puede modificarse");
