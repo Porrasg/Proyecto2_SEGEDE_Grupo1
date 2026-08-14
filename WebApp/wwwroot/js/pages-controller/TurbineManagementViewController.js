@@ -366,8 +366,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const s = (state || "").toLowerCase();
         if (s === "active") return "Activa";
         if (s === "maintenance") return "Mantenimiento";
-        if (s === "damaged") return "Dañada / Falla";
-        if (s === "inactive") return "Suspendida";
+        if (s === "damaged") return "Dañada";
+        if (s === "inactive") return "Inactiva";
         if (s === "decommissioned") return "Dada de Baja";
         return state || "-";
     }
