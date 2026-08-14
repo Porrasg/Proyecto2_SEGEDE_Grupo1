@@ -1861,7 +1861,11 @@ BEGIN
         DECLARE @TransferredEnergyMWh DECIMAL(18,4);
         DECLARE @SaturationLossMWh DECIMAL(18,4);
 
-        -- Obtener y bloquear la batería durante la transferencia
+        DECLARE @FlushId INT;
+
+       
+        -- 1. Obtener y bloquear la batería
+        
         SELECT
             @SnapshotEnergyMWh = CurrentEnergyMWh
         FROM dbo.tblBatteries WITH (UPDLOCK, HOLDLOCK)
@@ -1883,7 +1887,8 @@ BEGIN
                 1;
         END;
 
-        -- Obtener y bloquear el banco central
+        -- 2. Obtener y bloquear el Banco Central
+       
         SELECT
             @BankCurrentInventoryMWh = CurrentInventoryMWh,
             @BankMaximumCapacityMWh = MaximumCapacityMWh
@@ -1898,7 +1903,9 @@ BEGIN
                 1;
         END;
 
-        -- Calcular la capacidad disponible
+      
+        -- 3. Calcular capacidad disponible
+       
         SET @AvailableCapacityMWh =
             @BankMaximumCapacityMWh -
             @BankCurrentInventoryMWh;
@@ -1908,7 +1915,9 @@ BEGIN
             SET @AvailableCapacityMWh = 0;
         END;
 
-        -- Calcular la energía transferida y la pérdida
+      
+        -- 4. Calcular energía transferida y pérdida
+       
         IF @SnapshotEnergyMWh <= @AvailableCapacityMWh
         BEGIN
             SET @TransferredEnergyMWh =
@@ -1926,7 +1935,9 @@ BEGIN
                 @AvailableCapacityMWh;
         END;
 
-        -- Registrar el vaciado
+       
+        -- 5. Registrar el Flush
+      
         INSERT INTO dbo.tblFlushes
         (
             FlushBatchId,
@@ -1956,7 +1967,22 @@ BEGIN
             @CreatedAt
         );
 
-        -- Vaciar la batería y actualizar sus acumulados
+        
+        -- 6. Obtener el ID del Flush recién creado
+       
+        SET @FlushId = CAST(SCOPE_IDENTITY() AS INT);
+
+        
+        -- 7. CREAR SNAPSHOT DE LA BATERÍA
+        --    Se hace ANTES de modificar la batería.
+       
+        EXEC dbo.CRE_BATTERY_SNAPSHOT_PR
+            @BatteryId = @BatteryId,
+            @TurbineId = @TurbineId,
+            @FlushId = @FlushId;
+
+        -- 8. Vaciar la batería
+       
         UPDATE dbo.tblBatteries
         SET
             CurrentEnergyMWh = 0,
@@ -1969,7 +1995,9 @@ BEGIN
             UpdatedAt = GETDATE()
         WHERE BatteryId = @BatteryId;
 
-        -- Actualizar el banco central
+      
+        -- 9. Actualizar el Banco Central
+      
         UPDATE dbo.tblCentralBank
         SET
             CurrentInventoryMWh =
@@ -1984,17 +2012,25 @@ BEGIN
             UpdatedAt = GETDATE()
         WHERE CentralBankId = @CentralBankId;
 
+        -- 10. Confirmar transacción
+       
         COMMIT TRANSACTION;
 
-        SELECT CAST(SCOPE_IDENTITY() AS INT) AS FlushId;
+     
+        -- 11. Devolver el ID del Flush
+        
+        SELECT @FlushId AS FlushId;
+
     END TRY
     BEGIN CATCH
+
         IF @@TRANCOUNT > 0
         BEGIN
             ROLLBACK TRANSACTION;
         END;
 
         THROW;
+
     END CATCH;
 END;
 GO
@@ -4870,5 +4906,99 @@ BEGIN
         CreatedAt
     FROM dbo.tblEnergyProduction
     ORDER BY EventDate DESC;
+END;
+GO
+
+-- SP para crear un snapshot de la batería
+CREATE OR ALTER PROCEDURE dbo.CRE_BATTERY_SNAPSHOT_PR
+(
+    @BatteryId INT,
+    @TurbineId INT,
+    @FlushId INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @MaximumCapacityMWh DECIMAL(18,4);
+    DECLARE @CurrentEnergyMWh DECIMAL(18,4);
+    DECLARE @TotalGeneratedMWh DECIMAL(18,4);
+    DECLARE @TotalTransferredMWh DECIMAL(18,4);
+    DECLARE @TotalSaturationLossMWh DECIMAL(18,4);
+    DECLARE @BatteryStatus NVARCHAR(50);
+
+    -- Obtener el estado actual de la batería
+    SELECT
+        @MaximumCapacityMWh = MaximumCapacityMWh,
+        @CurrentEnergyMWh = CurrentEnergyMWh,
+        @TotalGeneratedMWh = TotalGeneratedMWh,
+        @TotalTransferredMWh = TotalTransferredMWh,
+        @TotalSaturationLossMWh = TotalSaturationLossMWh,
+        @BatteryStatus = Status
+    FROM dbo.tblBatteries
+    WHERE BatteryId = @BatteryId
+      AND TurbineId = @TurbineId;
+
+    -- Validar que la batería exista
+    IF @MaximumCapacityMWh IS NULL
+    BEGIN
+        THROW 50010,
+            'La batería indicada no existe o no pertenece a la turbina indicada.',
+            1;
+    END;
+
+    -- Guardar la captura técnica
+    INSERT INTO dbo.tblBatterySnapshots
+    (
+        FlushId,
+        BatteryId,
+        TurbineId,
+        MaximumCapacityMWh,
+        CurrentEnergyMWh,
+        TotalGeneratedMWh,
+        TotalTransferredMWh,
+        TotalSaturationLossMWh,
+        Status,
+        CapturedAt
+    )
+    VALUES
+    (
+        @FlushId,
+        @BatteryId,
+        @TurbineId,
+        @MaximumCapacityMWh,
+        @CurrentEnergyMWh,
+        @TotalGeneratedMWh,
+        @TotalTransferredMWh,
+        @TotalSaturationLossMWh,
+        @BatteryStatus,
+        GETDATE()
+    );
+
+    -- Devolver el ID del snapshot
+    SELECT CAST(SCOPE_IDENTITY() AS INT) AS SnapshotId;
+END;
+GO
+
+-- sp para obtener todos los snapshots de la batería
+CREATE OR ALTER PROCEDURE dbo.RET_ALL_BATTERY_SNAPSHOTS_PR
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        SnapshotId,
+        FlushId,
+        BatteryId,
+        TurbineId,
+        MaximumCapacityMWh,
+        CurrentEnergyMWh,
+        TotalGeneratedMWh,
+        TotalTransferredMWh,
+        TotalSaturationLossMWh,
+        Status,
+        CapturedAt
+    FROM dbo.tblBatterySnapshots
+    ORDER BY CapturedAt DESC;
 END;
 GO
