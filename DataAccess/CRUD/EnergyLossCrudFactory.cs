@@ -17,27 +17,27 @@ namespace DataAccess.CRUD
 
         public override void Create(BaseDTO baseDTO)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("Las pérdidas se registran mediante el proceso energético correspondiente");
         }
 
         public override void Delete(BaseDTO baseDTO)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("El historial de pérdidas no se elimina");
         }
 
         public override List<T> RetrieveAll<T>()
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("Use RetrieveByTurbine para consultar pérdidas de energía");
         }
 
         public override T RetrieveById<T>(int id)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("Use RetrieveByTurbine para consultar pérdidas de energía");
         }
 
         public override void Update(BaseDTO baseDTO)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("El historial de pérdidas no se modifica");
         }
 
 

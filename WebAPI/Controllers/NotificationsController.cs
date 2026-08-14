@@ -74,5 +74,28 @@ namespace WebAPI.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        [HttpPost]
+        [Route("ProcessQueue")]
+        public ActionResult ProcessQueue([FromQuery] int? callerUserId)
+        {
+            try
+            {
+                var processed = new NotificationManager().ProcessOverdueInvoices();
+                AuditHelper.TryAudit(callerUserId, "Process", "Notifications", null,
+                    $"Cola procesada: {processed} factura(s) vencida(s)");
+                return Ok(new
+                {
+                    message = processed == 0
+                        ? "No había facturas vencidas pendientes de notificación."
+                        : $"Se procesaron {processed} factura(s) vencida(s).",
+                    data = new { processed }
+                });
+            }
+            catch (Exception ex)
+            {
+                return ApiErrorHelper.Handle(nameof(NotificationsController), ex);
+            }
+        }
     }
 }

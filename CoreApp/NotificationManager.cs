@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
+using System.Linq;
 
 namespace CoreApp
 {
@@ -152,6 +153,54 @@ namespace CoreApp
             nCrud.Delete(n);
         }
 
+        public int ProcessOverdueInvoices()
+        {
+            var invoiceManager = new InvoiceManager();
+            var userCrud = new UserCrudFactory();
+            var overdueInvoices = invoiceManager.RetrieveAllInvoices()
+                .Where(i => i.PaymentStatus == "Pending" && i.DueDate < DateTime.Now)
+                .ToList();
+
+            foreach (var invoice in overdueInvoices)
+            {
+                invoice.PaymentStatus = "Overdue";
+                invoiceManager.Update(invoice);
+
+                var buyer = userCrud.RetrieveById<User>(invoice.BuyerId);
+                if (buyer == null)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    Create(new Notification
+                    {
+                        UserId = buyer.Id,
+                        Title = "Factura vencida",
+                        Message = $"La factura {invoice.InvoiceNumber} se encuentra vencida.",
+                        NotificationType = "Invoice",
+                        ReferenceType = "Invoice",
+                        ReferenceId = invoice.Id
+                    });
+                }
+                catch { /* el cambio de estado no depende de la notificación interna */ }
+
+                try
+                {
+                    SendInvoiceOverdueNotification(
+                        buyer.Email,
+                        buyer.FirstName,
+                        invoice.InvoiceNumber,
+                        $"₡{invoice.TotalAmount:N2}",
+                        Math.Max(1, (DateTime.Now.Date - invoice.DueDate.Date).Days));
+                }
+                catch { /* el cambio de estado no depende del correo */ }
+            }
+
+            return overdueInvoices.Count;
+        }
+
 
         private bool HasEmptyFields(Notification notification)
         {
@@ -206,9 +255,10 @@ namespace CoreApp
                     mail.From = new MailAddress(smtpUser, "SEGEDE - Sistema de Energía");
                     mail.To.Add(toEmail);
                     mail.Subject = subject;
+                    var safeUserName = WebUtility.HtmlEncode(userName ?? string.Empty);
                     mail.Body = $@"
                         <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; max-width: 600px;'>
-                            <h3 style='color: #333;'>Estimado(a) {userName},</h3>
+                            <h3 style='color: #333;'>Estimado(a) {safeUserName},</h3>
                             <p>{bodyHtml}</p>
                             <hr style='border: none; border-top: 1px solid #eee;' />
                             <small style='color: #777;'>Este es un correo automático del sistema SEGEDE, no responda a este mensaje.</small>
@@ -250,8 +300,8 @@ namespace CoreApp
             string bodyHtml = GetNotificationMessage(
                 "SERVICE_SCHEDULED",
                 userName,
-                $"Se ha agendado un servicio técnico para la turbina <strong>{turbineName}</strong> " +
-                $"con fecha programada: <strong>{serviceDate}</strong>.<br/><br/>" +
+                $"Se ha agendado un servicio técnico para la turbina <strong>{Html(turbineName)}</strong> " +
+                $"con fecha programada: <strong>{Html(serviceDate)}</strong>.<br/><br/>" +
                 $"Por favor, tome las precauciones necesarias y coordine con el personal técnico."
             );
 
@@ -275,8 +325,8 @@ namespace CoreApp
             string bodyHtml = GetNotificationMessage(
                 "CRITICAL_ALARM",
                 userName,
-                $"Se ha activado una alarma de criticidad <strong style='color: #dc3545;'>{severity}</strong>:<br/><br/>" +
-                $"<strong>Descripción:</strong> {alarmDescription}<br/><br/>" +
+                $"Se ha activado una alarma de criticidad <strong style='color: #dc3545;'>{Html(severity)}</strong>:<br/><br/>" +
+                $"<strong>Descripción:</strong> {Html(alarmDescription)}<br/><br/>" +
                 $"Se requiere atención inmediata para evaluar y resolver la situación."
             );
 
@@ -300,8 +350,8 @@ namespace CoreApp
             string bodyHtml = GetNotificationMessage(
                 "ENERGY_QUOTA_ASSIGNED",
                 userName,
-                $"Se le ha asignado una cuota de energía de <strong>{quotaAmount}</strong> " +
-                $"para el período: <strong>{period}</strong>.<br/><br/>" +
+                $"Se le ha asignado una cuota de energía de <strong>{Html(quotaAmount)}</strong> " +
+                $"para el período: <strong>{Html(period)}</strong>.<br/><br/>" +
                 $"Puede consultar los detalles en el sistema."
             );
 
@@ -350,7 +400,7 @@ namespace CoreApp
                 "LOGIN_SUCCESSFUL",
                 userName,
                 $"Ha iniciado sesión correctamente en el sistema SEGEDE.<br/><br/>" +
-                $"<strong>Fecha y hora:</strong> {loginDateTime}<br/><br/>" +
+                $"<strong>Fecha y hora:</strong> {Html(loginDateTime)}<br/><br/>" +
                 $"Si no reconoce esta actividad, por favor cambie su contraseña inmediatamente " +
                 $"y contacte al administrador del sistema."
             );
@@ -377,9 +427,9 @@ namespace CoreApp
                 "INVOICE_GENERATED",
                 userName,
                 $"Se ha generado una nueva factura a su nombre:<br/><br/>" +
-                $"<strong>Número de factura:</strong> {invoiceNumber}<br/>" +
-                $"<strong>Monto total:</strong> {totalAmount}<br/>" +
-                $"<strong>Fecha de vencimiento:</strong> <span style='color: #dc3545;'>{dueDate}</span><br/><br/>" +
+                $"<strong>Número de factura:</strong> {Html(invoiceNumber)}<br/>" +
+                $"<strong>Monto total:</strong> {Html(totalAmount)}<br/>" +
+                $"<strong>Fecha de vencimiento:</strong> <span style='color: #dc3545;'>{Html(dueDate)}</span><br/><br/>" +
                 $"Puede consultar los detalles de su factura en el sistema."
             );
 
@@ -405,8 +455,8 @@ namespace CoreApp
                 "INVOICE_OVERDUE",
                 userName,
                 $"<strong style='color: #dc3545;'>AVISO IMPORTANTE:</strong> Su factura ha vencido.<br/><br/>" +
-                $"<strong>Número de factura:</strong> {invoiceNumber}<br/>" +
-                $"<strong>Monto total:</strong> {totalAmount}<br/>" +
+                $"<strong>Número de factura:</strong> {Html(invoiceNumber)}<br/>" +
+                $"<strong>Monto total:</strong> {Html(totalAmount)}<br/>" +
                 $"<strong>Días de atraso:</strong> <span style='color: #dc3545;'>{daysOverdue}</span><br/><br/>" +
                 $"Por favor, realice el pago lo antes posible para evitar interrupciones en el servicio."
             );
@@ -432,9 +482,9 @@ namespace CoreApp
             string bodyHtml = GetNotificationMessage(
                 "TURBINE_FAILURE_REPORTED",
                 userName,
-                $"Se ha reportado una falla en la turbina <strong>{turbineName}</strong>:<br/><br/>" +
-                $"<strong>Severidad:</strong> <span style='color: #dc3545;'>{severity}</span><br/>" +
-                $"<strong>Descripción:</strong> {description}<br/><br/>" +
+                $"Se ha reportado una falla en la turbina <strong>{Html(turbineName)}</strong>:<br/><br/>" +
+                $"<strong>Severidad:</strong> <span style='color: #dc3545;'>{Html(severity)}</span><br/>" +
+                $"<strong>Descripción:</strong> {Html(description)}<br/><br/>" +
                 $"Se requiere atención de ingeniería para evaluar y resolver la situación."
             );
 
@@ -550,6 +600,11 @@ namespace CoreApp
             }
 
             return $"{intro}<br/><br/>{details}";
+        }
+
+        private static string Html(string value)
+        {
+            return WebUtility.HtmlEncode(value ?? string.Empty);
         }
     }
 }
