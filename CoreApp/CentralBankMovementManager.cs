@@ -13,7 +13,6 @@ namespace CoreApp
             var crud = new CentralBankMovementCrudFactory();
             return crud.RetrieveAll<CentralBankMovement>();
         }
-
         public CentralBankMovement RetrieveById(int id)
         {
             if (id <= 0)

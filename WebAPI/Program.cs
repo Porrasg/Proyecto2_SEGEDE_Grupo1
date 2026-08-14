@@ -4,6 +4,7 @@ using WebAPI.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHostedService<FlushAutomaticService>();
+builder.Services.AddHostedService<EnergySimulationService>();
 
 // Add services to the container.
 

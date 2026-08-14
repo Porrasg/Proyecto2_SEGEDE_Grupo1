@@ -100,7 +100,6 @@ namespace DataAccess.CRUD
 
             sqlDao.ExecuteProcedure(sqlOperation);
         }
-
         private CentralBankMovement BuildMovement(Dictionary<string, object> row)
         {
             return new CentralBankMovement
