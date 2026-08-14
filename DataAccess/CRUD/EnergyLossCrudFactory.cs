@@ -17,8 +17,7 @@ namespace DataAccess.CRUD
         // Implementación del método Create para registrar una pérdida de energía en la base de datos
         public override void Create(BaseDTO baseDTO)
         {
-            throw new NotImplementedException();
-        }
+            var loss = (EnergyLoss)baseDTO;
 
             var sqlOperation = new SqlOperation();
             sqlOperation.ProcedureName = "CRE_ENERGY_LOSS_PR";
