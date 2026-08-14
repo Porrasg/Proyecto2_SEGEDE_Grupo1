@@ -1,6 +1,5 @@
 using CoreApp;
 using Entities_DTOs;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -34,7 +33,6 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("SetPrice")]
-        [Authorize(Roles = "Administrator")]
         public ActionResult SetPrice(SetPriceRequest request, [FromQuery] int? callerUserId)
         {
             try
@@ -90,7 +88,6 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("SetTax")]
-        [Authorize(Roles = "Administrator")]
         public ActionResult SetTax(SetTaxRequest request, [FromQuery] int? callerUserId)
         {
             try

@@ -1,15 +1,11 @@
 using CoreApp;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    // OTP es infraestructura pre-autenticacion (se usa durante login, activacion y
-    // recuperacion de contraseña, cuando el llamador todavia no tiene sesion) -- todo
-    // el controller queda publico, igual que los endpoints equivalentes de Users.
-    [AllowAnonymous]
+    // OTP se usa durante login, activación y recuperación de contraseña.
     public class OtpsController : ControllerBase
     {
         [HttpPost]

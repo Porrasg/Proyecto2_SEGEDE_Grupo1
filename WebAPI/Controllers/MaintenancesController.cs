@@ -12,6 +12,7 @@ namespace WebAPI.Controllers
         public class ScheduleRequest
         {
             public int TurbineId { get; set; }
+            public int EngineerId { get; set; }
             public string MaintenanceType { get; set; } = string.Empty;
             public DateTime EstimatedStartDate { get; set; }
             public DateTime EstimatedEndDate { get; set; }
@@ -84,17 +85,18 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                var actorUserId = AuditHelper.ResolveCallerUserId(callerUserId);
                 if (!actorUserId.HasValue)
                 {
                     return Unauthorized(new { message = "No se pudo identificar al ingeniero responsable." });
                 }
 
                 var mm = new MaintenanceManager();
+
                 var maintenance = new Maintenance
                 {
                     TurbineId = request.TurbineId,
-                    EngineerId = actorUserId.Value,
+                    EngineerId = request.EngineerId,
                     MaintenanceType = request.MaintenanceType,
                     Description = $"Mantenimiento {request.MaintenanceType} programado desde el sistema",
                     EstimatedStartDate = request.EstimatedStartDate,
@@ -124,7 +126,7 @@ namespace WebAPI.Controllers
                     return BadRequest(new { message = "El informe técnico del mantenimiento es obligatorio." });
                 }
 
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                var actorUserId = AuditHelper.ResolveCallerUserId(callerUserId);
                 if (!actorUserId.HasValue)
                 {
                     return Unauthorized(new { message = "No se pudo identificar al usuario que completa el mantenimiento." });
@@ -175,7 +177,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                var actorUserId = AuditHelper.ResolveCallerUserId(callerUserId);
                 if (!actorUserId.HasValue)
                 {
                     return Unauthorized(new { message = "No se pudo identificar al usuario que cancela el mantenimiento." });
@@ -216,7 +218,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                var actorUserId = AuditHelper.ResolveCallerUserId(callerUserId);
                 if (!actorUserId.HasValue)
                 {
                     return Unauthorized(new { message = "No se pudo identificar al ingeniero responsable." });
@@ -240,7 +242,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                var actorUserId = AuditHelper.ResolveCallerUserId(callerUserId);
                 if (!actorUserId.HasValue)
                 {
                     return Unauthorized(new { message = "No se pudo identificar al usuario que actualiza el mantenimiento." });
@@ -263,7 +265,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                var actorUserId = AuditHelper.ResolveCallerUserId(callerUserId);
                 if (!actorUserId.HasValue)
                 {
                     return Unauthorized(new { message = "No se pudo identificar al usuario que cancela el mantenimiento." });

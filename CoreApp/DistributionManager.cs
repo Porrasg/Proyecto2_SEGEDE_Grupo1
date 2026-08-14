@@ -392,12 +392,13 @@ namespace CoreApp
             {
                 try
                 {
-                    new OtpManager().SendGenericEmail(
+                    var notificationManager = new NotificationManager();
+                    notificationManager.SendEnergyQuotaNotification(
                         buyer.Email,
                         buyer.FirstName,
-                        "Cuota de energía asignada",
-                        $"Se le asignó una cuota de <strong>{distribution.AssignedEnergyMWh} MWh</strong> " +
-                        $"({distribution.DistributionDate:dd/MM/yyyy}). Puede consultar el detalle en su Estado de Cuenta.");
+                        $"{distribution.AssignedEnergyMWh} MWh",
+                        distribution.DistributionDate.ToString("dd/MM/yyyy")
+                    );
                 }
                 catch { /* no bloquear la distribución ya creada */ }
 

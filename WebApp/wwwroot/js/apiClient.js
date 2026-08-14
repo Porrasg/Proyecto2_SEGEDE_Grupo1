@@ -23,15 +23,6 @@ const apiClient = (function () {
         return BASE + cleanPath;
     }
 
-    // Envía el JWT emitido en Users/ValidateLoginOtp (guardado por session.js) como
-    // Bearer token, si existe. Las cuentas estáticas que se saltan el OTP no tienen
-    // token todavía (ver JwtTokenHelper.cs) y por lo tanto no van a poder llamar los
-    // endpoints que exijan [Authorize] una vez que ese backdoor se elimine (K1).
-    function authHeader() {
-        const token = (typeof session !== "undefined" && session.getToken) ? session.getToken() : null;
-        return token ? { Authorization: "Bearer " + token } : {};
-    }
-
     // Agrega .done()/.fail()/.always() sobre una Promise nativa, replicando la
     // forma en que se consumía el jqXHR de jQuery (múltiples callbacks encadenables,
     // cada uno recibe el valor resuelto o el error rechazado).
@@ -61,14 +52,14 @@ const apiClient = (function () {
             return err;
         }
 
+
         const promise = fetch(fullUrl, {
             method: method,
-            headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
+            headers: { 'Content-Type': 'application/json' },
             body: body ? JSON.stringify(body) : undefined
         })
             .catch(function () {
-                // fetch() solo rechaza la promesa ante un fallo de red/CORS real (sin
-                // respuesta del servidor) - jamás por un status HTTP de error.
+                // fetch() solo rechaza la promesa ante un fallo de red/CORS real (sin respuesta del servidor) - jamás por un status HTTP de error.
                 console.warn('[SGDE apiClient] ' + method + ' ' + fullUrl + ' → HTTP 0 (sin respuesta — la Web API no está disponible o hay un problema de CORS/red)');
                 throw buildError('Sin respuesta del servidor', 0, '', null, '');
             })
@@ -108,7 +99,6 @@ const apiClient = (function () {
 
     return {
         url,
-        authHeader,
         unwrapList,
         // Ejecuta petición GET asíncrona para obtener recursos
         get: p => request('GET', p),

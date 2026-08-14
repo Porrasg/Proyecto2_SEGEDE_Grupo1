@@ -508,3 +508,23 @@ VALUES
 );
 GO
 
+-- tabla para almacenar los snapshots de las baterías
+CREATE TABLE dbo.tblBatterySnapshots
+(
+    SnapshotId INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+
+    FlushId INT NOT NULL,
+    BatteryId INT NOT NULL,
+    TurbineId INT NOT NULL,
+
+    MaximumCapacityMWh DECIMAL(18,4) NOT NULL,
+    CurrentEnergyMWh DECIMAL(18,4) NOT NULL,
+    TotalGeneratedMWh DECIMAL(18,4) NOT NULL,
+    TotalTransferredMWh DECIMAL(18,4) NOT NULL,
+    TotalSaturationLossMWh DECIMAL(18,4) NOT NULL,
+
+    Status NVARCHAR(50) NOT NULL,
+
+    CapturedAt DATETIME NOT NULL
+);
+GO
