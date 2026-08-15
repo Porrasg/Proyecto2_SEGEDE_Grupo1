@@ -5,13 +5,16 @@ namespace WebAPI.Services
     public class FlushAutomaticService : BackgroundService
     {
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly ILogger<FlushAutomaticService> _logger;
 
         private DateTime _lastExecutionDate = DateTime.MinValue;
 
         public FlushAutomaticService(
-            IServiceScopeFactory scopeFactory)
+            IServiceScopeFactory scopeFactory,
+            ILogger<FlushAutomaticService> logger)
         {
             _scopeFactory = scopeFactory;
+            _logger = logger;
         }
         protected override async Task ExecuteAsync(
             CancellationToken stoppingToken)
@@ -39,15 +42,14 @@ namespace WebAPI.Services
                                 now.Hour == config.ExecutionTime.Hours &&
                                 now.Minute == config.ExecutionTime.Minutes;
 
+                            var flushManager = new FlushManager();
                             bool alreadyExecutedToday =
-                                _lastExecutionDate.Date == now.Date;
+                                _lastExecutionDate.Date == now.Date ||
+                                (correctTime && flushManager.HasAutomaticFlushForDate(now));
 
                             if (correctTime &&
                                 !alreadyExecutedToday)
                             {
-                                var flushManager =
-                                    new FlushManager();
-
                                 int processed =
                                     flushManager.ExecuteMassFlush(
                                         "Automatic"
@@ -55,19 +57,16 @@ namespace WebAPI.Services
 
                                 _lastExecutionDate = now;
 
-                                Console.WriteLine(
-                                    $"Flush automático ejecutado. " +
-                                    $"Baterías procesadas: {processed}"
-                                );
+                                _logger.LogInformation(
+                                    "Flush automático ejecutado. Baterías procesadas: {Processed}",
+                                    processed);
                             }
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(
-                        $"Error en Flush automático: {ex.Message}"
-                    );
+                    _logger.LogError(ex, "Error en Flush automático");
                 }
 
                 // Revisar cada 30 segundos

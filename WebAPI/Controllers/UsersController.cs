@@ -12,14 +12,32 @@ namespace WebAPI.Controllers
         // Lo limpio antes de responder para evitar mostrar esa información.
         private static User Sanitize(User user)
         {
-            if (user != null) user.Password = string.Empty;
+            if (user != null)
+            {
+                user.Password = string.Empty;
+                user.Role = NormalizeRole(user.Role);
+            }
             return user;
         }
 
         private static List<User> Sanitize(List<User> users)
         {
-            users?.ForEach(u => u.Password = string.Empty);
+            users?.ForEach(u =>
+            {
+                u.Password = string.Empty;
+                u.Role = NormalizeRole(u.Role);
+            });
             return users;
+        }
+
+        private static string NormalizeRole(string role)
+        {
+            return role switch
+            {
+                "Admin" => "Administrator",
+                "Buyer" or "Customer" => "Distributor",
+                _ => role
+            };
         }
 
         public class UserRegisterRequest

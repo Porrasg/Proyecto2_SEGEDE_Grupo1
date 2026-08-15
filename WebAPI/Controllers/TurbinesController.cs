@@ -309,6 +309,28 @@ namespace WebAPI.Controllers
             catch (Exception ex) { return ApiErrorHelper.Handle(nameof(TurbinesController), ex); }
         }
 
+        [HttpPost]
+        [Route("CheckOverdueMaintenance")]
+        public ActionResult CheckOverdueMaintenance([FromQuery] int? callerUserId, [FromQuery] int overdueDays = 40)
+        {
+            try
+            {
+                var turbines = new MaintenanceManager()
+                    .RetrieveTurbinesWithOverdueMaintenance(overdueDays);
+                AuditHelper.TryAudit(callerUserId, "Check", "Maintenances", null,
+                    $"Verificación de mantenimiento vencido: {turbines.Count} turbina(s)");
+                return Ok(new
+                {
+                    message = $"Verificación completada: {turbines.Count} turbina(s) requieren mantenimiento.",
+                    data = turbines
+                });
+            }
+            catch (Exception ex)
+            {
+                return ApiErrorHelper.Handle(nameof(TurbinesController), ex);
+            }
+        }
+
         [HttpGet]
         [Route("Failures/{id}")]
         public ActionResult GetFailures(int id)

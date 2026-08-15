@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function loadMatrix() {
         apiClient.get("Roles/Permissions")
             .done(function (res) {
-                const items = res?.data || res?.Data || [];
+                const items = apiClient.unwrapList(res);
                 renderMatrix(items);
             })
             .fail(function (xhr) {

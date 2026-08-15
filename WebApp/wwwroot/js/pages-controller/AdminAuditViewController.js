@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (toInput) toInput.value = today.toISOString().slice(0, 10);
 
     apiClient.get("Users/RetrieveAll").done(function (res) {
-        const users = Array.isArray(res) ? res : (res?.data || res?.Data || []);
+        const users = apiClient.unwrapList(res);
         users.forEach(function (u) {
             userNames[u.id ?? u.Id] = `${u.firstName || u.FirstName || ""} ${u.firstLastName || u.FirstLastName || ""}`.trim() || `Usuario #${u.id ?? u.Id}`;
         });
@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         apiClient.get(`Audits/ByDateRange?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&page=1&pageSize=200`)
             .done(function (res) {
-                allLogs = res?.data?.items || res?.Data?.Items || [];
+                allLogs = apiClient.unwrapList(res);
                 renderFiltered();
             })
             .fail(function (xhr) {

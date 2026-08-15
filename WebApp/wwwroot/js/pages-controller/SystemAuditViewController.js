@@ -1,6 +1,5 @@
 // SystemAuditViewController.js (§22.1, §27) - Controlador para Auditoría Técnica del Sistema (registro inmutable / RN-030)
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("Inicializando SystemAuditViewController...");
 
     const role = session.getRole();
 
@@ -17,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let userNames = {};
     if (auditBody) {
         apiClient.get("Users/RetrieveAll").done(function (res) {
-            const users = Array.isArray(res) ? res : (res?.data || res?.Data || []);
+            const users = apiClient.unwrapList(res);
             users.forEach(function (u) {
                 userNames[u.id ?? u.Id] = `${u.firstName || u.FirstName || ""} ${u.firstLastName || u.FirstLastName || ""}`.trim() || `Usuario #${u.id ?? u.Id}`;
             });
@@ -48,7 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         apiClient.get(endpoint).done(function (res) {
-            let list = (res?.data?.items || res?.Data?.Items || res?.data || res?.Data || []);
+            let list = apiClient.unwrapList(res);
             
             // Si el usuario escribió texto (ej: nombre de usuario) en el filtro rápido y no era un ID numérico, filtramos en memoria
             if (userStr && isNaN(userStr)) {

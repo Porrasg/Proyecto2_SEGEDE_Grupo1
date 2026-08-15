@@ -1,6 +1,5 @@
 // CentralBankViewController.js (§22.1, §27) - Controlador para Banco Central y Traslados de Energía (Flushes)
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("Inicializando CentralBankViewController...");
 
     const role = session.getRole();
 
@@ -21,7 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function loadCentralBankStatus() {
         // 1. Nivel de Inventario
         apiClient.get("CentralBanks/RetrieveAll").done(function (res) {
-            const list = res?.data || res?.Data || [];
+            const list = apiClient.unwrapList(res);
             const cb = list[0] || {};
             const inv = cb.currentInventoryMWh ?? cb.CurrentInventoryMWh ?? 0;
             const updated = cb.updatedAt || cb.UpdatedAt;
@@ -38,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (logsBody) {
             logsBody.innerHTML = '<tr><td colspan="5" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando bitácora inmutable...</td></tr>';
             apiClient.get("Flushs/RetrieveAll").done(function (res) {
-                const list = (res?.data || res?.Data || []);
+                const list = apiClient.unwrapList(res);
                 renderMovementLogs(list.map(function (f) {
                     return {
                         id: f.id || f.Id,
@@ -106,7 +105,7 @@ document.addEventListener("DOMContentLoaded", function () {
         body.innerHTML = '<tr><td colspan="6" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando historial de flushes...</td></tr>';
 
         apiClient.get("Flushs/RetrieveAll").done(function (res) {
-            const list = (res?.data || res?.Data || []);
+            const list = apiClient.unwrapList(res);
             if (!list.length) {
                 body.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Aún no se han ejecutado traslados o flushes en la red.</td></tr>';
                 return;

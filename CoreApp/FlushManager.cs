@@ -2,6 +2,7 @@
 using Entities_DTOs;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace CoreApp
@@ -258,72 +259,14 @@ namespace CoreApp
                    status == "Cancelled";
         }
 
-    //metodo encargado del vaciado al bancocentral
-        public void ExecuteFlush(Flush flush)
-            {
-            if (flush == null)
-            {
-                throw new ArgumentNullException("La informacion del vaciado es invalida");
-            }
-            if (flush.TransferredEnergyMWh <= 0)
-            {
-                throw new Exception("La energia a transferir debe ser mayor a cero");
-            }
-
-            var batteryCrud = new BatteriesCrudFactory();
-            var battery = batteryCrud.RetrieveById<Battery>(flush.BatteryId);
-
-            if (battery == null)
-            {
-                throw new Exception("La bateria no existe.");
-            }
-            if(battery.Status !="Active")
-            {
-                throw new Exception("Para realizar un vaciado la bateria debe estar activa");
-            }
-            if (battery.CurrentEnergyMWh < flush.TransferredEnergyMWh)
-            {
-                throw new Exception("La bateria no tiene suficiente energia");
-            }
-            flush.SnapshotEnergyMWh = battery.CurrentEnergyMWh; // Guardar la energia actual de la bateria antes del vaciado
-
-            var centralManager = new CentralBankManager();
-
-            decimal loss = centralManager.ReceiveEnergy(flush.CentralBankId, flush.TransferredEnergyMWh);
-
-            flush.SaturationLossMWh = loss;
-            // Actualizar la bateria
-            battery.CurrentEnergyMWh -= flush.TransferredEnergyMWh;
-            battery.TotalTransferredMWh += flush.TransferredEnergyMWh;
-            battery.UpdatedAt = DateTime.UtcNow;
-
-            batteryCrud.Update(battery);
-
-            //consultar el bance central para hacer la actualizacion de la energia y registrar el movimiento
-            var centralBankCrud = new CentralBankCrudFactory();
-            var centralBank = centralBankCrud.RetrieveById<CentralBank>(flush.CentralBankId);
-
-            //registrar el movimiento en el banco central
-            var movementManager = new CentralBankMovementManager();
-
-            movementManager.Create(new CentralBankMovement
-            {
-                CentralBankId = flush.CentralBankId,
-                MovementType = "FLUSH",
-                EnergyMWh = flush.TransferredEnergyMWh,
-                InventoryAfterMovement = centralBank.CurrentInventoryMWh,
-                SaturationLossMWh = flush.SaturationLossMWh,
-                Description = $"Vaciado de {flush.TransferredEnergyMWh} MWh desde la bateria {flush.BatteryId} de la turbina {flush.TurbineId}"
-
-            });
-            //registrar el vaciado 
-            flush.ExecutedAt = DateTime.UtcNow;
-            flush.CreatedAt = DateTime.UtcNow;
-
-            flush.Status="Completed";
-            var flushCrud = new FlushCrudFactory();
-            flushCrud.Create(flush);
+        public bool HasAutomaticFlushForDate(DateTime date)
+        {
+            return RetrieveAllFlushes().Any(f =>
+                f.ExecutionType == "Automatic" &&
+                f.Status == "Completed" &&
+                f.ExecutedAt.Date == date.Date);
         }
+
         // metodo encargado de ejecutar el vaciado masivo
         public int ExecuteMassFlush(string executionType)
         {

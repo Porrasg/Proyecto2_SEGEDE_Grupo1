@@ -1,6 +1,5 @@
 // OperationsDashboardViewController.js - Controlador JS para el Panel de Operaciones / Ingeniero
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("Inicializando OperationsDashboardViewController...");
 
     const role = session.getRole();
     if (role !== "Engineer" && role !== "Administrator" && role !== "Admin") {

@@ -2,6 +2,7 @@
 using Entities_DTOs;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace CoreApp
@@ -458,6 +459,32 @@ namespace CoreApp
             }
 
             return result;
+        }
+
+        public List<Turbine> RetrieveTurbinesWithOverdueMaintenance(int overdueDays = 40)
+        {
+            if (overdueDays <= 0)
+            {
+                throw new BusinessException("La cantidad de días debe ser mayor a cero");
+            }
+
+            var turbines = new TurbineCrudFactory().RetrieveAll<Turbine>();
+            var maintenances = new MaintenanceCrudFactory().RetrieveAll<Maintenance>();
+            var threshold = DateTime.Now.AddDays(-overdueDays);
+
+            return turbines
+                .Where(t => t.Status != "Decommissioned")
+                .Where(t =>
+                {
+                    var lastCompleted = maintenances
+                        .Where(m => m.TurbineId == t.Id && m.Status == "Completed")
+                        .Select(m => m.ActualEndDate ?? m.EstimatedEndDate)
+                        .OrderByDescending(date => date)
+                        .FirstOrDefault();
+
+                    return lastCompleted == default || lastCompleted < threshold;
+                })
+                .ToList();
         }
 
         private bool HasEmptyFields(Maintenance m)

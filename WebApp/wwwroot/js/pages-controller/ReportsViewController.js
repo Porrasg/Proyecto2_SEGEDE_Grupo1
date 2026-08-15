@@ -40,11 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function readListResponse(res) {
-        if (Array.isArray(res)) {
-            return res;
-        }
-
-        return res?.data || res?.Data || res?.items || res?.Items || [];
+        return apiClient.unwrapList(res);
     }
 
     function getSessionBuyerId() {
@@ -297,18 +293,34 @@ document.addEventListener("DOMContentLoaded", function () {
     if (statusBody) {
         const btnExport = document.getElementById("btnExportStatus");
         let lastRows = [];
-        const OVERDUE_DAYS = 30;
+        const OVERDUE_DAYS = 40;
 
-        apiClient.get("Turbines/All").done(function (res) {
-            const list = readListResponse(res);
+        Promise.all([
+            apiClient.get("Turbines/All"),
+            apiClient.get("Maintenances/All")
+        ]).then(function ([turbinesResponse, maintenancesResponse]) {
+            const list = readListResponse(turbinesResponse);
+            const maintenances = readListResponse(maintenancesResponse);
             if (!list.length) {
                 statusBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No hay turbinas registradas.</td></tr>';
                 return;
             }
+
+            const latestMaintenanceByTurbine = {};
+            maintenances
+                .filter(m => (m.status ?? m.Status) === "Completed")
+                .forEach(m => {
+                    const turbineId = m.turbineId ?? m.TurbineId;
+                    const date = m.actualEndDate ?? m.ActualEndDate ?? m.estimatedEndDate ?? m.EstimatedEndDate;
+                    if (date && (!latestMaintenanceByTurbine[turbineId] || new Date(date) > new Date(latestMaintenanceByTurbine[turbineId]))) {
+                        latestMaintenanceByTurbine[turbineId] = date;
+                    }
+                });
+
             const now = new Date();
             lastRows = list.map(t => {
                 const status = t.status ?? t.Status;
-                const lastM = t.lastMaintenance ?? t.LastMaintenance;
+                const lastM = latestMaintenanceByTurbine[t.id ?? t.Id] || null;
                 const alerts = [];
                 if (status === "Damaged") alerts.push("Avería activa");
                 if (status === "Maintenance") alerts.push("Mantenimiento en curso");
@@ -328,7 +340,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     : '<span class="badge bg-success"><i class="bi bi-check-circle me-1" aria-hidden="true"></i>Sin alertas</span>'}</td>
             </tr>`).join("");
             btnExport.disabled = false;
-        }).fail(function (xhr) {
+        }).catch(function (xhr) {
             statusBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Error al cargar el estado de las turbinas.</td></tr>';
             handleApiError(xhr);
         });

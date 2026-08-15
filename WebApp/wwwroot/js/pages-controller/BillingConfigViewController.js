@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
         body.innerHTML = '<tr><td colspan="4" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando precios...</td></tr>';
         apiClient.get("Billing/PriceHistory")
             .done(function (res) {
-                const items = (res?.data || res?.Data || []).slice().sort(function (a, b) {
+                const items = apiClient.unwrapList(res).slice().sort(function (a, b) {
                     return new Date(b.validFrom || b.ValidFrom) - new Date(a.validFrom || a.ValidFrom);
                 });
                 if (!items.length) {
@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
         body.innerHTML = '<tr><td colspan="4" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando impuestos...</td></tr>';
         apiClient.get("Billing/TaxHistory")
             .done(function (res) {
-                const items = (res?.data || res?.Data || []).slice().sort(function (a, b) {
+                const items = apiClient.unwrapList(res).slice().sort(function (a, b) {
                     return new Date(b.validFrom || b.ValidFrom) - new Date(a.validFrom || a.ValidFrom);
                 });
                 if (!items.length) {

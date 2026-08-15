@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
         function loadUserStats() {
             apiClient.get("Users/RetrieveAll")
                 .done(function (res) {
-                    const users = Array.isArray(res) ? res : (res?.data || res?.Data || res?.items || res?.Items || []);
+                    const users = apiClient.unwrapList(res);
                     const active = (users || []).filter(u => ((u.status || u.Status) || "").toLowerCase() === 'active').length;
                     const total = (users || []).length;
                     setText("kpiActiveUsers", active);
@@ -352,7 +352,7 @@ document.addEventListener("DOMContentLoaded", function () {
             tableBody.innerHTML = '<tr><td colspan="7" class="text-center"><span class="spinner-border spinner-border-sm" role="status"></span> Cargando usuarios...</td></tr>';
             apiClient.get("Users/RetrieveAll")
                 .done(function (res) {
-                    allUsers = Array.isArray(res) ? res : (res?.data || res?.Data || res?.items || res?.Items || []);
+                    allUsers = apiClient.unwrapList(res);
                     filterAndRenderUsers();
                 })
                 .fail(function (xhr) {
@@ -619,7 +619,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     Status: "Pending"
                 };
 
-                console.log("[AdminUsers] create payload", dto);
 
                 apiClient.post("Users/Create?callerUserId=" + userId, dto)
                     .done(function () {
@@ -674,7 +673,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     password: ""
                 };
 
-                console.log("[AdminUsers] update payload", dto);
 
                 apiClient.put("Users/Update?callerUserId=" + userId, dto)
                     .done(function () {

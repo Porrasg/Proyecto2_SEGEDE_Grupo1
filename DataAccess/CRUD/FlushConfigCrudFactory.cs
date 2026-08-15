@@ -14,13 +14,13 @@ namespace DataAccess.CRUD
         }
         public override void Create(BaseDTO baseDTO)
         {
-            throw new NotImplementedException(
+            throw new NotSupportedException(
                 "La configuración de Flush no se crea desde el CRUD."
             );
         }
         public override void Delete(BaseDTO baseDTO)
         {
-            throw new NotImplementedException(
+            throw new NotSupportedException(
                 "La configuración de Flush no se elimina."
             );
         }

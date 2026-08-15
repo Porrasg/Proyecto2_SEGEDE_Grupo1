@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function loadUserNames() {
         return apiClient.get("Users/RetrieveAll").done(function (res) {
-            const users = res?.data || res?.Data || [];
+            const users = apiClient.unwrapList(res);
             users.forEach(function (u) {
                 userNames[u.id || u.Id] = u.firstName || u.FirstName ? `${u.firstName || u.FirstName} ${u.firstLastName || u.FirstLastName || ""}`.trim() : `Usuario #${u.id || u.Id}`;
             });
@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         apiClient.get("Distributions/RetrieveAll")
             .done(function (res) {
-                const items = res?.data || res?.Data || [];
+                const items = apiClient.unwrapList(res);
                 // Distributions/RetrieveAll devuelve filas individuales por comprador (Distribution); se filtra
                 // por el mes/año de DistributionDate y se agrupan por DistributionBatchId (el lote de ese mes).
                 const rowsInPeriod = items.filter(function (d) {
@@ -91,7 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         apiClient.get("Distributions/RetrieveByBatchId/" + distributionBatchId)
             .done(function (res) {
-                const items = res?.data || res?.Data || [];
+                const items = apiClient.unwrapList(res);
                 if (!items.length) {
                     detailsBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Sin asignaciones registradas para esta distribución.</td></tr>';
                     return;

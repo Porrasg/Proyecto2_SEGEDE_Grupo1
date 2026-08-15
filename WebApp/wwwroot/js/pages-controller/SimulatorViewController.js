@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function loadTurbines() {
         apiClient.get("Turbines/RetrieveAll")
             .done(function (res) {
-                const turbines = res?.data || res?.Data || [];
+                const turbines = apiClient.unwrapList(res);
                 const options = turbines.map(function (t) {
                     const code = t.code || t.Code || `#${t.id}`;
                     return `<option value="${t.id}">${escapeHtml(code)} — ${escapeHtml(t.name || "")}</option>`;
@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             runTrigger(btnBattery, `¿Forzar la batería de la turbina seleccionada a ${charge} MWh?`, "Alterar Batería",
                 `Turbina #${turbineId} → ${charge} MWh`,
-                function () { return apiClient.post("Energy/SetBatteryCharge", { turbineId: turbineId, currentEnergyMWh: charge }); });
+                function () { return apiClient.post("Energy/SetBatteryCharge?callerUserId=" + callerUserId, { turbineId: turbineId, currentEnergyMWh: charge }); });
         });
     }
 
@@ -95,7 +95,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (btnEnergyCycle) {
         btnEnergyCycle.addEventListener("click", function () {
             runTrigger(btnEnergyCycle, "¿Ejecutar de inmediato un ciclo de simulación energética para todas las turbinas activas?", "Ciclo de Energía", "Todas las turbinas",
-                function () { return apiClient.post("Energy/RunSimulation", {}); });
+                function () { return apiClient.post("Energy/RunSimulation?callerUserId=" + callerUserId, {}); });
         });
     }
 
@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (btnMaintCheck) {
         btnMaintCheck.addEventListener("click", function () {
             runTrigger(btnMaintCheck, "¿Ejecutar la verificación de mantenimientos vencidos (> 40 días)?", "Verificar Mantenimientos", "-",
-                function () { return apiClient.post("Turbines/CheckOverdueMaintenance", {}); });
+                function () { return apiClient.post("Turbines/CheckOverdueMaintenance?callerUserId=" + callerUserId, {}); });
         });
     }
 
@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (btnFlush) {
         btnFlush.addEventListener("click", function () {
             runTrigger(btnFlush, "¿Ejecutar un Flush manual ahora? Traslada toda la energía disponible al Banco Central y no se puede deshacer.", "Flush Manual", "-",
-                function () { return apiClient.post("Flushs/ExecuteManual", {}); });
+                function () { return apiClient.post("Flushs/ExecuteManual?callerUserId=" + callerUserId, {}); });
         });
     }
 
@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (btnNotifications) {
         btnNotifications.addEventListener("click", function () {
             runTrigger(btnNotifications, "¿Procesar de inmediato la cola de notificaciones pendientes?", "Procesar Notificaciones", "-",
-                function () { return apiClient.post("Notifications/ProcessQueue", {}); });
+                function () { return apiClient.post("Notifications/ProcessQueue?callerUserId=" + callerUserId, {}); });
         });
     }
 
@@ -136,7 +136,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const month = parseInt(monthSelect?.value);
             const year = parseInt(yearInput?.value);
             runTrigger(btnDistribution, `¿Ejecutar la distribución comercial de ${month}/${year}? Cierra el período y genera estados de cuenta.`, "Distribución Mensual", `${month}/${year}`,
-                function () { return apiClient.post(`Distributions/ExecuteMonthly?month=${month}&year=${year}`, {}); });
+                function () { return apiClient.post(`Distributions/ExecuteMonthly?month=${month}&year=${year}&callerUserId=${callerUserId}`, {}); });
         });
     }
 });

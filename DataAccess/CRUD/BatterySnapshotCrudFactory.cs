@@ -14,22 +14,22 @@ namespace DataAccess.CRUD
 
         public override void Create(BaseDTO baseDTO)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("Las capturas de batería se crean automáticamente durante un Flush");
         }
 
         public override void Update(BaseDTO baseDTO)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("Las capturas de batería son históricas y no se modifican");
         }
 
         public override void Delete(BaseDTO baseDTO)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("Las capturas de batería son históricas y no se eliminan");
         }
 
         public override T RetrieveById<T>(int id)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("Este módulo solo expone el historial completo de capturas");
         }
 
         public override List<T> RetrieveAll<T>()
