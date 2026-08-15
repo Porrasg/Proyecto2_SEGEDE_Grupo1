@@ -34,8 +34,11 @@ namespace DataAccess.CRUD
             sqlOperation.AddStringParameter("Status", dist.Status);
             sqlOperation.AddDateTimeParameter("CreatedAt", dist.CreatedAt);
 
-            // Ejecutamos el SP
-            sqlDao.ExecuteProcedure(sqlOperation);
+            var result = sqlDao.ExecuteQueryProcedure(sqlOperation);
+            if (result.Count > 0 && result[0].TryGetValue("DistributionId", out var generatedId))
+            {
+                dist.Id = Convert.ToInt32(generatedId);
+            }
         }
 
         public override void Delete(BaseDTO baseDTO)

@@ -46,7 +46,6 @@ namespace DataAccess.CRUD
 
             sqlOperation.AddIntParameter("FlushId", flush.Id);
             sqlOperation.AddStringParameter("Status", flush.Status);
-            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", flush.UpdatedAt);
 
             // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);
@@ -118,7 +117,6 @@ namespace DataAccess.CRUD
             sqlOperation.AddStringParameter("ExecutionType", flush.ExecutionType);
             sqlOperation.AddStringParameter("Status", flush.Status);
             sqlOperation.AddDateTimeParameter("ExecutedAt", flush.ExecutedAt);
-            sqlOperation.AddNullableDateTimeParameter("UpdatedAt", flush.UpdatedAt);
 
             // Ejecutamos el SP
             sqlDao.ExecuteProcedure(sqlOperation);

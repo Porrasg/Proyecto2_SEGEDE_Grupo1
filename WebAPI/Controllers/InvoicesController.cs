@@ -47,7 +47,7 @@ namespace WebAPI.Controllers
             try
             {
                 var invoice = new InvoiceManager().RetrieveById(request.StatementId);
-                var actorUserId = AuditHelper.ResolveCallerUserId(User, callerUserId);
+                var actorUserId = AuditHelper.ResolveCallerUserId(callerUserId);
                 var isBuyer = User.IsInRole("Buyer") || User.IsInRole("Customer") || User.IsInRole("Distributor");
                 if (isBuyer && actorUserId != invoice.BuyerId)
                 {

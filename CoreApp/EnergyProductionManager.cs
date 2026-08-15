@@ -58,6 +58,13 @@ namespace CoreApp
 
             var epCrud = new EnergyProductionCrudFactory();
             var last = epCrud.RetrieveLast(turbineId);
+            var battery = new BatteriesCrudFactory().RetrieveAll<Battery>()
+                .FirstOrDefault(b => b.TurbineId == turbine.Id && b.Status == "Active");
+
+            if (battery == null)
+            {
+                return null;
+            }
 
             var periodStart = last?.EventDate ?? DateTime.Now.AddDays(-DefaultPeriodDays);
             var periodEnd = DateTime.Now;
@@ -80,18 +87,17 @@ namespace CoreApp
                 CreatedAt = DateTime.Now
             };
 
-            epCrud.Create(record);
+            if (net <= 0)
+            {
+                epCrud.Create(record);
+                return record;
+            }
 
             // Acreditar la producción neta a la batería de la turbina, si tiene una asignada
             if (net > 0)
             {
-                var batteryCrud = new BatteriesCrudFactory();
-                var battery = batteryCrud.RetrieveAll<Battery>().FirstOrDefault(b => b.TurbineId == turbine.Id && b.Status == "Active");
-
-                if (battery != null)
-                {
-                    new BatteryManager().StoreEnergy(battery.Id, net);
-                }
+                EnergyStorageCalculator.ApplyGeneratedEnergy(battery, net, DateTime.Now);
+                epCrud.CreateAndUpdateBattery(record, battery);
             }
 
             return record;

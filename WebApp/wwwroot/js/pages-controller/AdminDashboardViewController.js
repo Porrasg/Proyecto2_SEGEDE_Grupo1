@@ -338,6 +338,15 @@ document.addEventListener("DOMContentLoaded", function () {
             return [firstName, last1, last2].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
         }
 
+        // se verifica que si o si trigan los roles correctamente para luego su filtrado 
+        function normalizeRole(role) {
+            const value = (role || "").toString().trim().toLowerCase();
+            if (value === "admin" || value === "administrator") return "administrator";
+            if (value === "ing" || value === "ing." || value === "engineer" || value === "ingeniero") return "engineer";
+            if (value === "buyer" || value === "distributor" || value === "customer") return "distributor";
+            return value;
+        }
+
         // Carga la lista completa de usuarios y llama al filtrado/render.
         function loadUsers() {
             tableBody.innerHTML = '<tr><td colspan="7" class="text-center"><span class="spinner-border spinner-border-sm" role="status"></span> Cargando usuarios...</td></tr>';
@@ -363,7 +372,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     (u.firstLastName || "").toLowerCase().includes(query) ||
                     (u.secondLastName || "").toLowerCase().includes(query) ||
                     (u.email || "").toLowerCase().includes(query);
-                const matchesRole = !roleFilter || (u.role || "") === roleFilter;
+                // Comparo el rol sin importar como venga
+                const matchesRole = !roleFilter || normalizeRole(u.role) === normalizeRole(roleFilter);
                 return matchesQuery && matchesRole;
             });
 
@@ -424,9 +434,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         function getRoleBadge(role) {
-            if (role === "Administrator") return '<span class="badge bg-danger">Administrador</span>';
-            if (role === "Engineer") return '<span class="badge bg-info text-dark">Ingeniero</span>';
-            if (role === "Distributor") return '<span class="badge bg-success">Comprador</span>';
+            const normalizedRole = normalizeRole(role);
+            if (normalizedRole === "administrator") return '<span class="badge bg-danger">Administrador</span>';
+            if (normalizedRole === "engineer") return '<span class="badge bg-info text-dark">Ingeniero</span>';
+            if (normalizedRole === "distributor") return '<span class="badge bg-success">Comprador</span>';
             return `<span class="badge bg-secondary">${role || "-"}</span>`;
         }
 

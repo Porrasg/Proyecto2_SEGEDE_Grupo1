@@ -13,6 +13,11 @@ namespace WebAPI.Controllers
 
     public class EnergyController : ControllerBase
     {
+        public class SetBatteryChargeRequest
+        {
+            public int TurbineId { get; set; }
+            public decimal CurrentEnergyMWh { get; set; }
+        }
 
         [HttpGet]
         [Route("LocalBattery/{turbineId}")]
@@ -117,6 +122,48 @@ namespace WebAPI.Controllers
                 });
             }
 
+        }
+
+        [HttpPost]
+        [Route("SetBatteryCharge")]
+        public ActionResult SetBatteryCharge(SetBatteryChargeRequest request, [FromQuery] int? callerUserId)
+        {
+            try
+            {
+                var battery = new BatteryManager().SetCurrentEnergyByTurbine(
+                    request.TurbineId,
+                    request.CurrentEnergyMWh);
+
+                AuditHelper.TryAudit(callerUserId, "Simulate", "Batteries", battery.Id,
+                    $"Carga ajustada a {battery.CurrentEnergyMWh} MWh desde el panel de simulación");
+
+                return Ok(new { message = "Carga de batería actualizada.", data = battery });
+            }
+            catch (Exception ex)
+            {
+                return ApiErrorHelper.Handle(nameof(EnergyController), ex);
+            }
+        }
+
+        [HttpPost]
+        [Route("RunSimulation")]
+        public ActionResult RunSimulation([FromQuery] int? callerUserId)
+        {
+            try
+            {
+                var results = new EnergyProductionManager().ExecutePeriodProduction();
+                AuditHelper.TryAudit(callerUserId, "Simulate", "EnergyProduction", null,
+                    $"Ciclo energético ejecutado para {results.Count} turbina(s)");
+                return Ok(new
+                {
+                    message = $"Ciclo energético completado para {results.Count} turbina(s).",
+                    data = results
+                });
+            }
+            catch (Exception ex)
+            {
+                return ApiErrorHelper.Handle(nameof(EnergyController), ex);
+            }
         }
 
     }

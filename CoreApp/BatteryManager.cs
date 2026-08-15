@@ -2,32 +2,17 @@
 using Entities_DTOs;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace CoreApp
 {
     public class BatteryManager
     {
-        /*public List<Battery> RetrieveAllBatteries()
-        {
-            var batteryCrud = new BatteriesCrudFactory();
-            return batteryCrud.RetrieveAll<Battery>();
-        } */
-
         public List<Battery> RetrieveAllBatteries()
         {
             var batteryCrud = new BatteriesCrudFactory();
-
-            // Forzamos la obtención explícita mapeada a través de la firma del factory concreto
-            List<Battery> list = batteryCrud.RetrieveAll<Battery>();
-
-            // Verificación de respaldo para depuración en caliente (Hot Debug)
-            if (list == null)
-            {
-                list = new List<Battery>();
-            }
-
-            return list;
+            return batteryCrud.RetrieveAll<Battery>() ?? new List<Battery>();
         }
 
 
@@ -308,30 +293,41 @@ namespace CoreApp
                 throw new Exception("La batería no existe.");
             }
 
-            decimal availableSpace =
-                battery.MaximumCapacityMWh - battery.CurrentEnergyMWh;
-
-            decimal overflow = 0;
-
-            if (generatedEnergy <= availableSpace)
-            {
-                battery.CurrentEnergyMWh += generatedEnergy;
-            }
-            else
-            {
-                battery.CurrentEnergyMWh = battery.MaximumCapacityMWh;
-
-                overflow = generatedEnergy - availableSpace;
-
-                battery.TotalSaturationLossMWh += overflow;
-            }
-
-            battery.TotalGeneratedMWh += generatedEnergy;
-            battery.UpdatedAt = DateTime.UtcNow;
+            var overflow = EnergyStorageCalculator.ApplyGeneratedEnergy(
+                battery,
+                generatedEnergy,
+                DateTime.UtcNow);
 
             batteryCrud.Update(battery);
 
             return overflow;
+        }
+
+        public Battery SetCurrentEnergyByTurbine(int turbineId, decimal currentEnergyMWh)
+        {
+            if (turbineId <= 0)
+            {
+                throw new BusinessException("El identificador de la turbina no es válido");
+            }
+
+            var batteryCrud = new BatteriesCrudFactory();
+            var battery = batteryCrud.RetrieveAll<Battery>()
+                .FirstOrDefault(b => b.TurbineId == turbineId && b.Status == "Active");
+
+            if (battery == null)
+            {
+                throw new BusinessException("La turbina no posee una batería activa");
+            }
+
+            if (currentEnergyMWh < 0 || currentEnergyMWh > battery.MaximumCapacityMWh)
+            {
+                throw new BusinessException($"La carga debe estar entre 0 y {battery.MaximumCapacityMWh} MWh");
+            }
+
+            battery.CurrentEnergyMWh = currentEnergyMWh;
+            battery.UpdatedAt = DateTime.Now;
+            batteryCrud.Update(battery);
+            return battery;
         }
 
         public decimal TransferEnergyToCentralBank(

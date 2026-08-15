@@ -28,7 +28,7 @@ namespace WebAPI.Controllers
                 }
 
                 var dm = new DistributionManager();
-                var results = dm.ExecuteMonthlyDistribution(year, month, cbId.Value);
+                var results = dm.ExecuteMonthlyClosing(year, month, cbId.Value);
 
                 // Dejo registro de que se hizo el cierre mensual.
                 AuditHelper.TryAudit(callerUserId, "Execute", "Distributions", null,

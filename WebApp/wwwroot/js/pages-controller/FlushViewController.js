@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 if (!items.length) {
                     historyBody.innerHTML =
-                        '<tr><td colspan="6" class="text-center text-muted">Sin operaciones de flush registradas.</td></tr>';
+                        '<tr><td colspan="6" class="text-center text-muted">Sin operaciones de vaciado registradas.</td></tr>';
                     return;
                 }
                 historyBody.innerHTML = items.map(function (f) {
@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }).join("");
             })
             .fail(function (xhr) {
-                historyBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al cargar el historial de flush.</td></tr>';
+                historyBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al cargar el historial de vaciado.</td></tr>';
                 handleApiError(xhr);
             });
     }
@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", function () {
             isAutomatic: isAutomatic
         })
             .done(function (res) {
-                notify.success("Configuración de Flush guardada correctamente.");
+                notify.success("Configuración de vaciado guardada correctamente.");
             })
             .fail(function (xhr) {
                 handleApiError(xhr);
@@ -121,10 +121,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (manualBtn) {
         manualBtn.addEventListener("click", function () {
             notify.confirm(
-                "¿Ejecutar el flush manual ahora? Esta acción trasladará toda la energía disponible de las baterías locales al Banco Central y no se puede deshacer.",
+                "¿Ejecutar el vaciado manual ahora? Esta acción trasladará toda la energía disponible de las baterías locales al Banco Central y no se puede deshacer.",
                 {
                     dangerous: true,
-                    confirmText: "Ejecutar flush"
+                    confirmText: "Ejecutar Vaciado"
                 }
             ).then(function (ok) {
 
@@ -148,7 +148,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         notify.success(
                             res?.message ||
                             res?.Message ||
-                            "Flush manual ejecutado correctamente."
+                            "Vaciado manual ejecutado correctamente."
                         );
 
                         if (statusBadge) {

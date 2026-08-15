@@ -1,6 +1,5 @@
 ﻿using CoreApp;
 using Entities_DTOs;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers
@@ -21,19 +20,6 @@ namespace WebAPI.Controllers
         {
             users?.ForEach(u => u.Password = string.Empty);
             return users;
-        }
-
-        // Agrega el JWT de sesion (login ya completo, post-OTP) al objeto de usuario
-        // ya serializado, sin romper la forma plana que session.save() del frontend
-        // ya espera (role/userId/email al nivel raiz, no anidados bajo "user").
-        private static object WithToken(User user)
-        {
-            var node = System.Text.Json.JsonSerializer.SerializeToNode(user, new System.Text.Json.JsonSerializerOptions
-            {
-                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
-            })!.AsObject();
-            node["token"] = JwtTokenHelper.GenerateToken(user);
-            return node;
         }
 
         public class UserRegisterRequest
@@ -207,7 +193,6 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ChangePasswordByEmail")]
-        [AllowAnonymous]
         public ActionResult ChangePasswordByEmail(ChangePasswordEmailRequest request)
         {
             try
@@ -224,7 +209,6 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Register")]
-        [AllowAnonymous]
         public ActionResult Register(UserRegisterRequest request)
         {
             try
@@ -260,7 +244,6 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ConfirmChangePasswordByEmail")]
-        [AllowAnonymous]
         public ActionResult ConfirmChangePasswordByEmail([FromBody] ConfirmChangePasswordEmailRequest request, [FromQuery] string tokenCode)
         {
             try
@@ -320,7 +303,6 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Create")]
-        [Authorize(Roles = "Administrator")]
         public ActionResult Create(User user, [FromQuery] int? callerUserId)
         {
             try
@@ -356,7 +338,6 @@ namespace WebAPI.Controllers
 
         [HttpPut]
         [Route("Update")]
-        [Authorize(Roles = "Administrator")]
         public ActionResult Update(User user, [FromQuery] int? callerUserId)
         {
             try
@@ -387,7 +368,6 @@ namespace WebAPI.Controllers
 
         [HttpDelete]
         [Route("Delete")]
-        [Authorize(Roles = "Administrator")]
         public ActionResult Delete(User user, [FromQuery] int? callerUserId)
         {
             try
@@ -418,7 +398,6 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Login")]
-        [AllowAnonymous]
         public ActionResult Login(LoginRequest request)
         {
             try
@@ -427,13 +406,7 @@ namespace WebAPI.Controllers
                 var user = um.Login(request.Email, request.Password);
                 var sanitizedUser = Sanitize(user);
 
-                // Las cuentas estaticas de demostracion no usan OTP. Entregarles el
-                // JWT aqui mantiene operativo su objetivo de pruebas rapidas sin
-                // adelantar la autenticacion de los usuarios reales, que siguen
-                // recibiendo el token solo despues de ValidateLoginOtp.
-                return user.Id < 0
-                    ? Ok(WithToken(sanitizedUser))
-                    : Ok(sanitizedUser);
+                return Ok(sanitizedUser);
             }
             catch (Exception ex)
             {
@@ -444,14 +417,13 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ValidateLoginOtp")]
-        [AllowAnonymous]
         public ActionResult ValidateLoginOtp(OtpRequest request)
         {
             try
             {
                 var um = new UserManager();
                 var user = um.ValidateLoginOtp(request.Email, request.OtpCode);
-                return Ok(WithToken(Sanitize(user)));
+                return Ok(Sanitize(user));
             }
             catch (Exception ex)
             {
@@ -461,7 +433,6 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ResetPassword")]
-        [AllowAnonymous]
         public ActionResult ResetPassword(ResetPasswordRequest request)
         {
             try
@@ -485,7 +456,6 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("RecoverPassword")]
-        [AllowAnonymous]
         public ActionResult RecoverPassword([FromBody] OtpRequest request)
         {
             try
@@ -502,7 +472,6 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ConfirmResetPassword")]
-        [AllowAnonymous]
         public ActionResult ConfirmResetPassword(ResetPasswordRequest request)
         {
             try
@@ -520,7 +489,6 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ActivateAccount")]
-        [AllowAnonymous]
         public ActionResult ActivateAccount([FromBody] OtpRequest request)
         {
             try
@@ -545,7 +513,6 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("Activate")]
-        [AllowAnonymous]
         public ActionResult Activate([FromBody] UserActivationRequest request)
         {
             try
@@ -573,7 +540,6 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("ResendOtp")]
-        [AllowAnonymous]
         public ActionResult ResendOtp([FromBody] OtpRequest request, [FromQuery] string usageType)
         {
             try

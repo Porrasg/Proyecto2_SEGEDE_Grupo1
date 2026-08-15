@@ -1,6 +1,5 @@
 using CoreApp;
 using Entities_DTOs;
-using System.Security.Claims;
 
 namespace WebAPI
 {
@@ -9,19 +8,12 @@ namespace WebAPI
     // una operación de negocio que ya se aplicó con éxito.
     public static class AuditHelper
     {
-        public static int? ResolveCallerUserId(ClaimsPrincipal principal, int? suppliedUserId = null)
+        public static int? ResolveCallerUserId(int? suppliedUserId)
         {
-            var claimValue = principal?.FindFirstValue(ClaimTypes.NameIdentifier);
-            // El claim firmado es la fuente principal. Las cuentas estaticas de
-            // demostracion usan IDs negativos, pero siguen siendo actores
-            // autenticados validos. El fallback de query queda limitado a usuarios
-            // persistidos con IDs positivos.
-            if (int.TryParse(claimValue, out var authenticatedUserId) && authenticatedUserId != 0)
-            {
-                return authenticatedUserId;
-            }
-
-            return suppliedUserId.HasValue && suppliedUserId.Value > 0
+            // La sesión académica envía el actor. Los IDs negativos pertenecen a
+            // cuentas estáticas de demostración y son válidos para autorizar el
+            // flujo, aunque TryAudit no los persiste como FK de usuario.
+            return suppliedUserId.HasValue && suppliedUserId.Value != 0
                 ? suppliedUserId.Value
                 : null;
         }

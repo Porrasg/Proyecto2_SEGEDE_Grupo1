@@ -36,22 +36,22 @@ namespace DataAccess.CRUD
 
         public override void Delete(BaseDTO baseDTO)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("El historial de generación no se elimina");
         }
 
         public override List<T> RetrieveAll<T>()
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("Use RetrieveByTurbine para consultar generación de energía");
         }
 
         public override T RetrieveById<T>(int id)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("Use RetrieveByTurbine para consultar generación de energía");
         }
 
         public override void Update(BaseDTO baseDTO)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("El historial de generación no se modifica");
         }
 
 
@@ -89,12 +89,12 @@ namespace DataAccess.CRUD
             // Mapear los valores del diccionario a las propiedades del objeto EnergyGeneration
             var generation = new EnergyGeneration
             {
-                Id = (int)row["EnergyGenerationId"],
-                TurbineId = (int)row["TurbineId"],
-                GenerateMWh = (decimal)row["GenerateMWh"],
-                WindSpeedMs = (decimal)row["WindSpeedMs"],
-                GenerateAt = (DateTime)row["GenerateAt"],
-                CreateAt = (DateTime)row["CreateAt"]
+                Id = Convert.ToInt32(row["EnergyGenerationId"]),
+                TurbineId = Convert.ToInt32(row["TurbineId"]),
+                GenerateMWh = Convert.ToDecimal(row["GeneratedMWh"]),
+                WindSpeedMs = Convert.ToDecimal(row["WindSpeedMs"]),
+                GenerateAt = Convert.ToDateTime(row["GeneratedAt"]),
+                CreateAt = Convert.ToDateTime(row["CreatedAt"])
             };
             
             return generation;

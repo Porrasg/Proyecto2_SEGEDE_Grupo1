@@ -3,8 +3,8 @@ using Microsoft.Extensions.Logging;
 
 namespace WebAPI
 {
-    // Logging estatico minimo (sin contenedor de DI, misma convencion que AuditHelper
-    // y JwtTokenHelper). Antes de este helper, ninguna excepcion capturada en los
+    // Logging estatico minimo (sin contenedor de DI, misma convencion que AuditHelper).
+    // Antes de este helper, ninguna excepcion capturada en los
     // controllers quedaba registrada en ningun lado -- el try/catch de cada accion
     // solo le devolvia el mensaje al cliente y lo descartaba. Program.cs llama a
     // Configure() una sola vez al arrancar para reutilizar el pipeline de logging

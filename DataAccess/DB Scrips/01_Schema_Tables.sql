@@ -471,7 +471,6 @@ CREATE TABLE [dbo].[tblEnergyLosses](
 	[LostMWh] [decimal](18, 4) NOT NULL,
 	[Reason] [nvarchar](250) NOT NULL,
 	[OccurredAt] [datetime] NOT NULL,
-	[CreatedAt] [datetime] NOT NULL,
 	[BatteryId] [int] NULL,
  CONSTRAINT [PK_tblEnergyLosses] PRIMARY KEY CLUSTERED
 (
@@ -479,6 +478,11 @@ CREATE TABLE [dbo].[tblEnergyLosses](
 )WITH (STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 
+GO
+
+ALTER TABLE dbo.tblEnergyLosses
+ADD OpportunityCostCRC DECIMAL(18,4) NOT NULL
+    CONSTRAINT DF_tblEnergyLosses_OpportunityCostCRC DEFAULT (0);
 GO
 
 --Tabla para la configuracion de los flushes automaticos, incluyendo la hora de ejecucion y si es automatico o manual.
@@ -505,6 +509,32 @@ VALUES
     0,
     GETDATE(),
     NULL
+);
+GO
+
+-- tabla para almacenar los snapshots de las baterías
+CREATE TABLE dbo.tblBatterySnapshots
+(
+    SnapshotId INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+
+    FlushId INT NOT NULL,
+    BatteryId INT NOT NULL,
+    TurbineId INT NOT NULL,
+
+    MaximumCapacityMWh DECIMAL(18,4) NOT NULL,
+    CurrentEnergyMWh DECIMAL(18,4) NOT NULL,
+    TotalGeneratedMWh DECIMAL(18,4) NOT NULL,
+    TotalTransferredMWh DECIMAL(18,4) NOT NULL,
+    TotalSaturationLossMWh DECIMAL(18,4) NOT NULL,
+
+    CapturedEnergy DECIMAL(18,4) NOT NULL,
+
+    Status NVARCHAR(50) NOT NULL,
+
+    CapturedAt DATETIME NOT NULL,
+
+    CONSTRAINT UQ_FlushSnapshot
+        UNIQUE (FlushId, BatteryId)
 );
 GO
 

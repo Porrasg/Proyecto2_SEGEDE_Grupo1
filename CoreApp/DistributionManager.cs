@@ -17,7 +17,7 @@ namespace CoreApp
             return crud.RetrieveAll<Distribution>();
         }
 
-        // Ejecuta el cierre mensual del día 30.
+        // Ejecuta el cierre mensual solicitado desde administración o el simulador.
         // El cierre toma la energia disponible en el Banco Central,
         // distribuye los forecasts pendientes y genera las facturas correspondientes.
         public List<Distribution> ExecuteMonthlyClosing(
@@ -35,14 +35,6 @@ namespace CoreApp
                 throw new Exception("El mes indicado no es valido");
             }
 
-            var lastDay = DateTime.DaysInMonth(year, month);
-            var closingDate = new DateTime(year, month, lastDay);
-          //  if (DateTime.Now.Date != closingDate.Date)
-          //  {
-          //      throw new Exception(
-          //          "El cierre mensual solo puede ejecutarse el último día del mes");
-         //   }
-           
             // Ejecutar la distribucion mensual.
             return ExecuteMonthlyDistribution(
                 year,
@@ -136,8 +128,6 @@ namespace CoreApp
                 availableEnergy);
 
             // Si existe demanda pero no alcanza ni para el 10%, no se ejecuta la distribución.
-            Console.WriteLine($"TOTAL DEMANDA: {totalDemand}");
-            Console.WriteLine($"ENERGIA DISPONIBLE: {availableEnergy}");
 
 
             if (ratio <= 0)
@@ -392,12 +382,13 @@ namespace CoreApp
             {
                 try
                 {
-                    new OtpManager().SendGenericEmail(
+                    var notificationManager = new NotificationManager();
+                    notificationManager.SendEnergyQuotaNotification(
                         buyer.Email,
                         buyer.FirstName,
-                        "Cuota de energía asignada",
-                        $"Se le asignó una cuota de <strong>{distribution.AssignedEnergyMWh} MWh</strong> " +
-                        $"({distribution.DistributionDate:dd/MM/yyyy}). Puede consultar el detalle en su Estado de Cuenta.");
+                        $"{distribution.AssignedEnergyMWh} MWh",
+                        distribution.DistributionDate.ToString("dd/MM/yyyy")
+                    );
                 }
                 catch { /* no bloquear la distribución ya creada */ }
 

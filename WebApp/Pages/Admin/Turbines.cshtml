@@ -18,17 +18,19 @@
         <div class="filter-chips-container my-2 my-md-0">
             <button type="button" class="filter-chip active" data-status="" data-target="#filterStatus"><i class="bi bi-grid"></i> Todas</button>
             <button type="button" class="filter-chip" data-status="Active" data-target="#filterStatus"><i class="bi bi-check-circle-fill text-success"></i> Activas</button>
+            <button type="button" class="filter-chip" data-status="Inactive" data-target="#filterStatus"><i class="bi bi-pause-circle text-dark"></i> Inactivas</button>
             <button type="button" class="filter-chip" data-status="Maintenance" data-target="#filterStatus"><i class="bi bi-tools text-warning"></i> En Mantenimiento</button>
             <button type="button" class="filter-chip" data-status="Damaged" data-target="#filterStatus"><i class="bi bi-exclamation-triangle-fill text-danger"></i> Dañadas</button>
-            <button type="button" class="filter-chip" data-status="Inactive" data-target="#filterStatus"><i class="bi bi-pause-circle text-secondary"></i> Suspendidas</button>
+            <button type="button" class="filter-chip" data-status="Decommissioned" data-target="#filterStatus"><i class="bi bi-trash3-fill text-secondary"></i> Dada de Baja</button>
         </div>
         <div class="d-flex gap-2 align-items-center">
             <select class="form-select form-select-sm d-none" id="filterStatus">
                 <option value="">Todos los Estados</option>
                 <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
                 <option value="Maintenance">Maintenance</option>
                 <option value="Damaged">Damaged</option>
-                <option value="Inactive">Inactive</option>
+                <option value="Decommissioned">Decommissioned</option>
             </select>
             <button type="button" class="btn btn-outline-secondary btn-sm" id="btnClearFilters" title="Limpiar todos los filtros"><i class="bi bi-x-circle me-1"></i> Limpiar</button>
             <button class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#turbineModal"><i class="bi bi-plus-lg"></i> Nueva Turbina</button>

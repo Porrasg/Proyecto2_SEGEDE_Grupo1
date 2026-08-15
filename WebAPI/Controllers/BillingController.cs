@@ -1,6 +1,5 @@
 using CoreApp;
 using Entities_DTOs;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -14,11 +13,16 @@ namespace WebAPI.Controllers
     [ApiController]
     public class BillingController : ControllerBase
     {
-        // Cuerpo simple para exportar un estado de cuenta sin meter librerías extra.
-        public class ExportStatementRequest
+        // Cuerpos de las acciones administrativas sobre estados de cuenta.
+        public class AnnulStatementRequest
         {
             public int StatementId { get; set; }
-            public string Format { get; set; } = string.Empty;
+            public string Reason { get; set; } = string.Empty;
+        }
+
+        public class RegenerateStatementRequest
+        {
+            public int OriginalStatementId { get; set; }
         }
 
         public class SetPriceRequest
@@ -34,7 +38,6 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("SetPrice")]
-        [Authorize(Roles = "Administrator")]
         public ActionResult SetPrice(SetPriceRequest request, [FromQuery] int? callerUserId)
         {
             try
@@ -90,7 +93,6 @@ namespace WebAPI.Controllers
 
         [HttpPost]
         [Route("SetTax")]
-        [Authorize(Roles = "Administrator")]
         public ActionResult SetTax(SetTaxRequest request, [FromQuery] int? callerUserId)
         {
             try
@@ -141,6 +143,72 @@ namespace WebAPI.Controllers
             {
                 AppLogger.LogError(nameof(BillingController), ex);
                 return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [Route("AnnulStatement")]
+        public ActionResult AnnulStatement(AnnulStatementRequest request, [FromQuery] int? callerUserId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.Reason))
+                {
+                    return BadRequest(new { message = "El motivo de anulación es obligatorio." });
+                }
+
+                var manager = new InvoiceManager();
+                var invoice = manager.RetrieveById(request.StatementId);
+                if (invoice.PaymentStatus == "Paid")
+                {
+                    return BadRequest(new { message = "No se puede anular un estado de cuenta pagado." });
+                }
+                if (invoice.PaymentStatus == "Cancelled")
+                {
+                    return BadRequest(new { message = "El estado de cuenta ya está anulado." });
+                }
+                manager.Delete(invoice);
+                AuditHelper.TryAudit(callerUserId, "Cancel", "Invoices", invoice.Id,
+                    $"Estado de cuenta {invoice.InvoiceNumber} anulado. Motivo: {request.Reason.Trim()}");
+                return Ok(new { message = "Estado de cuenta anulado correctamente." });
+            }
+            catch (Exception ex)
+            {
+                return ApiErrorHelper.Handle(nameof(BillingController), ex);
+            }
+        }
+
+        [HttpPost]
+        [Route("RegenerateStatement")]
+        public ActionResult RegenerateStatement(RegenerateStatementRequest request, [FromQuery] int? callerUserId)
+        {
+            try
+            {
+                var manager = new InvoiceManager();
+                var original = manager.RetrieveById(request.OriginalStatementId);
+                if (original.PaymentStatus != "Cancelled")
+                {
+                    return BadRequest(new { message = "Solo se puede regenerar un estado de cuenta anulado." });
+                }
+
+                var regenerated = new Invoice
+                {
+                    DistributionId = original.DistributionId,
+                    BuyerId = original.BuyerId,
+                    TaxPercentage = original.TaxPercentage
+                };
+                manager.Create(regenerated);
+                AuditHelper.TryAudit(callerUserId, "Regenerate", "Invoices", regenerated.Id,
+                    $"Estado de cuenta regenerado a partir de {original.InvoiceNumber}");
+                return Ok(new
+                {
+                    message = "Estado de cuenta regenerado correctamente.",
+                    data = regenerated
+                });
+            }
+            catch (Exception ex)
+            {
+                return ApiErrorHelper.Handle(nameof(BillingController), ex);
             }
         }
     }

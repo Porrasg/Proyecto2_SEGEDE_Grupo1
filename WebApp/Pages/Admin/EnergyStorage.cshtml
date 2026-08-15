@@ -22,7 +22,7 @@
                         <div id="cbInventory" class="fs-4 fw-bold">-- MWh</div>
                     </div>
                     <div>
-                        <button id="btnFlush" class="btn btn-danger">Ejecutar Flush Manual</button>
+                        <button id="btnFlush" class="btn btn-danger">Ejecutar Vaciado Manual</button>
                     </div>
                 </div>
 
@@ -51,7 +51,7 @@
 
     <div class="row">
         <div class="col-12">
-            <h2 class="h6">Historial de Flushes</h2>
+            <h2 class="h6">Historial de Vaciados</h2>
             <div class="card p-3">
                 <table id="flushHistoryTable" class="table table-striped table-hover w-100">
                     <thead>
@@ -93,10 +93,35 @@
     </div>
 </div>
 
+<div class="row mt-4">
+    <div class="col-12">
+        <h2 class="h6">Capturas Técnicas de Baterías</h2>
+
+        <div class="card p-3">
+            <table id="batterySnapshotsTable" class="table table-striped table-hover w-100">
+                <thead>
+                    <tr>
+                        <th>Flush</th>
+                        <th>Batería</th>
+                        <th>Turbina</th>
+                        <th>Capacidad Máxima (MWh)</th>
+                        <th>Energía Capturada (MWh)</th>
+                        <th>Total Generado (MWh)</th>
+                        <th>Total Transferido (MWh)</th>
+                        <th>Pérdida Saturación (MWh)</th>
+                        <th>Estado</th>
+                        <th>Fecha de Captura</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <!-- Incrementamos a v=1.3 para forzar la lectura del script con los bloques IF -->
-    <script src="~/js/pages-controller/AdminEnergyStorageViewController.js?v=1.5"></script>
+    <script src="~/js/pages-controller/AdminEnergyStorageViewController.js?v=1.6"></script>
 }
 
 
