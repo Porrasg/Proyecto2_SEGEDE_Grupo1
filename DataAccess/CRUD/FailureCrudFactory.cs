@@ -32,8 +32,14 @@ namespace DataAccess.CRUD
             sqlOperation.AddDateTimeParameter("CreatedAt", failure.CreatedAt);
             sqlOperation.AddNullableDateTimeParameter("UpdatedAt", failure.UpdatedAt); // puede ser nulo
 
-            // Ejecutamos el SP
-            sqlDao.ExecuteProcedure(sqlOperation);
+            // Ejecutamos el SP y recuperar el ID generado
+            var result = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            //Guardar en el DTO el FailureID generado por SQL Server
+            if (result.Count > 0) 
+            {
+                failure.Id = (int)result[0]["FailureId"];
+            }
         }
 
         public override void Delete(BaseDTO baseDTO)
