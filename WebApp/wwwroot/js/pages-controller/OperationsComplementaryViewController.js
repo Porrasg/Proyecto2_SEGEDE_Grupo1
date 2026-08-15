@@ -505,7 +505,21 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             });
 
+            // Asociar evento a los botones Cancelar
+            document.querySelectorAll(".btn-failure-cancel").forEach(function (btn) {
 
+                btn.addEventListener("click", function () {
+
+                    const failureId = parseInt(btn.dataset.id);
+
+                    if (!failureId) {
+                        notify.error("No se pudo identificar la falla seleccionada.");
+                        return;
+                    }
+
+                    cancelFailure(failureId);
+                });
+            });
 
         }
 
@@ -658,6 +672,50 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
         }
 
+
+        // Cancelar una falla existente
+        function cancelFailure(failureId) {
+
+            apiClient.get(`Failures/RetrieveById/${failureId}`)
+                .done(function (failure) {
+
+                    const confirmed = confirm(
+                        "¿Está seguro de que desea cancelar esta falla?"
+                    );
+
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    // El manager espera recibir la falla completa.
+                    // Marcamos el estado como Cancelled antes de enviarla.
+                    failure.status = "Cancelled";
+                    failure.Status = "Cancelled";
+
+                    failure.updatedAt = new Date().toISOString();
+                    failure.UpdatedAt = failure.updatedAt;
+
+                    apiClient.delete(
+                        `Failures/Delete${callerQuery}`,
+                        failure
+                    )
+                        .done(function () {
+
+                            notify.success("Falla cancelada correctamente.");
+
+                            // Actualizar la tabla
+                            loadFailures();
+                        })
+                        .fail(function (xhr) {
+
+                            handleApiError(xhr);
+                        });
+                })
+                .fail(function (xhr) {
+
+                    handleApiError(xhr);
+                });
+        }
 
 
         function registerFailure() {
