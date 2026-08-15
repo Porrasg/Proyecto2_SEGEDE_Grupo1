@@ -46,8 +46,164 @@
             </tbody>
         </table>
     </div>
-    <!-- Modal Falla -->
-    <div class="modal fade" id="regFailModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Reportar Falla de Turbina</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar diálogo"></button></div><div class="modal-body"><form id="regFailForm" novalidate><div class="mb-2"><label class="form-label" for="fTurbine">Turbina</label><select class="form-select" id="fTurbine" required></select></div><div class="mb-2"><label class="form-label" for="fSeverity">Severidad</label><select class="form-select" id="fSeverity" required><option value="Low">Baja</option><option value="Medium" selected>Media</option><option value="High">Alta</option><option value="Critical">Crítica</option></select><small class="text-danger d-block mt-1">¡Atención! Una falla Crítica cambiará el estado de la turbina a Dañada inmediatamente.</small></div><div class="mb-2"><label class="form-label" for="fDesc">Descripción técnica</label><textarea class="form-control" id="fDesc" minlength="10" maxlength="500" rows="4" required></textarea><div class="form-text">Incluya síntomas, condiciones y evidencia observada (10–500 caracteres).</div></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-danger" id="saveFailBtn">Reportar</button></div></div></div></div>
+    <!-- Modal Reportar Falla -->
+    <div class="modal fade" id="regFailModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Reportar Falla de Turbina</h5>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Cerrar diálogo">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="regFailForm" novalidate>
+
+                        <!-- Turbina -->
+                        <div class="mb-2">
+                            <label class="form-label" for="fTurbine">
+                                Turbina
+                            </label>
+
+                            <select class="form-select"
+                                    id="fTurbine"
+                                    required>
+                            </select>
+                        </div>
+
+                        <!-- Severidad -->
+                        <div class="mb-2">
+                            <label class="form-label" for="fSeverity">
+                                Severidad
+                            </label>
+
+                            <select class="form-select"
+                                    id="fSeverity"
+                                    required>
+                                <option value="Low">Baja</option>
+                                <option value="Medium" selected>Media</option>
+                                <option value="High">Alta</option>
+                                <option value="Critical">Crítica</option>
+                            </select>
+
+                            <small class="text-danger d-block mt-1">
+                                ¡Atención! Una falla Crítica cambiará el estado de la turbina a Dañada inmediatamente.
+                            </small>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="mb-2">
+                            <label class="form-label" for="fDesc">
+                                Descripción técnica
+                            </label>
+                            
+                            <textarea class="form-control"
+                                      id="fDesc"
+                                      minlength="10"
+                                      maxlength="500"
+                                      rows="4"
+                                      required></textarea>
+                            <div class="form-text">
+                                Incluya síntomas, condiciones y evidencia observada (10–500 caracteres).
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+
+                <!--Moda Footer-->
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-danger"
+                            id="saveFailBtn">
+                        Reportar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div> <!--Fin Modal Reportar Falla-->
+
+
+    <!-- Modal Editar Falla -->
+    <div class="modal fade" id="editFailModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Falla</h5>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Cerrar diálogo">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <!-- ID oculto de la falla -->
+                    <input type="hidden" id="editFailId">
+
+                    <div class="mb-3">
+                        <label class="form-label">Turbina</label>
+                        <input type="text"
+                               class="form-control"
+                               id="editFailTurbine"
+                               disabled>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Severidad</label>
+                        <select class="form-select" id="editFailSeverity">
+                            <option value="Low">Baja</option>
+                            <option value="Medium">Media</option>
+                            <option value="High">Alta</option>
+                            <option value="Critical">Crítica</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Descripción técnica</label>
+                        <textarea class="form-control"
+                                  id="editFailDescription"
+                                  minlength="10"
+                                  maxlength="500"
+                                  rows="4">
+                    </textarea>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-primary"
+                            id="saveEditFailBtn">
+                        Guardar cambios
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>  <!-- Fin Modal Editar Falla -->
+
+  
 </div>
 
 @section Scripts {
