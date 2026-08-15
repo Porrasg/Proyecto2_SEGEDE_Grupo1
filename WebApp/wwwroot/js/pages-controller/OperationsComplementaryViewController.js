@@ -44,9 +44,9 @@ document.addEventListener("DOMContentLoaded", function () {
         initFailuresModule();
     });
 
-    
+
     // 1. MONITORIZACIÓN ENERGÉTICA (/Engineer/Energy)
- 
+
     function initEnergyModule() {
         const energyTurbineSelect = document.getElementById("engEnergyTurbine");
         if (!energyTurbineSelect) return;
@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     ) + " MWh";
             }
         });
-        
+
 
         // 2. HISTORIAL DE GENERACION DE ENERGIA
 
@@ -186,7 +186,7 @@ document.addEventListener("DOMContentLoaded", function () {
         `).join("");
     }
 
-   
+
     // 2. MANTENIMIENTOS (/Engineer/Maintenances)
     function initMaintenancesModule() {
         const maintsBody = document.getElementById("engMaintsBody");
@@ -411,7 +411,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function renderFailsTable(list) {
             if (!list.length) {
-                failsBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No se reportan fallas ni incidencias operativas para los filtros seleccionados.</td></tr>';
+                failsBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No se reportan fallas ni incidencias operativas para los filtros seleccionados.</td></tr>';
                 return;
             }
 
@@ -424,7 +424,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     Low: '<span class="badge bg-info text-dark">Baja</span>',
                     Medium: '<span class="badge bg-warning text-dark">Media</span>',
                     High: '<span class="badge bg-danger-subtle text-danger">Alta</span>',
-                    Critical: '<span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> Crítica</span>'
+                    Critical: '<span class="badge bg-danger">Crítica</span>'
                 };
                 const sevBadge = severityMap[sev] || `<span class="badge bg-secondary">${escapeHtml(sev)}</span>`;
                 const status = f.status || f.Status || "Reported";
@@ -433,17 +433,108 @@ document.addEventListener("DOMContentLoaded", function () {
                 const dateStr = formatDateTime(f.failureDate || f.FailureDate);
 
                 return `
-                    <tr class="${sev.toLowerCase() === 'critical' ? 'table-danger' : ''}">
-                        <td>#${escapeHtml(id)}</td>
-                        <td class="fw-bold">${escapeHtml(tCode)}</td>
-                        <td>${sevBadge}</td>
-                        <td>${escapeHtml(statusMap[status] || status)}</td>
-                        <td>${escapeHtml(desc)}</td>
-                        <td>${dateStr}</td>
-                    </tr>
-                `;
+                <tr class="${sev.toLowerCase() === 'critical' ? 'table-danger' : ''}">
+                    <td>#${escapeHtml(id)}</td>
+                    <td class="fw-bold">${escapeHtml(tCode)}</td>
+                    <td>${sevBadge}</td>
+                    <td>${escapeHtml(statusMap[status] || status)}</td>
+                    <td>${escapeHtml(desc)}</td>
+                    <td>${dateStr}</td>
+
+                    <td>
+                        <div class="d-flex gap-1 flex-wrap">
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary btn-failure-edit"
+                                    data-id="${id}">
+                                Editar
+                            </button>
+                            ${status !== "Resolved" && status !== "Cancelled" ? `
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-success btn-failure-resolve"
+                                        data-id="${id}">
+                                    Resolver
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger btn-failure-cancel"
+                                        data-id="${id}">
+                                    Cancelar
+                                </button>
+                            ` : ""}
+                        </div>
+                    </td>
+                </tr>
+            `;
             }).join("");
+
+            // Asociar evento a los botones Resolver
+            document.querySelectorAll(".btn-failure-resolve").forEach(function (btn) {
+
+                btn.addEventListener("click", function () {
+
+                    const failureId = parseInt(btn.dataset.id);
+
+                    if (!failureId) {
+                        notify.error("No se pudo identificar la falla seleccionada.");
+                        return;
+                    }
+
+                    resolveFailure(failureId);
+                });
+            });
         }
+
+        function resolveFailure(failureId) {
+
+            // Primero obtener la falla completa desde la API
+            apiClient.get(`Failures/RetrieveById/${failureId}`)
+                .done(function (failure) {
+
+                    const resolution = prompt(
+                        "Ingrese la resolución técnica aplicada a la falla:"
+                    );
+
+                    if (!resolution || resolution.trim().length < 10) {
+                        notify.warning(
+                            "Debe ingresar una resolución técnica de al menos 10 caracteres."
+                        );
+                        return;
+                    }
+
+                    // Actualizar los campos necesarios para cerrar la falla
+                    failure.status = "Resolved";
+                    failure.Status = "Resolved";
+
+                    failure.resolution = resolution.trim();
+                    failure.Resolution = resolution.trim();
+
+                    // Actualizar la fecha de modificación
+                    failure.updatedAt = new Date().toISOString();
+                    failure.UpdatedAt = failure.updatedAt;
+
+                    apiClient.put(
+                        `Failures/Update${callerQuery}`,
+                        failure
+                    )
+                        .done(function () {
+
+                            notify.success("Falla resuelta correctamente.");
+
+                            loadFailures();
+                        })
+                        .fail(function (xhr) {
+
+                            handleApiError(xhr);
+                        });
+                })
+                .fail(function (xhr) {
+
+                    handleApiError(xhr);
+                });
+        }
+
+
+
 
         function registerFailure() {
             const tid = parseInt(document.getElementById("fTurbine")?.value || 0);
@@ -477,7 +568,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
- 
+
     // UTILIDADES
     function populateTurbineSelect(selectEl, includeAllOption) {
         if (!selectEl) return;
