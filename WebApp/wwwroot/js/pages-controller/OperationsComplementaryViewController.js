@@ -177,7 +177,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // 2. MANTENIMIENTOS (/Engineer/Maintenances)
+    // 2. MANTENIMIENTOS (/ENGINEER/MAINTENANCES)
     function initMaintenancesModule() {
         const maintsBody = document.getElementById("engMaintsBody");
         if (!maintsBody) return;
@@ -378,14 +378,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
         loadFailures();
 
+        
         if (filterTurbine) filterTurbine.addEventListener("change", loadFailures);
         if (filterSeverity) filterSeverity.addEventListener("change", loadFailures);
 
         const saveBtn = document.getElementById("saveFailBtn");
         if (saveBtn) saveBtn.addEventListener("click", registerFailure);
 
+        // Elementos del modal Editar Falla
+        const editFailModalEl = document.getElementById("editFailModal");
+        const editFailModal = editFailModalEl ? new bootstrap.Modal(editFailModalEl) : null;
+        const editFailId = document.getElementById("editFailId");
+        const editFailTurbine = document.getElementById("editFailTurbine");
+        const editFailSeverity = document.getElementById("editFailSeverity");
+        const editFailDescription = document.getElementById("editFailDescription");
+        const saveEditFailBtn = document.getElementById("saveEditFailBtn");
+
+        if (saveEditFailBtn) {
+            saveEditFailBtn.addEventListener("click", updateFailure);
+        }
+
+
         function loadFailures() {
-            failsBody.innerHTML = '<tr><td colspan="6" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando averías y alertas...</td></tr>';
+            failsBody.innerHTML = '<tr><td colspan="7" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando averías y alertas...</td></tr>';
             const tid = filterTurbine?.value;
             const endpoint = tid ? ("Failures/ByTurbine/" + tid) : "Failures/All";
 
@@ -395,7 +410,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (severity) list = list.filter(f => (f.severity || f.Severity) === severity);
                 renderFailsTable(list);
             }).fail(function (xhr) {
-                failsBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al consultar el registro de fallas.</td></tr>';
+                failsBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error al consultar el registro de fallas.</td></tr>';
                 handleApiError(xhr);
             });
         }
@@ -473,6 +488,25 @@ document.addEventListener("DOMContentLoaded", function () {
                     resolveFailure(failureId);
                 });
             });
+
+            // Asociar evento a los botones Editar
+            document.querySelectorAll(".btn-failure-edit").forEach(function (btn) {
+
+                btn.addEventListener("click", function () {
+
+                    const failureId = parseInt(btn.dataset.id);
+
+                    if (!failureId) {
+                        notify.error("No se pudo identificar la falla seleccionada.");
+                        return;
+                    }
+
+                    openEditFailure(failureId);
+                });
+            });
+
+
+
         }
 
         function resolveFailure(failureId) {
@@ -524,6 +558,105 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
         }
 
+
+        // Cargar los datos de una falla existente y abrir el modal de edición
+        function openEditFailure(failureId) {
+
+            apiClient.get(`Failures/RetrieveById/${failureId}`)
+                .done(function (failure) {
+
+                    // Leer propiedades aceptando camelCase o PascalCase
+                    const id = failure.id ?? failure.Id;
+                    const turbineId = failure.turbineId ?? failure.TurbineId;
+                    const severity = failure.severity ?? failure.Severity;
+                    const description = failure.description ?? failure.Description;
+
+                    // Guardar el ID de la falla
+                    if (editFailId) {
+                        editFailId.value = id;
+                    }
+
+                    // Mostrar el código de la turbina
+                    if (editFailTurbine) {
+                        editFailTurbine.value =
+                            allTurbinesMap[turbineId] || `Turbina #${turbineId}`;
+                    }
+
+                    // Seleccionar la severidad actual
+                    if (editFailSeverity) {
+                        editFailSeverity.value = severity;
+                    }
+
+                    // Cargar la descripción actual
+                    if (editFailDescription) {
+                        editFailDescription.value = description || "";
+                    }
+
+                    // Abrir el modal
+                    editFailModal?.show();
+                })
+                .fail(function (xhr) {
+                    handleApiError(xhr);
+                });
+        }
+
+        // Actualizar una falla existente
+        function updateFailure() {
+
+            const failureId = parseInt(editFailId?.value || 0);
+            const severity = editFailSeverity?.value;
+            const description = editFailDescription?.value.trim();
+
+            if (!failureId) {
+                notify.error("No se pudo identificar la falla.");
+                return;
+            }
+
+            if (!severity || !description || description.length < 10 || description.length > 500) {
+                notify.warning(
+                    "Debe ingresar una descripción técnica de 10 a 500 caracteres."
+                );
+                return;
+            }
+
+            // Obtener nuevamente la falla completa para conservar
+            // todos los datos que no se modifican desde el modal.
+            apiClient.get(`Failures/RetrieveById/${failureId}`)
+                .done(function (failure) {
+
+                    // Modificar únicamente los campos editables
+                    failure.severity = severity;
+                    failure.Severity = severity;
+
+                    failure.description = description;
+                    failure.Description = description;
+
+                    failure.updatedAt = new Date().toISOString();
+                    failure.UpdatedAt = failure.updatedAt;
+
+                    // Enviar la falla completa al endpoint Update
+                    apiClient.put(
+                        `Failures/Update${callerQuery}`,
+                        failure
+                    )
+                        .done(function () {
+
+                            notify.success("Falla actualizada correctamente.");
+
+                            // Cerrar modal
+                            editFailModal?.hide();
+
+                            // Actualizar la tabla
+                            loadFailures();
+                        })
+                        .fail(function (xhr) {
+                            handleApiError(xhr);
+                        });
+                })
+                .fail(function (xhr) {
+                    handleApiError(xhr);
+                });
+        }
 
 
 
