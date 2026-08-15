@@ -48,7 +48,7 @@ namespace WebAPI.Controllers
             {
                 var bm = new BatteryManager();
                 bm.Create(battery);
-                AuditHelper.TryAudit(callerUserId, "Create", "Batterys", battery.Id, "Batería creada");
+                AuditHelper.TryAudit(callerUserId, "Create", "Batteries", battery.Id, "Batería creada");
                 return Ok(battery);
             }
             catch (Exception ex)
@@ -65,7 +65,7 @@ namespace WebAPI.Controllers
             {
                 var bm = new BatteryManager();
                 bm.Update(battery);
-                AuditHelper.TryAudit(callerUserId, "Update", "Batterys", battery.Id, "Batería actualizada");
+                AuditHelper.TryAudit(callerUserId, "Update", "Batteries", battery.Id, "Batería actualizada");
                 return Ok(battery);
             }
             catch (Exception ex)
@@ -82,7 +82,7 @@ namespace WebAPI.Controllers
             {
                 var bm = new BatteryManager();
                 bm.Delete(battery);
-                AuditHelper.TryAudit(callerUserId, "LogicalDelete", "Batterys", battery.Id, "Batería desactivada");
+                AuditHelper.TryAudit(callerUserId, "LogicalDelete", "Batteries", battery.Id, "Batería desactivada");
                 return Ok(battery);
             }
             catch (Exception ex)

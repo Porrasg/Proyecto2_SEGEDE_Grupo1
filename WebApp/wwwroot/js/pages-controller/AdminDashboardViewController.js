@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     const totalTurbines = Number(data.totalTurbines ?? data.TotalTurbines ?? 0);
                     const activeTurbines = Number(data.activeTurbines ?? data.ActiveTurbines ?? 0);
+             
                     const centralBankInventoryMWh = Number(data.centralBankInventory ?? data.CentralBankInventory ?? 0);
                     const effectiveCapacityMWh = Number(data.effectiveCapacity ?? data.EffectiveCapacity ?? 0);
                     const monthForecasts = Number(data.monthForecasts ?? data.MonthForecasts ?? 0);
@@ -39,9 +40,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     const totalBilledAmount = Number(data.monthTotalBilled ?? data.MonthTotalBilled ?? 0);
                     const periodProductionMWh = Number(data.monthTotalDistributed ?? data.MonthTotalDistributed ?? 0);
                     const flushDate = data.lastFlush || data.LastFlush;
+                   
 
                     setText("kpiTotalTurbines", totalTurbines);
                     setText("kpiActiveTurbines", activeTurbines);
+                    
                     setText("kpiTurbinesInMaintenance", Number(totalTurbines - activeTurbines > 0 ? totalTurbines - activeTurbines : 0));
                     setText("kpiCbInventory", formatNumber(centralBankInventoryMWh) + " MWh");
                     setText("kpiEffectiveCap", formatNumber(effectiveCapacityMWh) + " MWh");
@@ -50,12 +53,29 @@ document.addEventListener("DOMContentLoaded", function () {
                     setText("kpiTotalDemand", formatNumber(totalDemandMWh) + " MWh");
                     setText("kpiTotalBilled", "₡ " + formatNumber(totalBilledAmount));
                     setText("kpiLastFlush", flushDate ? new Date(flushDate).toLocaleDateString("es-CR", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "Sin registros");
-
+                    
                     renderAdminCharts(totalTurbines, activeTurbines, centralBankInventoryMWh, effectiveCapacityMWh, totalDemandMWh);
                 })
                 .fail(function (xhr) {
                     handleApiError(xhr);
+                    
                 });
+            console.log("🔥 VOY A CONSULTAR BATERÍAS");
+
+            apiClient.get("Batteries/RetrieveAllBatteries")
+                .done(function (res) {
+                console.log("🔥 RESPUESTA DE BATERÍAS:", res);
+
+                const batteries = apiClient.unwrapList(res);
+
+                console.log("🔥 CANTIDAD:", batteries.length);
+
+                setText("kpiBatteries", batteries.length);
+            })
+            .fail(function (xhr) {
+                console.error("🔥 ERROR BATTERIES:", xhr);
+                setText("kpiBatteries", "-");
+            });
         }
 
         // Traigo todos los usuarios y cuento cuántos tienen estado activo.

@@ -1,0 +1,192 @@
+﻿@page
+@model SEGEDE_Grupo1.WebApp.Pages.Admin.BatteriesModel
+@{
+    ViewData["Title"] = "Gestión de Baterías";
+}
+
+<div class="container mt-4">
+
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">@ViewData["Title"]</h2>
+            <p class="text-muted mb-0">
+                Consulta el estado y rendimiento de las baterías asociadas a las turbinas.
+            </p>
+        </div>
+
+        <button id="btnRefreshBatteries" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Actualizar
+        </button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
+            <div class="card kpi-card h-100 p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted fw-semibold">
+                        Baterías Activas
+                    </span>
+                    <span class="badge bg-success bg-opacity-10 text-success p-2 rounded-circle">
+                        <i class="bi bi-battery-full fs-5"></i>
+                    </span>
+                </div>
+
+                <h2 id="kpiActiveBatteries" class="fw-bold text-success mb-0">
+                    -
+                </h2>
+
+                <small class="text-muted">
+                    Baterías disponibles
+                </small>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card kpi-card h-100 p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted fw-semibold">
+                        Energía Almacenada
+                    </span>
+                    <span class="badge bg-info bg-opacity-10 text-info p-2 rounded-circle">
+                        <i class="bi bi-lightning-charge-fill fs-5"></i>
+                    </span>
+                </div>
+
+                <h2 id="kpiCurrentEnergy" class="fw-bold mb-0">
+                    -
+                    <small class="fs-6 text-muted">MWh</small>
+                </h2>
+
+                <small class="text-muted">
+                    Energía actualmente almacenada
+                </small>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card kpi-card h-100 p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted fw-semibold">
+                        Energía Transferida
+                    </span>
+                    <span class="badge bg-primary bg-opacity-10 text-primary p-2 rounded-circle">
+                        <i class="bi bi-box-arrow-up fs-5"></i>
+                    </span>
+                </div>
+
+                <h2 id="kpiTransferredEnergy" class="fw-bold mb-0">
+                    -
+                    <small class="fs-6 text-muted">MWh</small>
+                </h2>
+
+                <small class="text-muted">
+                    Energía enviada al Banco Central
+                </small>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card kpi-card h-100 p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted fw-semibold">
+                        Pérdidas por Saturación
+                    </span>
+                    <span class="badge bg-danger bg-opacity-10 text-danger p-2 rounded-circle">
+                        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                    </span>
+                </div>
+
+                <h2 id="kpiSaturationLoss" class="fw-bold text-danger mb-0">
+                    -
+                    <small class="fs-6 text-muted">MWh</small>
+                </h2>
+
+                <small class="text-muted">
+                    Energía que no pudo almacenarse
+                </small>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Tabla -->
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-transparent py-3">
+            <div class="d-flex justify-content-between align-items-center">
+
+                <div>
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-battery-charging me-2"></i>
+                        Baterías Registradas
+                    </h5>
+
+                    <small class="text-muted">
+                        Estado y estadísticas de cada batería.
+                    </small>
+                </div>
+
+                <div style="max-width: 300px;">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+
+                        <input type="text"
+                               id="searchBattery"
+                               class="form-control"
+                               placeholder="Buscar batería o turbina..." />
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center">ID</th>
+                            <th class="text-center">Turbina</th>
+                            <th class="text-center">Capacidad</th>
+                            <th class="text-center">Energía Actual</th>
+                            <th class="text-center">Generada</th>
+                            <th class="text-center">Transferida</th>
+                            <th class="text-center">Saturación</th>
+                            <th class="text-center">Estado</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="batteriesTableBody">
+
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                Cargando baterías...
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="~/js/pages-controller/BatteriesViewController.js"
+         asp-append-version="true"></script>
+}
