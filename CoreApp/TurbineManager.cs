@@ -148,8 +148,25 @@ namespace CoreApp
             // Se asignan las fechas de creación y actualización
             turbine.CreatedAt = DateTime.Now;
             turbine.UpdatedAt = null;
-
+            // Se crea la turbina en la base de datos
             tCrud.Create(turbine);
+            
+            // Crear automáticamente la batería asociada
+            var battery = new Battery
+            {
+                TurbineId = turbine.Id,
+                MaximumCapacityMWh = turbine.NominalWeeklyCapacityMWh,
+                CurrentEnergyMWh = 0,
+                TotalGeneratedMWh = 0,
+                TotalTransferredMWh = 0,
+                TotalSaturationLossMWh = 0,
+                Status = "Active",
+                CreatedAt = DateTime.Now,
+                UpdatedAt = null
+            };
+
+            var batteryCrud = new BatteriesCrudFactory();
+            batteryCrud.Create(battery);
         }
         public void Update(Turbine turbine)
         {

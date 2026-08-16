@@ -15,8 +15,6 @@ namespace CoreApp
             return batteryCrud.RetrieveAll<Battery>() ?? new List<Battery>();
         }
 
-
-
         public Battery RetrieveById(int id)
         {
             if (id <= 0)
