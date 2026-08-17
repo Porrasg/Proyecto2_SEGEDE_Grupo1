@@ -30,8 +30,14 @@ namespace DataAccess.CRUD
             sqlOperation.AddDateTimeParameter("CreatedAt", forecast.CreatedAt);
             sqlOperation.AddNullableDateTimeParameter("UpdatedAt", forecast.UpdatedAt); // puede ser nulo
 
-            // Ejecutamos el SP
-            sqlDao.ExecuteProcedure(sqlOperation);
+            // Ejecutar el SP y recuperar el ForecastId generado
+            var result = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Guardar en el DTO el ID generado
+            if (result.Count > 0)
+            {
+                forecast.Id = Convert.ToInt32(result[0]["ForecastId"]);
+            }
         }
 
         public override void Delete(BaseDTO baseDTO)
