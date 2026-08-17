@@ -165,7 +165,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }).done(function () {
                     notify.success("Pronóstico de demanda actualizado exitosamente.");
                     bootstrap.Modal.getInstance(document.getElementById("forecastModal"))?.hide();
-                    loadForecasts(buyerScopeId);
+                    loadForecasts(userId);
                 }).fail(function (xhr) {
                     handleApiError(xhr);
                 }).always(function () {
@@ -174,14 +174,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             } else {
                 apiClient.post("Forecasts/Register?callerUserId=" + userId + "&callerRole=" + role, {
-                    buyerId: parseInt(buyerScopeId), // ForecastManager exige el comprador del pronóstico
+                    buyerId: parseInt(userId), // ForecastManager exige el comprador del pronóstico
                     forecastMonth: m,
                     forecastYear: y,
                     requestedEnergyMWh: amt
                 }).done(function () {
                     notify.success("Nuevo pronóstico registrado y sujeto a distribución.");
                     bootstrap.Modal.getInstance(document.getElementById("forecastModal"))?.hide();
-                    loadForecasts(buyerScopeId);
+                    loadForecasts(userId);
                 }).fail(function (xhr) {
                     handleApiError(xhr);
                 }).always(function () {
