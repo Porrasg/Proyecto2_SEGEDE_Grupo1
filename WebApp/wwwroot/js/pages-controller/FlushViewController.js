@@ -59,6 +59,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
                 historyBody.innerHTML = items.map(function (f) {
                     const status = f.status || f.Status || "-";
+                    const statusMap = { Completed: "Completado", Failed: "Fallido", Pending: "Pendiente" };
+                    const statusText = statusMap[status] || status;
                     const badge = status === "Completed" ? "bg-success" : status === "Failed" ? "bg-danger" : "bg-warning text-dark";
                     return `<tr>
                         <td>${f.id || f.Id}</td>
@@ -66,7 +68,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <td>${new Date(f.executedAt || f.ExecutedAt).toLocaleString("es-CR")}</td>
                         <td>${Number(f.transferredEnergyMWh ?? f.TransferredEnergyMWh ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</td>
                         <td>${Number(f.saturationLossMWh ?? f.SaturationLossMWh ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</td>
-                        <td><span class="badge ${badge}">${status}</span></td>
+                        <td><span class="badge ${badge}">${statusText}</span></td>
                     </tr>`;
                 }).join("");
             })

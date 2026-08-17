@@ -347,20 +347,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // ==========================================
-    // FUNCIONES AUXILIARES GLOBALES
-    // ==========================================
-    if (typeof escapeHtml !== 'function') {
-        window.escapeHtml = function (str) {
-            if (!str) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        };
-    }
+
 
     function stateLabel(state) {
         const s = (state || "").toLowerCase();
@@ -520,17 +507,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 maintBody.innerHTML = list.map(m => {
                     const tipo = m.maintenanceType || m.MaintenanceType || m.type || m.Type || "Preventivo";
+                    const typeMap = { Preventive: "Preventivo", Corrective: "Correctivo", Critical: "Crítico", Emergency: "Emergencia" };
+                    const tipoText = typeMap[tipo] || tipo;
                     const inicioEst = m.estimatedStartDate || m.EstimatedStartDate || m.scheduledStart || m.startDate;
                     const finEst = m.estimatedEndDate || m.EstimatedEndDate || m.scheduledEnd || m.endDate;
                     const estado = m.status || m.Status || m.state || "Programado";
+                    const statusMap = { Scheduled: "Programado", Inspection: "Inspección", Completed: "Completado", InProgress: "En Progreso", Pending: "Pendiente" };
+                    const estadoText = statusMap[estado] || estado;
                     const resultado = m.result || m.Result || m.description || m.Description || "-";
 
                     return `
                     <tr>
-                        <td><span class="badge bg-info text-dark">${escapeHtml(tipo)}</span></td>
+                        <td><span class="badge bg-info text-dark">${escapeHtml(tipoText)}</span></td>
                         <td>${inicioEst ? formatDate(inicioEst) : 'N/A'}</td>
                         <td>${finEst ? formatDate(finEst) : 'Por definir'}</td>
-                        <td><span class="badge bg-warning text-dark">${escapeHtml(estado)}</span></td>
+                        <td><span class="badge bg-warning text-dark">${escapeHtml(estadoText)}</span></td>
                         <td>${escapeHtml(resultado)}</td>
                     </tr>
                 `;
@@ -565,6 +556,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         || f.timestamp || f.Timestamp;
 
                     const severity = f.severityLevel || f.SeverityLevel || f.severity || "Media";
+                    const severityMap = { High: "Alta", Medium: "Media", Low: "Baja" };
+                    const severityText = severityMap[severity] || severity;
                     const desc = f.description || f.Description || f.comments || "-";
 
                     const displayDate = formatDateTime(rawFailDate) !== "-" ? formatDateTime(rawFailDate) : (rawFailDate || "Fecha no disponible");
@@ -572,7 +565,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     return `
                     <tr>
                         <td>${displayDate}</td>
-                        <td><span class="badge bg-danger">${escapeHtml(severity)}</span></td>
+                        <td><span class="badge bg-danger">${escapeHtml(severityText)}</span></td>
                         <td>${escapeHtml(desc)}</td>
                     </tr>
                 `;
