@@ -227,8 +227,11 @@ document.addEventListener("DOMContentLoaded", function () {
         const stmtYear = document.getElementById("buyStmtYear");
         if (stmtYear) stmtYear.addEventListener("change", filterAndRenderStatements);
 
+        const stmtMonth = document.getElementById("buyStmtMonth");
+        if (stmtMonth) stmtMonth.addEventListener("change", filterAndRenderStatements);
+
         function loadStatements(buyerScopeId) {
-            stmtsBody.innerHTML = '<tr><td colspan="7" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando estados de cuenta...</td></tr>';
+            stmtsBody.innerHTML = '<tr><td colspan="8" class="text-center"><span class="spinner-border spinner-border-sm"></span> Cargando estados de cuenta...</td></tr>';
             apiClient.get("Invoices/Statements?buyerId=" + buyerScopeId)
                 .done(function (res) {
                     allStatements = readListResponse(res);
@@ -251,17 +254,45 @@ document.addEventListener("DOMContentLoaded", function () {
                     filterAndRenderStatements();
                 })
                 .fail(function (xhr) {
-                    stmtsBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error al cargar estados de cuenta.</td></tr>';
+                    stmtsBody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error al cargar estados de cuenta.</td></tr>';
                     handleApiError(xhr);
                 });
         }
 
         function filterAndRenderStatements() {
-            const year = parseInt(document.getElementById("buyStmtYear")?.value || 2026);
-            const filtered = allStatements.filter(s => {
-                const issueDate = s.issueDate ?? s.IssueDate;
-                return issueDate && new Date(issueDate).getFullYear() === year;
+
+            const year =
+                parseInt(document.getElementById("buyStmtYear")?.value || 2026);
+
+            const monthValue =
+                document.getElementById("buyStmtMonth")?.value || "";
+
+            const month = monthValue
+                ? parseInt(monthValue)
+                : null;
+
+            const filtered = allStatements.filter(function (s) {
+
+                const issueDate =
+                    s.issueDate ??
+                    s.IssueDate;
+
+                if (!issueDate) {
+                    return false;
+                }
+
+                const date = new Date(issueDate);
+
+                const matchesYear =
+                    date.getFullYear() === year;
+
+                const matchesMonth =
+                    month === null ||
+                    (date.getMonth() + 1) === month;
+
+                return matchesYear && matchesMonth;
             });
+
             renderStatementsTable(filtered);
         }
 
@@ -274,7 +305,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function renderStatementsTable(list) {
             if (!list.length) {
-                stmtsBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No tienes estados de cuenta emitidos en este período.</td></tr>';
+                stmtsBody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No tienes estados de cuenta emitidos en este período.</td></tr>';
                 return;
             }
 
@@ -287,12 +318,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 const sub = Number(s.subtotal || s.Subtotal || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
                 const tax = Number(s.taxAmount || s.TaxAmount || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
                 const total = Number(s.totalAmount || s.TotalAmount || 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
+                const unitPrice = Number(s.unitPrice ?? s.UnitPrice ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 });
                 const st = s.paymentStatus || s.PaymentStatus || "Pending";
 
                 return `
                     <tr>
                         <td class="fw-bold">${monthsEs[m] || m} ${y}</td>
                         <td>${energy} MWh</td>
+                        <td>₡${unitPrice}</td>
                         <td>₡${sub}</td>
                         <td>₡${tax}</td>
                         <td class="fw-bold text-success">₡${total}</td>
