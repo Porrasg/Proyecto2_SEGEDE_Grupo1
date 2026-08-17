@@ -8,12 +8,56 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>@ViewData["Title"]</h2>
     </div>
-    <div class="d-flex justify-content-between mb-3">
-        <select class="form-select" id="buyStmtYear" style="max-width: 150px;"><option value="2026">2026</option></select>
+    <div class="d-flex gap-2 mb-3">
+
+        <!-- Filtro por año -->
+        <select class="form-select"
+                id="buyStmtYear"
+                style="max-width: 150px;">
+            <option value="2026">2026</option>
+        </select>
+
+        <!-- Filtro por período -->
+        <select class="form-select"
+                id="buyStmtMonth"
+                style="max-width: 180px;">
+            <option value="">Todos los períodos</option>
+            <option value="1">Enero</option>
+            <option value="2">Febrero</option>
+            <option value="3">Marzo</option>
+            <option value="4">Abril</option>
+            <option value="5">Mayo</option>
+            <option value="6">Junio</option>
+            <option value="7">Julio</option>
+            <option value="8">Agosto</option>
+            <option value="9">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+        </select>
+
     </div>
     <table class="table table-striped table-hover">
-        <thead><tr><th>Período</th><th>Energía Asignada (MWh)</th><th>Subtotal (CRC)</th><th>Impuesto (CRC)</th><th>Total (CRC)</th><th>Estado</th><th>Acciones</th></tr></thead>
-        <tbody id="buyStmtsBody"><tr><td colspan="7" class="text-center">Cargando mis estados de cuenta...</td></tr></tbody>
+        <thead>
+            <tr>
+                <th>Período</th>
+                <th>Energía Asignada (MWh)</th>
+                <th>Precio Unitario (CRC/MWh)</th>
+                <th>Subtotal (CRC)</th>
+                <th>Impuesto (CRC)</th>
+                <th>Total (CRC)</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody id="buyStmtsBody">
+            <tr>
+                <td colspan="8" class="text-center">
+                    Cargando mis estados de cuenta...
+                </td>
+            </tr>
+        </tbody>
     </table>
     <!-- Modal Ver Detalle (solo lectura) -->
     <div class="modal fade" id="buyStmtViewModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
