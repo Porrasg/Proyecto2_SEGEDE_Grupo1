@@ -44,43 +44,122 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (detailsBody) detailsBody.innerHTML = '<tr><td colspan="5" class="text-center"><span class="spinner-border spinner-border-sm"></span> Consultando...</td></tr>';
 
-        apiClient.get("Distributions/RetrieveAll")
-            .done(function (res) {
-                const items = apiClient.unwrapList(res);
-                // Distributions/RetrieveAll devuelve filas individuales por comprador (Distribution); se filtra
-                // por el mes/año de DistributionDate y se agrupan por DistributionBatchId (el lote de ese mes).
-                const rowsInPeriod = items.filter(function (d) {
-                    const dt = new Date(d.distributionDate ?? d.DistributionDate);
-                    return (dt.getMonth() + 1) === month && dt.getFullYear() === year;
+        apiClient.get(`Forecasts/ByMonth?month=${month}&year=${year}`)
+            .done(function (forecastRes) {
+
+                const forecasts = apiClient.unwrapList(forecastRes);
+
+                // Obtener los ForecastId correspondientes al período seleccionado
+                const forecastIds = forecasts.map(function (f) {
+                    return f.id ?? f.Id;
                 });
 
-                if (!rowsInPeriod.length) {
-                    if (totalDemandEl) totalDemandEl.textContent = "- MWh";
-                    if (availInvEl) availInvEl.textContent = "- MWh";
-                    if (scenarioEl) scenarioEl.innerHTML = '<span class="badge bg-secondary">-</span>';
-                    if (dateEl) dateEl.textContent = "-";
-                    if (detailsBody) detailsBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Sin distribución ejecutada para este mes.</td></tr>';
-                    return;
-                }
+                apiClient.get("Distributions/RetrieveAll")
+                    .done(function (res) {
 
-                const totalDemand = rowsInPeriod.reduce((s, d) => s + Number(d.requestedEnergyMWh ?? d.RequestedEnergyMWh ?? 0), 0);
-                const totalAssigned = rowsInPeriod.reduce((s, d) => s + Number(d.assignedEnergyMWh ?? d.AssignedEnergyMWh ?? 0), 0);
-                const batchId = rowsInPeriod[0].distributionBatchId ?? rowsInPeriod[0].DistributionBatchId;
-                const executionDate = rowsInPeriod[0].distributionDate ?? rowsInPeriod[0].DistributionDate;
-                // Estado del lote: si alguna fila quedó "Partial" (prorrateo por escasez), se refleja como tal.
-                const batchStatus = rowsInPeriod.some(d => (d.status ?? d.Status) === "Partial") ? "Partial" : "Completed";
+                        const items = apiClient.unwrapList(res);
 
-                if (totalDemandEl) totalDemandEl.textContent = totalDemand.toLocaleString("es-CR", { minimumFractionDigits: 2 }) + " MWh";
-                // El inventario disponible del Banco Central al momento de la ejecución no se persiste por
-                // distribución en el backend actual — se muestra el total efectivamente asignado en su lugar.
-                if (availInvEl) availInvEl.textContent = totalAssigned.toLocaleString("es-CR", { minimumFractionDigits: 2 }) + " MWh";
-                if (scenarioEl) scenarioEl.innerHTML = statusBadge(batchStatus);
-                if (dateEl) dateEl.textContent = executionDate ? new Date(executionDate).toLocaleString("es-CR") : "-";
+                        // Una distribución pertenece al período según su Forecast,
+                        // no según la fecha en que fue ejecutada.
+                        const rowsInPeriod = items.filter(function (d) {
 
-                loadDetails(batchId);
+                            const forecastId =
+                                d.forecastId ??
+                                d.ForecastId;
+
+                            return forecastIds.includes(forecastId);
+                        });
+
+                        if (!rowsInPeriod.length) {
+                            if (totalDemandEl) totalDemandEl.textContent = "- MWh";
+                            if (availInvEl) availInvEl.textContent = "- MWh";
+                            if (scenarioEl) scenarioEl.innerHTML =
+                                '<span class="badge bg-secondary">-</span>';
+                            if (dateEl) dateEl.textContent = "-";
+
+                            if (detailsBody) {
+                                detailsBody.innerHTML =
+                                    '<tr><td colspan="5" class="text-center text-muted">Sin distribución ejecutada para este mes.</td></tr>';
+                            }
+
+                            return;
+                        }
+
+                        const totalDemand = rowsInPeriod.reduce(
+                            (s, d) =>
+                                s + Number(
+                                    d.requestedEnergyMWh ??
+                                    d.RequestedEnergyMWh ??
+                                    0
+                                ),
+                            0
+                        );
+
+                        const totalAssigned = rowsInPeriod.reduce(
+                            (s, d) =>
+                                s + Number(
+                                    d.assignedEnergyMWh ??
+                                    d.AssignedEnergyMWh ??
+                                    0
+                                ),
+                            0
+                        );
+
+                        const batchId =
+                            rowsInPeriod[0].distributionBatchId ??
+                            rowsInPeriod[0].DistributionBatchId;
+
+                        const executionDate =
+                            rowsInPeriod[0].distributionDate ??
+                            rowsInPeriod[0].DistributionDate;
+
+                        const batchStatus = rowsInPeriod.some(
+                            d => (d.status ?? d.Status) === "Partial"
+                        )
+                            ? "Partial"
+                            : "Completed";
+
+                        if (totalDemandEl) {
+                            totalDemandEl.textContent =
+                                totalDemand.toLocaleString("es-CR", {
+                                    minimumFractionDigits: 2
+                                }) + " MWh";
+                        }
+
+                        if (availInvEl) {
+                            availInvEl.textContent =
+                                totalAssigned.toLocaleString("es-CR", {
+                                    minimumFractionDigits: 2
+                                }) + " MWh";
+                        }
+
+                        if (scenarioEl) {
+                            scenarioEl.innerHTML = statusBadge(batchStatus);
+                        }
+
+                        if (dateEl) {
+                            dateEl.textContent = executionDate
+                                ? new Date(executionDate).toLocaleString("es-CR")
+                                : "-";
+                        }
+
+                        loadDetails(batchId);
+                    })
+                    .fail(function (xhr) {
+                        if (detailsBody) {
+                            detailsBody.innerHTML =
+                                '<tr><td colspan="5" class="text-center text-danger">Error al consultar la distribución.</td></tr>';
+                        }
+
+                        handleApiError(xhr);
+                    });
             })
             .fail(function (xhr) {
-                if (detailsBody) detailsBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error al consultar la distribución.</td></tr>';
+                if (detailsBody) {
+                    detailsBody.innerHTML =
+                        '<tr><td colspan="5" class="text-center text-danger">Error al consultar los pronósticos del período.</td></tr>';
+                }
+
                 handleApiError(xhr);
             });
     }
