@@ -60,20 +60,13 @@ document.addEventListener("DOMContentLoaded", function () {
                     handleApiError(xhr);
                     
                 });
-            console.log("🔥 VOY A CONSULTAR BATERÍAS");
-
             apiClient.get("Batteries/RetrieveAllBatteries")
                 .done(function (res) {
-                console.log("🔥 RESPUESTA DE BATERÍAS:", res);
-
                 const batteries = apiClient.unwrapList(res);
-
-                console.log("🔥 CANTIDAD:", batteries.length);
-
                 setText("kpiBatteries", batteries.length);
             })
             .fail(function (xhr) {
-                console.error("🔥 ERROR BATTERIES:", xhr);
+                handleApiError(xhr);
                 setText("kpiBatteries", "-");
             });
         }
