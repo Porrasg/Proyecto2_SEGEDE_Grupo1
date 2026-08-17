@@ -229,7 +229,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const photoPreview = document.getElementById("uPhotoPreview");
                 if (photoPreview) photoPreview.classList.add("d-none");
                 userPhotoDataUrl = null;
-                attachPhotoPreview();
+                attachPhotoPreview("uPhoto", "uPhotoPreview");
                 updateCalculatedAge();
 
                 if (userModal) userModal.show();
@@ -245,42 +245,18 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
 
-        function attachEditPhotoPreview() {
-            const photoInput = document.getElementById("editPhoto");
-            const photoPreview = document.getElementById("editPhotoPreview");
-            if (!photoInput || photoInput.dataset.bound === "true") return;
-            photoInput.dataset.bound = "true";
-            photoInput.addEventListener("change", function () {
-                const file = this.files?.[0];
-                if (!file) { editPhotoDataUrl = null; if (photoPreview) photoPreview.classList.add("d-none"); return; }
-                const img = new Image();
-                img.onload = function () {
-                    const MAX = 256;
-                    const scale = Math.min(1, MAX / Math.max(img.width, img.height));
-                    const canvas = document.createElement("canvas");
-                    canvas.width = Math.round(img.width * scale);
-                    canvas.height = Math.round(img.height * scale);
-                    canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-                    editPhotoDataUrl = canvas.toDataURL("image/jpeg", 0.82);
-                    URL.revokeObjectURL(img.src);
-                    if (photoPreview) { photoPreview.src = editPhotoDataUrl; photoPreview.classList.remove("d-none"); }
-                };
-                img.onerror = function () { URL.revokeObjectURL(img.src); notify.error("No se pudo leer la imagen seleccionada."); };
-                img.src = URL.createObjectURL(file);
-            });
-        }
-
         let userPhotoDataUrl = null;
 
-        function attachPhotoPreview() {
-            const photoInput = document.getElementById("uPhoto");
-            const photoPreview = document.getElementById("uPhotoPreview");
+        function attachPhotoPreview(inputId, previewId, dataUrlVariable) {
+            const photoInput = document.getElementById(inputId);
+            const photoPreview = document.getElementById(previewId);
             if (!photoInput || photoInput.dataset.bound === "true") return;
             photoInput.dataset.bound = "true";
             photoInput.addEventListener("change", function () {
                 const file = this.files?.[0];
                 if (!file) {
-                    userPhotoDataUrl = null;
+                    if (inputId === "editPhoto") editPhotoDataUrl = null;
+                    else userPhotoDataUrl = null;
                     if (photoPreview) photoPreview.classList.add("d-none");
                     return;
                 }
@@ -292,10 +268,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     canvas.width = Math.round(img.width * scale);
                     canvas.height = Math.round(img.height * scale);
                     canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-                    userPhotoDataUrl = canvas.toDataURL("image/jpeg", 0.82);
+                    const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+                    if (inputId === "editPhoto") editPhotoDataUrl = dataUrl;
+                    else userPhotoDataUrl = dataUrl;
                     URL.revokeObjectURL(img.src);
                     if (photoPreview) {
-                        photoPreview.src = userPhotoDataUrl;
+                        photoPreview.src = dataUrl;
                         photoPreview.classList.remove("d-none");
                     }
                 };
@@ -466,10 +444,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         function getStatusBadge(status) {
-            if ((status || "").toLowerCase() === "active") return '<span class="badge bg-success">Active</span>';
-            if ((status || "").toLowerCase() === "inactive") return '<span class="badge bg-secondary">Inactive</span>';
-            if ((status || "").toLowerCase() === "blocked") return '<span class="badge bg-danger">Blocked</span>';
-            if ((status || "").toLowerCase() === "pendingactivation") return '<span class="badge bg-warning text-dark">Pending</span>';
+            if ((status || "").toLowerCase() === "active") return '<span class="badge bg-success">Activo</span>';
+            if ((status || "").toLowerCase() === "inactive") return '<span class="badge bg-secondary">Inactivo</span>';
+            if ((status || "").toLowerCase() === "blocked") return '<span class="badge bg-danger">Bloqueado</span>';
+            if ((status || "").toLowerCase() === "pendingactivation") return '<span class="badge bg-warning text-dark">Pendiente</span>';
             return `<span class="badge bg-warning text-dark">${status || "-"}</span>`;
         }
 
@@ -522,7 +500,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 if (roleInput) { roleInput.value = sourceUser.role || sourceUser.Role || "Engineer"; roleInput.disabled = false; }
-                attachEditPhotoPreview();
+                attachPhotoPreview("editPhoto", "editPhotoPreview");
 
                 if (editUserModal) {
                     editUserModal.show();
@@ -629,7 +607,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     // aleatoria que nadie conoce; el usuario define la suya propia al activar
                     // la cuenta. passVal solo aplica al modal de edición (reseteo puntual).
                     Password: passVal || "",
-                    Status: "Pending"
+                    Status: "PendingActivation"
                 };
 
 
