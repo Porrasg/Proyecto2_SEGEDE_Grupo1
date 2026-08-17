@@ -32,8 +32,14 @@ namespace DataAccess.CRUD
             sqlOperation.AddDateTimeParameter("CreatedAt", battery.CreatedAt);
             sqlOperation.AddNullableDateTimeParameter("UpdatedAt", battery.UpdatedAt); // puede ser nulo
 
-            // Ejecutamos el SP
-            sqlDao.ExecuteProcedure(sqlOperation);
+            // Ejecutar el SP y recuperar el BatteryId generado
+            var result = sqlDao.ExecuteQueryProcedure(sqlOperation);
+
+            // Guardar en el DTO el ID generado
+            if (result.Count > 0)
+            {
+                battery.Id = Convert.ToInt32(result[0]["BatteryId"]);
+            }
         }
 
         public override void Delete(BaseDTO baseDTO)

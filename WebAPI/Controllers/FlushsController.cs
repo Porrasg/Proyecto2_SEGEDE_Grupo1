@@ -32,6 +32,8 @@ namespace WebAPI.Controllers
         {
             try
             {
+                var actorUserId = AuditHelper.ResolveCallerUserId(callerUserId);
+
                 var flushManager = new FlushManager();
 
                 int processed =
@@ -46,24 +48,13 @@ namespace WebAPI.Controllers
                     });
                 }
 
-                // Registrar la ejecución en auditoría
-                try
-                {
-                    var am = new AuditManager();
-
-                    am.Create(new Audit
-                    {
-                        UserId = callerUserId,
-                        Action = "Execute",
-                        EntityName = "Flushes",
-                        Description =
-                            $"Vaciado manual masivo: {processed} batería(s) trasladada(s) al Banco Central"
-                    });
-                }
-                catch
-                {
-                    // La auditoría no debe cancelar el vaciado
-                }
+                AuditHelper.TryAudit(
+                    actorUserId,
+                    "Execute",
+                    "Flushes",
+                    null,
+                    $"Vaciado manual masivo: {processed} batería(s) trasladada(s) al Banco Central"
+                );
 
                 return Ok(new
                 {
@@ -79,6 +70,8 @@ namespace WebAPI.Controllers
                 });
             }
         }
+
+
 
         [HttpGet]
         [Route("RetrieveById/{id}")]

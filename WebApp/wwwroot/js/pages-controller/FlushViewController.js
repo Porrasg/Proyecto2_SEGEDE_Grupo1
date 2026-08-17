@@ -1,5 +1,7 @@
 // FlushViewController.js (§60, §85 Admin/Flush) - Configuración y ejecución de vaciado (Flush) hacia el Banco Central
 document.addEventListener("DOMContentLoaded", function () {
+
+    const currentUserId = session.getUserId();
     const configForm = document.getElementById("flushConfigForm");
     if (!configForm) return;
 
@@ -140,7 +142,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     statusBadge.className = "badge bg-warning text-dark";
                 }
 
-                apiClient.post("Flushs/ExecuteManual")
+                apiClient.post(`Flushs/ExecuteManual?callerUserId=${currentUserId}`)
                     .done(function (res) {
 
                         notify.success(
