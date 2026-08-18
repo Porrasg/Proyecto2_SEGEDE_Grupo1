@@ -1,6 +1,6 @@
 ﻿using CoreApp;
 
-namespace WebAPI.Services
+namespace WebAPI.Controllers
 {
     public class FlushAutomaticService : BackgroundService
     {
