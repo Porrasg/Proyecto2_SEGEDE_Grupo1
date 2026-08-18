@@ -91,12 +91,6 @@
 
                 <!-- Menú Navegación Modular por Rol -->
                 <ul class="nav nav-pills flex-column flex-grow-1 gap-1 sgde-sidebar-menu">
-                    <li class="nav-item" data-roles="superadmin,administrator,admin,engineer,buyer,customer">
-                        <a asp-page="/Dashboard" class="nav-link d-flex align-items-center gap-3 px-3 py-2" data-nav="/dashboard">
-                            <i class="bi bi-grid-1x2-fill"></i>
-                            <span>Centro de Módulos</span>
-                        </a>
-                    </li>
 
                     <!-- Módulos Administrador -->
                     <li class="nav-item" data-roles="superadmin,administrator,admin">
@@ -198,7 +192,7 @@
                     <li class="nav-item" data-roles="superadmin,administrator,admin">
                         <a href="/Admin/Simulator" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
                             <i class="bi bi-cpu"></i>
-                            <span>Panel de Simulación</span>
+                            <span>Panel de Prueba</span>
                         </a>
                     </li>
 
@@ -212,7 +206,7 @@
                     <li class="nav-item" data-roles="engineer">
                         <a href="/Engineer/Simulator" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
                             <i class="bi bi-sliders"></i>
-                            <span>Simulador SCADA</span>
+                            <span>Panel de Prueba</span>
                         </a>
                     </li>
                     <li class="nav-item" data-roles="engineer">
@@ -255,12 +249,6 @@
                         <a href="/Engineer/Reports" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
                             <i class="bi bi-file-bar-graph"></i>
                             <span>Reportes Operativos</span>
-                        </a>
-                    </li>
-                    <li class="nav-item" data-roles="engineer">
-                        <a href="/Engineer/Audit" class="nav-link d-flex align-items-center gap-3 px-3 py-2">
-                            <i class="bi bi-journal-check"></i>
-                            <span>Auditoría Técnica</span>
                         </a>
                     </li>
 
