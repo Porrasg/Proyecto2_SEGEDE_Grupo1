@@ -1,4 +1,4 @@
-﻿using Entities_DTOs;
+using Entities_DTOs;
 using System.IO.Compression;
 using System.Security;
 using System.Text;
@@ -198,51 +198,187 @@ namespace CoreApp
 
         private static byte[] BuildPdf(FileExportRequest request)
         {
-            var lines = new List<string>
-            {
-                request.Title,
-                $"Generado: {DateTime.Now:yyyy-MM-dd HH:mm}",
-                string.Empty,
-                string.Join(" | ", request.Headers),
-                new string('-', Math.Min(105, request.Headers.Sum(header => header.Length + 3)))
-            };
+            var isLandscape = request.Headers.Count > 6;
+            var pageWidth = isLandscape ? 792f : 612f;
+            var pageHeight = isLandscape ? 612f : 792f;
+            const float margin = 36f;
+            var printableWidth = pageWidth - (margin * 2);
 
-            foreach (var row in request.Rows)
+            // Cálculo dinámico de ancho de columnas según contenido y encabezados
+            var colWidths = CalculateColumnWidths(request.Headers, request.Rows, printableWidth);
+
+            var pageBuilders = new List<StringBuilder>();
+            var currentBuilder = new StringBuilder();
+            pageBuilders.Add(currentBuilder);
+
+            var y = pageHeight - margin;
+
+            void RenderHeader(StringBuilder sb, bool isFirstPage)
             {
-                lines.AddRange(WrapLine(string.Join(" | ", row.Select(cell => cell ?? string.Empty)), 105));
+                // Banner superior de marca
+                sb.AppendLine("0.122 0.306 0.471 rg"); // Primary Slate Blue (#1F4E78)
+                sb.AppendLine($"36 {y - 4} {printableWidth} 4 re f");
+
+                // Título y metadatos
+                sb.AppendLine("BT");
+                sb.AppendLine("/F2 8 Tf");
+                sb.AppendLine("0.392 0.455 0.545 rg"); // Muted Gray (#64748B)
+                sb.AppendLine($"36 {y - 16} Td");
+                sb.AppendLine("(SGDE | SISTEMA DE GENERACION Y DESPACHO ELECTRICO) Tj");
+                sb.AppendLine("ET");
+
+                sb.AppendLine("BT");
+                sb.AppendLine("/F2 14 Tf");
+                sb.AppendLine("0.122 0.306 0.471 rg");
+                sb.AppendLine($"36 {y - 34} Td");
+                sb.AppendLine($"({PdfEscape(request.Title)}) Tj");
+                sb.AppendLine("ET");
+
+                sb.AppendLine("BT");
+                sb.AppendLine("/F1 8.5 Tf");
+                sb.AppendLine("0.392 0.455 0.545 rg");
+                sb.AppendLine($"36 {y - 48} Td");
+                var subText = $"Fecha de emision: {DateTime.Now:yyyy-MM-dd HH:mm}   |   Registros: {request.Rows.Count}";
+                sb.AppendLine($"({PdfEscape(subText)}) Tj");
+                sb.AppendLine("ET");
+
+                // Línea divisoria
+                sb.AppendLine("0.796 0.835 0.882 RG");
+                sb.AppendLine("0.5 w");
+                sb.AppendLine($"36 {y - 56} m {36 + printableWidth} {y - 56} l S");
+
+                y -= 66;
             }
 
-            const int linesPerPage = 49;
-            var pages = lines.Chunk(linesPerPage).ToList();
-            if (pages.Count == 0) pages.Add(Array.Empty<string>());
+            void RenderTableHeader(StringBuilder sb)
+            {
+                const float headerHeight = 22f;
+                // Fondo de la cabecera
+                sb.AppendLine("0.122 0.306 0.471 rg");
+                sb.AppendLine($"36 {y - headerHeight} {printableWidth} {headerHeight} re f");
 
+                // Texto de encabezados (Blanco en negrita)
+                sb.AppendLine("BT");
+                sb.AppendLine("/F2 9 Tf");
+                sb.AppendLine("1 1 1 rg");
+
+                var curX = margin;
+                for (var i = 0; i < request.Headers.Count; i++)
+                {
+                    var text = FitText(request.Headers[i], colWidths[i] - 10, 9f, true);
+                    sb.AppendLine($"{curX + 5} {y - 15} Td");
+                    sb.AppendLine($"({PdfEscape(text)}) Tj");
+                    sb.AppendLine($"{- (curX + 5)} {- (y - 15)} Td");
+                    curX += colWidths[i];
+                }
+                sb.AppendLine("ET");
+
+                y -= headerHeight;
+            }
+
+            // Iniciar Primera Página
+            RenderHeader(currentBuilder, true);
+            RenderTableHeader(currentBuilder);
+
+            const float rowHeight = 20f;
+            const float bottomMarginThreshold = 50f;
+
+            for (var rowIndex = 0; rowIndex < request.Rows.Count; rowIndex++)
+            {
+                // Verificar si cabe la siguiente fila; si no, crear nueva página
+                if (y - rowHeight < bottomMarginThreshold)
+                {
+                    currentBuilder = new StringBuilder();
+                    pageBuilders.Add(currentBuilder);
+                    y = pageHeight - margin;
+                    RenderHeader(currentBuilder, false);
+                    RenderTableHeader(currentBuilder);
+                }
+
+                var row = request.Rows[rowIndex];
+
+                // Fondo Zebra Striping
+                if (rowIndex % 2 == 1)
+                {
+                    currentBuilder.AppendLine("0.973 0.980 0.988 rg"); // #F8FAFC
+                    currentBuilder.AppendLine($"36 {y - rowHeight} {printableWidth} {rowHeight} re f");
+                }
+
+                // Borde inferior de fila
+                currentBuilder.AppendLine("0.88 0.90 0.92 RG");
+                currentBuilder.AppendLine("0.5 w");
+                currentBuilder.AppendLine($"36 {y - rowHeight} m {36 + printableWidth} {y - rowHeight} l S");
+
+                // Renderizar Texto de Celdas
+                currentBuilder.AppendLine("BT");
+                currentBuilder.AppendLine("/F1 8.5 Tf");
+                currentBuilder.AppendLine("0.118 0.161 0.231 rg"); // #1E293B
+
+                var cellX = margin;
+                for (var colIndex = 0; colIndex < request.Headers.Count; colIndex++)
+                {
+                    var rawValue = colIndex < row.Count ? (row[colIndex] ?? string.Empty) : string.Empty;
+                    var formattedValue = FitText(rawValue, colWidths[colIndex] - 10, 8.5f, false);
+
+                    currentBuilder.AppendLine($"{cellX + 5} {y - 14} Td");
+                    currentBuilder.AppendLine($"({PdfEscape(formattedValue)}) Tj");
+                    currentBuilder.AppendLine($"{- (cellX + 5)} {- (y - 14)} Td");
+                    cellX += colWidths[colIndex];
+                }
+                currentBuilder.AppendLine("ET");
+
+                y -= rowHeight;
+            }
+
+            // Agregar Pie de Página en cada página
+            var totalPages = pageBuilders.Count;
+            for (var p = 0; p < totalPages; p++)
+            {
+                var sb = pageBuilders[p];
+                sb.AppendLine("0.796 0.835 0.882 RG");
+                sb.AppendLine("0.5 w");
+                sb.AppendLine($"36 34 m {36 + printableWidth} 34 l S");
+
+                sb.AppendLine("BT");
+                sb.AppendLine("/F1 8 Tf");
+                sb.AppendLine("0.392 0.455 0.545 rg");
+                sb.AppendLine("36 22 Td");
+                sb.AppendLine("(Documento generado oficialmente por SGDE - Sistema de Generacion y Despacho Eléctrico) Tj");
+                sb.AppendLine("ET");
+
+                sb.AppendLine("BT");
+                sb.AppendLine("/F1 8 Tf");
+                sb.AppendLine("0.392 0.455 0.545 rg");
+                var pageStr = $"Pagina {p + 1} de {totalPages}";
+                var pageStrX = 36 + printableWidth - (pageStr.Length * 5);
+                sb.AppendLine($"{pageStrX} 22 Td");
+                sb.AppendLine($"({PdfEscape(pageStr)}) Tj");
+                sb.AppendLine("ET");
+            }
+
+            // Construcción del PDF
             var objects = new Dictionary<int, byte[]>();
             var pageObjectIds = new List<int>();
-            var nextObjectId = 4;
+            var nextObjectId = 5; // 1: Catalog, 2: Pages, 3: Font Helvetica, 4: Font Helvetica-Bold
 
-            foreach (var pageLines in pages)
+            foreach (var builder in pageBuilders)
             {
                 var pageObjectId = nextObjectId++;
                 var contentObjectId = nextObjectId++;
                 pageObjectIds.Add(pageObjectId);
 
-                var contentBuilder = new StringBuilder("BT\n/F1 9 Tf\n40 760 Td\n12 TL\n");
-                foreach (var line in pageLines)
-                {
-                    contentBuilder.Append('(').Append(PdfEscape(line)).Append(") Tj\nT*\n");
-                }
-                contentBuilder.Append("ET\n");
-                var contentBytes = Encoding.ASCII.GetBytes(contentBuilder.ToString());
+                var contentBytes = Encoding.ASCII.GetBytes(builder.ToString());
                 objects[contentObjectId] = Combine(
                     Encoding.ASCII.GetBytes($"<< /Length {contentBytes.Length} >>\nstream\n"),
                     contentBytes,
                     Encoding.ASCII.GetBytes("endstream"));
-                objects[pageObjectId] = Encoding.ASCII.GetBytes($"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents {contentObjectId} 0 R >>");
+                objects[pageObjectId] = Encoding.ASCII.GetBytes($"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {pageWidth} {pageHeight}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents {contentObjectId} 0 R >>");
             }
 
             objects[1] = Encoding.ASCII.GetBytes("<< /Type /Catalog /Pages 2 0 R >>");
             objects[2] = Encoding.ASCII.GetBytes($"<< /Type /Pages /Kids [{string.Join(" ", pageObjectIds.Select(id => $"{id} 0 R"))}] /Count {pageObjectIds.Count} >>");
-            objects[3] = Encoding.ASCII.GetBytes("<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>");
+            objects[3] = Encoding.ASCII.GetBytes("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
+            objects[4] = Encoding.ASCII.GetBytes("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
 
             using var output = new MemoryStream();
             WriteAscii(output, "%PDF-1.4\n%SGDE\n");
@@ -265,11 +401,51 @@ namespace CoreApp
             return output.ToArray();
         }
 
-        private static IEnumerable<string> WrapLine(string value, int width)
+        private static float[] CalculateColumnWidths(IReadOnlyList<string> headers, IReadOnlyList<IReadOnlyList<string?>> rows, float printableWidth)
         {
-            if (string.IsNullOrEmpty(value)) return new[] { string.Empty };
-            return Enumerable.Range(0, (value.Length + width - 1) / width)
-                .Select(index => value.Substring(index * width, Math.Min(width, value.Length - index * width)));
+            var count = headers.Count;
+            if (count == 0) return Array.Empty<float>();
+
+            var weights = new float[count];
+            for (var i = 0; i < count; i++)
+            {
+                var headerLen = headers[i].Length;
+                var maxContentLen = rows.Select(r => i < r.Count ? (r[i]?.Length ?? 0) : 0).DefaultIfEmpty(0).Max();
+                weights[i] = Math.Max(5, Math.Max(headerLen, maxContentLen));
+            }
+
+            var totalWeight = weights.Sum();
+            if (totalWeight <= 0) totalWeight = 1;
+
+            var widths = new float[count];
+            var minWidth = 40f;
+            for (var i = 0; i < count; i++)
+            {
+                widths[i] = Math.Max(minWidth, (weights[i] / totalWeight) * printableWidth);
+            }
+
+            var currentSum = widths.Sum();
+            if (currentSum > 0 && Math.Abs(currentSum - printableWidth) > 0.01f)
+            {
+                var factor = printableWidth / currentSum;
+                for (var i = 0; i < count; i++) widths[i] *= factor;
+            }
+
+            return widths;
+        }
+
+        private static string FitText(string value, float maxWidth, float fontSize, bool isBold)
+        {
+            if (string.IsNullOrEmpty(value)) return string.Empty;
+
+            // Ancho aproximado de carácter en Helvetica (en pt)
+            var approxCharWidth = fontSize * (isBold ? 0.55f : 0.48f);
+            var maxChars = Math.Max(1, (int)(maxWidth / approxCharWidth));
+
+            if (value.Length <= maxChars) return value;
+            if (maxChars <= 3) return value.Substring(0, maxChars);
+
+            return value.Substring(0, maxChars - 3) + "...";
         }
 
         private static string PdfEscape(string value)
