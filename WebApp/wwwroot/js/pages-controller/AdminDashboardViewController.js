@@ -383,15 +383,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 const age = u.age ?? u.Age ?? (u.birthDate || u.BirthDate ? calculateAgeFromDate(u.birthDate || u.BirthDate) : "-");
                 const roleBadge = getRoleBadge(u.role);
                 const statusBadge = getStatusBadge(u.status);
-                const isActive = (u.status || "").toLowerCase() === "active";
-                const isPending = (u.status || "").toLowerCase() === "pending" || (u.status || "").toLowerCase() === "pendingactivation";
+                const normalizedStatus = (u.status || "").toLowerCase();
+                const isActive = normalizedStatus === "active";
+                const isPending = normalizedStatus === "pending" || normalizedStatus === "pendingactivation";
+                const isInactive = normalizedStatus === "inactive";
+                const isLocked = normalizedStatus === "locked" || normalizedStatus === "blocked";
                 const phone = u.phoneNumber || u.PhoneNumber || u.phone || u.Phone || "-";
 
                 let actions = `<button class="btn btn-sm btn-outline-primary me-1 btn-edit" data-id="${u.id}" title="Editar usuario"><i class="bi bi-pencil"></i> Editar</button>`;
                 if (isActive) {
                     actions += `<button class="btn btn-sm btn-outline-danger btn-deactivate" data-id="${u.id}" title="Desactivar usuario"><i class="bi bi-person-x"></i> Desactivar</button>`;
-                } else {
-                    actions += `<button class="btn btn-sm btn-outline-success btn-reactivate" data-id="${u.id}" data-email="${escapeHtml(u.email || "")}" data-status="${escapeHtml(u.status || "")}" title="${isPending ? "Activar usuario" : "Reactivar usuario"}"><i class="bi bi-person-check"></i> ${isPending ? "Activar" : "Reactivar"}</button>`;
+                } else if (isPending) {
+                    actions += `<button class="btn btn-sm btn-outline-warning btn-reactivate" data-id="${u.id}" data-status="${escapeHtml(u.status || "")}" title="Activar usuario con OTP"><i class="bi bi-envelope-check"></i> Activar</button>`;
+                } else if (isInactive) {
+                    actions += `<button class="btn btn-sm btn-outline-success btn-reactivate" data-id="${u.id}" data-status="${escapeHtml(u.status || "")}" title="Reactivar usuario"><i class="bi bi-person-check"></i> Reactivar</button>`;
+                } else if (isLocked) {
+                    actions += `<button class="btn btn-sm btn-outline-secondary" disabled title="El desbloqueo requiere una acción separada"><i class="bi bi-lock"></i> Bloqueado</button>`;
                 }
 
                 return `
@@ -418,7 +425,6 @@ document.addEventListener("DOMContentLoaded", function () {
             tableBody.querySelectorAll(".btn-reactivate").forEach(btn => {
                 btn.addEventListener("click", () => reactivateUser(
                     btn.getAttribute("data-id"),
-                    btn.getAttribute("data-email"),
                     btn.getAttribute("data-status")
                 ));
             });
@@ -446,8 +452,8 @@ document.addEventListener("DOMContentLoaded", function () {
         function getStatusBadge(status) {
             if ((status || "").toLowerCase() === "active") return '<span class="badge bg-success">Activo</span>';
             if ((status || "").toLowerCase() === "inactive") return '<span class="badge bg-secondary">Inactivo</span>';
-            if ((status || "").toLowerCase() === "blocked") return '<span class="badge bg-danger">Bloqueado</span>';
-            if ((status || "").toLowerCase() === "pendingactivation") return '<span class="badge bg-warning text-dark">Pendiente</span>';
+            if (["locked", "blocked"].includes((status || "").toLowerCase())) return '<span class="badge bg-danger">Bloqueado</span>';
+            if (["pending", "pendingactivation"].includes((status || "").toLowerCase())) return '<span class="badge bg-warning text-dark">Pendiente</span>';
             return `<span class="badge bg-warning text-dark">${status || "-"}</span>`;
         }
 
@@ -695,7 +701,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
-        function reactivateUser(id, email, status) {
+        function reactivateUser(id, status) {
             const normalizedStatus = (status || "").toLowerCase();
             if (normalizedStatus === "pending" || normalizedStatus === "pendingactivation") {
                 // La activación ahora exige que el propio usuario establezca su
@@ -705,7 +711,25 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            notify.warning("Solo los usuarios pendientes de activación pueden reactivarse desde esta pantalla.");
+            if (normalizedStatus !== "inactive") {
+                notify.warning("Solo se pueden reactivar usuarios inactivos.");
+                return;
+            }
+
+            notify.confirm("¿Desea reactivar este usuario? Podrá volver a iniciar sesión con su contraseña actual.", {
+                confirmText: "Reactivar"
+            }).then(function (ok) {
+                if (!ok) return;
+
+                apiClient.post(`Users/Reactivate/${parseInt(id)}?callerUserId=${userId}`, {})
+                    .done(function (res) {
+                        notify.success(res?.message || "Usuario reactivado correctamente.");
+                        loadUsers();
+                    })
+                    .fail(function (xhr) {
+                        handleApiError(xhr);
+                    });
+            });
         }
     }
 });
