@@ -252,6 +252,19 @@ namespace DataAccess.CRUD
             sqlDao.ExecuteProcedure(sqlOperation);
         }
 
+        // Reactiva una cuenta que fue desactivada administrativamente.
+        // No consume OTP ni modifica la contraseña: ese flujo pertenece únicamente
+        // a la activación inicial de cuentas Pending.
+        public void ReactivateAccount(string email)
+        {
+            var sqlOperation = new SqlOperation();
+            sqlOperation.ProcedureName = "ACTIVATE_USER_STATUS_PR";
+
+            sqlOperation.AddStringParameter("Email", email);
+
+            sqlDao.ExecuteProcedure(sqlOperation);
+        }
+
         //Metodo que construye el DTO del User a partir de la data que viene en la consulta de la BD
         private User BuildUser(Dictionary<string, object> row)
         {

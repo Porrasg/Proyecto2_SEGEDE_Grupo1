@@ -583,12 +583,15 @@ BEGIN
 	UPDATE dbo.tblUsers
 	SET
 		Status = 'Active',
+		FailedLoginAttempts = 0,
+		LockoutEndAt = NULL,
 		UpdatedAt = GETDATE()
-	WHERE Email = @Email;
+	WHERE Email = @Email
+	  AND Status = 'Inactive';
 
 	IF @@ROWCOUNT = 0
 	BEGIN
-		RAISERROR('No existe un usuario registrado con el correo indicado.', 16, 1);
+		RAISERROR('No existe un usuario inactivo con el correo indicado.', 16, 1);
 		RETURN;
 	END;
 END;

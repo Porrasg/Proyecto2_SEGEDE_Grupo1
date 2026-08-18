@@ -1,4 +1,4 @@
-﻿using DataAccess.CRUD;
+using DataAccess.CRUD;
 using Entities_DTOs;
 using System;
 using System.Collections.Generic;
@@ -31,6 +31,11 @@ namespace CoreApp
                 throw new Exception("El usuario no puede ser nulo");
             }
 
+            if (string.IsNullOrWhiteSpace(user.Status) || string.Equals(user.Status, "PendingActivation", StringComparison.OrdinalIgnoreCase))
+            {
+                user.Status = "Pending";
+            }
+
             ValidateUser(user); // Reviso datos obligatorios y formatos antes de guardar.
 
             var uCrud = new UserCrudFactory();
@@ -58,7 +63,6 @@ namespace CoreApp
             user.Password = HashPassword(user.Password);
 
             // Dejo valores iniciales para que la cuenta quede lista.
-            user.Status = "Pending";
             user.FailedLoginAttempts = 0;
             user.LockoutEndAt = null;
             user.LastLoginAt = null;
@@ -272,6 +276,54 @@ namespace CoreApp
             uCrud.Delete(user);
         }
 
+        // Reactiva una cuenta desactivada sin alterar contraseña, rol ni datos personales.
+        // Pending conserva su flujo de activación por OTP y Locked requiere una acción
+        // administrativa distinta de desbloqueo.
+        public User Reactivate(int userId)
+        {
+            if (userId <= 0)
+            {
+                throw new Exception("El identificador del usuario no es válido");
+            }
+
+            var uCrud = new UserCrudFactory();
+            var user = uCrud.RetrieveById<User>(userId);
+
+            if (user == null)
+            {
+                throw new Exception("El usuario que desea reactivar no existe");
+            }
+
+            if (user.Status == "Active")
+            {
+                throw new Exception("El usuario ya se encuentra activo");
+            }
+
+            if (user.Status == "Pending")
+            {
+                throw new Exception("El usuario debe completar la activación inicial con el código OTP");
+            }
+
+            if (user.Status == "Locked")
+            {
+                throw new Exception("La cuenta está bloqueada y debe desbloquearse mediante una acción separada");
+            }
+
+            if (user.Status != "Inactive")
+            {
+                throw new Exception("Solo se pueden reactivar usuarios inactivos");
+            }
+
+            uCrud.ReactivateAccount(user.Email);
+
+            user.Status = "Active";
+            user.FailedLoginAttempts = 0;
+            user.LockoutEndAt = null;
+            user.UpdatedAt = DateTime.Now;
+
+            return user;
+        }
+
         public User RetrieveUserById(int id)
         {
             if (id <= 0)
@@ -375,6 +427,11 @@ namespace CoreApp
                 throw new Exception("La cuenta todavía no ha sido activada");
             }
 
+            if (user.Status == "Inactive")
+            {
+                throw new Exception("La cuenta se encuentra inactiva. Solicite su reactivación a un administrador");
+            }
+
             if (user.Status == "Locked")
             {
                 throw new Exception("La cuenta se encuentra bloqueada");
@@ -470,8 +527,22 @@ namespace CoreApp
 
             if (storedUser != null)
             {
+                if (storedUser.Status == "Pending")
+                {
+                    throw new Exception("La cuenta todavía no ha sido activada");
+                }
+
+                if (storedUser.Status == "Inactive")
+                {
+                    throw new Exception("La cuenta se encuentra inactiva. Solicite su reactivación a un administrador");
+                }
+
+                if (storedUser.Status == "Locked")
+                {
+                    throw new Exception("La cuenta se encuentra bloqueada");
+                }
+
                 storedUser.Role = string.IsNullOrWhiteSpace(storedUser.Role) ? account.Role : storedUser.Role;
-                storedUser.Status = "Active";
                 user = storedUser;
                 return true;
             }
@@ -1116,6 +1187,7 @@ namespace CoreApp
         private bool IsValidStatus(string status)
         {
             return status == "Pending" ||
+                   status == "PendingActivation" ||
                    status == "Active" ||
                    status == "Inactive" ||
                    status == "Locked";

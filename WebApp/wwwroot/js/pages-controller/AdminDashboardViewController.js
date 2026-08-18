@@ -607,7 +607,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     // aleatoria que nadie conoce; el usuario define la suya propia al activar
                     // la cuenta. passVal solo aplica al modal de edición (reseteo puntual).
                     Password: passVal || "",
-                    Status: "PendingActivation"
+                    Status: "Pending"
                 };
 
 
