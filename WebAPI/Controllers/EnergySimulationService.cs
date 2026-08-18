@@ -1,7 +1,7 @@
 ﻿using CoreApp;
 using Entities_DTOs;
 
-namespace WebAPI.Services
+namespace WebAPI.Controllers
 {
     public class EnergySimulationService : BackgroundService
     {

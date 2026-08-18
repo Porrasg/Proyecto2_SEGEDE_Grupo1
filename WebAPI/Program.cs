@@ -1,5 +1,5 @@
 using WebAPI;
-using WebAPI.Services;
+using WebAPI.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
