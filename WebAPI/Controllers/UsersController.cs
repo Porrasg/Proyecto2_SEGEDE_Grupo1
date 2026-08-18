@@ -1,4 +1,4 @@
-﻿using CoreApp;
+using CoreApp;
 using Entities_DTOs;
 using Microsoft.AspNetCore.Mvc;
 
@@ -325,6 +325,11 @@ namespace WebAPI.Controllers
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(user.Status) || string.Equals(user.Status, "PendingActivation", StringComparison.OrdinalIgnoreCase))
+                {
+                    user.Status = "Pending";
+                }
+
                 if (string.IsNullOrWhiteSpace(user.Password))
                 {
                     user.Password = GenerateRandomCompliantPassword();
