@@ -598,6 +598,17 @@ document.addEventListener("DOMContentLoaded", function () {
                     return;
                 }
 
+                const initialPass = (passVal || "").trim();
+                if (initialPass) {
+                    const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
+                    if (!passRegex.test(initialPass)) {
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Guardar';
+                        notify.warning("La contraseña asignada debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.");
+                        return;
+                    }
+                }
+
                 const dto = {
                     Identification: idVal,
                     FirstName: fullNameVal,
@@ -609,11 +620,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     BirthDate: birthDateVal,
                     Age: Number.isFinite(parseInt(ageVal)) ? parseInt(ageVal) : 0,
                     ProfilePhoto: userPhotoDataUrl,
-                    // Sin campo de contraseña en el modal de creación: el backend genera una
-                    // aleatoria que nadie conoce; el usuario define la suya propia al activar
-                    // la cuenta. passVal solo aplica al modal de edición (reseteo puntual).
-                    Password: passVal || "",
-                    Status: "Pending"
+                    Password: initialPass,
+                    Status: initialPass ? "Active" : "Pending"
                 };
 
 

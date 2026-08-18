@@ -71,10 +71,12 @@ namespace CoreApp
 
             uCrud.Create(user);
 
-            // Luego de guardar, genero el OTP para activar la cuenta.
-            var otpManager = new OtpManager();
-
-            otpManager.GenerateAndSendOtp(user.Email, user.FirstName, "ACCOUNT_ACTIVATION");
+            // Si el estado es Pending, genero el OTP para activar la cuenta. Si es Active, no requiere activación.
+            if (string.Equals(user.Status, "Pending", StringComparison.OrdinalIgnoreCase))
+            {
+                var otpManager = new OtpManager();
+                otpManager.GenerateAndSendOtp(user.Email, user.FirstName, "ACCOUNT_ACTIVATION");
+            }
         }
 
         public void Update(User user)

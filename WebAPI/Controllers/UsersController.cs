@@ -325,14 +325,17 @@ namespace WebAPI.Controllers
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(user.Status) || string.Equals(user.Status, "PendingActivation", StringComparison.OrdinalIgnoreCase))
-                {
-                    user.Status = "Pending";
-                }
-
                 if (string.IsNullOrWhiteSpace(user.Password))
                 {
                     user.Password = GenerateRandomCompliantPassword();
+                    if (string.IsNullOrWhiteSpace(user.Status) || string.Equals(user.Status, "PendingActivation", StringComparison.OrdinalIgnoreCase))
+                    {
+                        user.Status = "Pending";
+                    }
+                }
+                else if (string.IsNullOrWhiteSpace(user.Status))
+                {
+                    user.Status = "Active";
                 }
 
                 var um = new UserManager();
